@@ -36,6 +36,7 @@ body{
     radial-gradient(920px 620px at 50% 100%, rgba(255,233,196,0.74), transparent 62%),
     linear-gradient(135deg, var(--bg-soft) 0%, var(--bg) 40%, #faeedf 66%, #f4dfc5 100%),
     var(--bg);
+  overflow-x:hidden;
 }
 
 .page-shell{
@@ -397,9 +398,19 @@ h1{
   .hero-grid{
     grid-template-columns: 1fr;
     align-items:start;
+    gap:22px;
+  }
+  .hero-visual{
+    align-items:center;
   }
   .phone-screen{
     max-height: 62vh;
+  }
+  .visual-caption{
+    max-width:100%;
+  }
+  .section{
+    margin-top:44px;
   }
   .cards-grid{
     grid-template-columns: 1fr;
@@ -409,24 +420,89 @@ h1{
 @media (max-width: 640px){
   .page-shell{
     width: min(100% - 20px, var(--container));
+    padding-bottom:44px;
   }
   .topbar{
     width:100%;
     margin:0;
     border-radius: 18px;
-    padding:12px 16px;
+    padding:10px 14px;
+    flex-wrap:wrap;
+    justify-content:flex-start;
+    row-gap:8px;
+  }
+  .brand{
+    width:100%;
+  }
+  .brand-name{
+    font-size:0.9rem;
   }
   .top-link{
-    margin-right:4px;
+    margin-right:0;
+    font-size:0.92rem;
+  }
+  .hero{
+    padding-top:10px;
+  }
+  h1{
+    font-size:clamp(1.55rem, 7vw, 1.95rem);
+    max-width:22ch;
+  }
+  .hero-text{
+    font-size:0.98rem;
+    line-height:1.58;
+  }
+  .hero-points{
+    gap:8px;
+  }
+  .hero-points li{
+    font-size:0.87rem;
+    padding:7px 10px;
   }
   .button{
     width:100%;
   }
   .mini-features{
     grid-template-columns: 1fr;
+    gap:10px;
   }
   .mini-card-wide{
     grid-column:auto;
+  }
+  .mini-card{
+    grid-template-columns: 44px 1fr;
+    gap:10px;
+    padding:12px;
+  }
+  .mini-icon{
+    width:44px;
+    height:44px;
+    border-radius:12px;
+    font-size:0.84rem;
+  }
+  .mini-body h2{
+    font-size:0.98rem;
+  }
+  .mini-body p{
+    font-size:0.9rem;
+    line-height:1.45;
+    margin-top:4px;
+  }
+  .workbook-panel{
+    padding:16px;
+  }
+  .workbook-note{
+    flex-direction:column;
+    align-items:flex-start;
+  }
+  .workbook-note .button{
+    width:100%;
+  }
+  .section{
+    margin-top:36px;
+  }
+  .footer{
+    margin-top:40px;
   }
 }
 
