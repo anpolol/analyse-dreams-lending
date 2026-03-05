@@ -375,6 +375,54 @@ h1{
   color: var(--muted);
 }
 
+/* SEO text section */
+.seo-text{
+  max-width: 100%;
+  padding:24px;
+  border-radius: var(--radius-lg);
+  border:1px solid var(--border);
+  background:
+    radial-gradient(700px 220px at 12% 0%, rgba(130,204,195,0.18), transparent 62%),
+    linear-gradient(145deg, rgba(255,247,237,0.86), rgba(246,223,193,0.66));
+  box-shadow: 0 14px 34px rgba(14,47,63,0.08);
+}
+
+.seo-text h2{
+  font-size: clamp(1.45rem, 2.1vw, 1.95rem);
+  letter-spacing:-0.015em;
+}
+
+.seo-text h3{
+  margin-top:20px;
+  font-size:1.14rem;
+  letter-spacing:-0.01em;
+}
+
+.seo-text p{
+  margin:12px 0 0;
+  color: var(--muted);
+  font-size:1rem;
+  line-height:1.72;
+  max-width:78ch;
+}
+
+.seo-text ul{
+  margin:12px 0 0;
+  padding:0;
+  list-style:none;
+  display:grid;
+  gap:8px;
+}
+
+.seo-text li{
+  padding:10px 12px;
+  border-radius:12px;
+  border:1px solid rgba(14,47,63,0.12);
+  background: rgba(255,245,231,0.62);
+  color: var(--ink-2);
+  font-weight:600;
+}
+
 /* Footer */
 .footer{
   margin-top:56px;
@@ -497,6 +545,24 @@ h1{
   }
   .workbook-note .button{
     width:100%;
+  }
+  .seo-text{
+    padding:16px;
+  }
+  .seo-text h2{
+    font-size:1.32rem;
+  }
+  .seo-text h3{
+    margin-top:16px;
+    font-size:1.02rem;
+  }
+  .seo-text p{
+    font-size:0.96rem;
+    line-height:1.6;
+  }
+  .seo-text li{
+    padding:9px 10px;
+    font-size:0.92rem;
   }
   .section{
     margin-top:36px;
