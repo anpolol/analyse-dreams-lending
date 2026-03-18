@@ -33,7 +33,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
   <!-- меняй v при каждом релизе, чтобы сбрасывался кэш -->
-  <link rel="stylesheet" href="./styles.css?v=20260305-7" />
+  <link rel="stylesheet" href="./styles.css?v=20260317-21" />
 </head>
 
 <body>
@@ -41,97 +41,118 @@
     <header class="hero" id="top">
       <nav class="topbar">
         <a class="brand" href="https://t.me/dreams_analyse_bot" target="_blank" rel="noopener" aria-label="Открыть бота в Telegram">
-          <!-- положи рядом с index.html: logo.jpg (или поменяй имя ниже) -->
           <img class="brand-logo" src="./logo.jpeg" alt="Логотип" />
           <span class="brand-name">Анализ снов</span>
         </a>
 
-        <!-- если хочешь скролл к кнопкам, замени href на #cta -->
         <a class="top-link" href="https://t.me/dreams_analyse_bot" target="_blank" rel="noopener">Попробовать бесплатно</a>
       </nav>
 
       <div class="hero-grid">
         <section class="hero-copy">
-          <p class="eyebrow">Бот для саморефлексии</p>
+          <div class="hero-main">
+            <p class="eyebrow">Бот для саморефлексии</p>
 
-          <h1>Анализ снов онлайн в юнгианском подходе</h1>
-
-          <p class="hero-text">
-            Отправьте сон — бот выделит ключевые образы, предложит направления интерпретации и поможет увидеть связь со своей жизнью
-            без мистификации и универсальных трактовок.
-          </p>
-
-          <div class="hero-actions" id="cta">
-            <a class="button button-primary" href="https://t.me/dreams_analyse_bot" target="_blank" rel="noopener">Открыть бота</a>
-            <a class="button button-secondary" href="https://t.me/dreams_analyse_bot" target="_blank" rel="noopener">Получить тетрадь</a>
+            <h1>Анализ снов онлайн в юнгианском подходе</h1>
           </div>
 
-          <ul class="hero-points" aria-label="Ключевые преимущества">
-            <li>Бесплатно</li>
-            <li>Бережно и по шагам</li>
-            <li>Подходит без опыта</li>
-          </ul>
+          <div class="hero-bottom">
+            <p class="hero-text">
+              Отправьте сон — бот выделит ключевые образы, предложит направления интерпретации и поможет увидеть связь со своей жизнью
+              без мистификации и универсальных трактовок.
+            </p>
 
-          <div class="mini-features" aria-label="Функции">
-            <article class="mini-card">
-              <div class="mini-icon">01</div>
-              <div class="mini-body">
-                <h2>Быстрый разбор</h2>
-                <p>Первичная интерпретация по ключевым образам и динамике сна.</p>
-              </div>
-            </article>
-
-            <article class="mini-card">
-              <div class="mini-icon">02</div>
-              <div class="mini-body">
-                <h2>Символ</h2>
-                <p>Смысл образа в юнгианской логике: варианты и контекст.</p>
-              </div>
-            </article>
-
-            <article class="mini-card mini-card-wide">
-              <div class="mini-icon">03</div>
-              <div class="mini-body">
-                <h2>Детальный разбор</h2>
-                <p>Вопросы к жизненной ситуации, чтобы найти личный смысл.</p>
-              </div>
-            </article>
+            <div class="hero-actions" id="cta">
+              <a class="button button-primary" href="https://t.me/dreams_analyse_bot" target="_blank" rel="noopener">Открыть бота</a>
+              <a class="button button-secondary" href="https://t.me/dreams_analyse_bot" target="_blank" rel="noopener">Получить тетрадь</a>
+            </div>
           </div>
         </section>
 
+        <!--
         <aside class="hero-visual" aria-label="Скриншот бота">
           <div class="phone">
 
             <div class="phone-screen">
-              <!-- положи рядом с index.html: bot-chat.jpg (или поменяй имя ниже) -->
               <img src="./bot-chat.png" alt="Пример диалога с ботом @dreams_analyse_bot" />
             </div>
           </div>
 
           <p class="visual-caption">Пример ответа в Telegram: символы → эмоции → вопросы для размышления.</p>
         </aside>
+        -->
       </div>
     </header>
 
     <main>
-      <section class="section promise" id="about">
-        <div class="section-intro">
-          <p class="eyebrow">Почему это работает</p>
-          <h2>Не «сонник», а аккуратная рамка, которая помогает понять, что психика показывает во сне.</h2>
+      <section class="section feature-showcase" aria-label="Функции">
+        <div class="feature-showcase-top">
+          <div class="feature-showcase-overlay">
+            <p>Бесплатно</p>
+            <span aria-hidden="true">✦</span>
+            <p>Бережно и по шагам</p>
+            <span aria-hidden="true">✦</span>
+            <p>Подходит всем</p>
+            <small>(включая новичков в интерпретации снов)</small>
+          </div>
         </div>
 
-        <div class="cards-grid">
+        <div class="mini-features">
+          <article class="mini-card">
+            <img class="mini-visual" src="./image_3.PNG" alt="" />
+            <div class="mini-body">
+              <h2>Быстрый разбор</h2>
+              <p>Первичная интерпретация по ключевым образам и динамике сна.</p>
+            </div>
+          </article>
+
+          <article class="mini-card">
+            <img class="mini-visual" src="./image_4.PNG" alt="" />
+            <div class="mini-body">
+              <h2>Символ</h2>
+              <p>Смысл образа в юнгианской логике: варианты и контекст.</p>
+            </div>
+          </article>
+
+          <article class="mini-card mini-card-wide">
+            <img class="mini-visual" src="./image_5.PNG" alt="" />
+            <div class="mini-body">
+              <h2>Детальный разбор</h2>
+              <p>Вопросы к жизненной ситуации, чтобы найти личный смысл.</p>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="section promise" id="about">
+        <div class="promise-stars" aria-hidden="true">
+          <img class="promise-star promise-star-1" src="./Str Union_s.PNG" alt="" />
+          <img class="promise-star promise-star-2" src="./Str Union_L.PNG" alt="" />
+          <img class="promise-star promise-star-3" src="./Str Union_m.PNG" alt="" />
+          <img class="promise-star promise-star-4" src="./Str Union_s.PNG" alt="" />
+          <img class="promise-star promise-star-5" src="./Str Union_m.PNG" alt="" />
+        </div>
+
+        <div class="promise-intro">
+          <p class="eyebrow">Почему это работает?</p>
+          <h2><span>Не «сонник»,</span><br /> а аккуратная рамка, которая помогает понять, что психика показывает во сне</h2>
+        </div>
+
+        <div class="promise-grid">
           <article class="info-card">
+            <img class="info-thumb" src="./image_8.PNG" alt="" />
             <h3>Индивидуальный смысл</h3>
             <p>Символы читаются через личный контекст, а не через универсальные трактовки.</p>
           </article>
 
           <article class="info-card">
+            <img class="info-thumb" src="./image_7.PNG" alt="" />
             <h3>Бережная навигация</h3>
             <p>Бот задаёт вопросы и помогает удерживать внимание на нюансах сна.</p>
           </article>
 
           <article class="info-card">
+            <img class="info-thumb" src="./image_6.PNG" alt="" />
             <h3>Поддержка самостоятельности</h3>
             <p>Подходит как практика самонаблюдения и подготовки к работе со сном.</p>
           </article>
@@ -140,40 +161,60 @@
 
       <section class="section workbook" id="workbook">
         <div class="workbook-panel">
-          <div class="section-intro narrow">
-            <p class="eyebrow">Тетрадь с техниками</p>
-            <h2>8 техник интерпретации снов, чтобы разбирать их глубже и точнее.</h2>
-          </div>
+          <img class="workbook-image" src="./image_9.PNG" alt="" />
 
-          <p class="workbook-lead">
-            Короткие упражнения и вопросы, которые помогают не скатываться в «общие значения» и держать связь сна с жизнью.
-          </p>
+          <div class="workbook-overlay">
+            <div class="workbook-copy">
+              <p class="eyebrow">Тетрадь с техниками</p>
+              <h2>
+                <span>8 техник</span>
+                <span class="workbook-line">интерпретации снов, чтобы разбирать</span>
+                <span class="workbook-line">их глубже и точнее</span>
+              </h2>
 
-          <div class="workbook-note">
-            <p>Забрать тетрадь и перейти в бота.</p>
-            <a class="button button-primary" href="https://t.me/dreams_analyse_bot" target="_blank" rel="noopener">Получить тетрадь</a>
+              <p class="workbook-lead">
+                Короткие упражнения и вопросы, которые помогают не скатываться в «общие значения» и держать связь сна с жизнью.
+              </p>
+            </div>
+
+            <div class="workbook-note">
+              <a class="button button-primary" href="https://t.me/dreams_analyse_bot" target="_blank" rel="noopener">Получить тетрадь</a>
+            </div>
           </div>
         </div>
       </section>
 
       <section class="section audience">
-        <div class="section-intro">
-          <p class="eyebrow">Для кого</p>
-          <h2>Для тех, кто хочет понимать сны без мистификации и без банальных трактовок.</h2>
+        <div class="audience-stars" aria-hidden="true">
+          <img class="audience-star audience-star-1" src="./Str Union_s.PNG" alt="" />
+          <img class="audience-star audience-star-2" src="./Str Union_L.PNG" alt="" />
+          <img class="audience-star audience-star-3" src="./Str Union_m.PNG" alt="" />
+          <img class="audience-star audience-star-4" src="./Str Union_s.PNG" alt="" />
         </div>
 
-        <div class="cards-grid">
-          <article class="info-card">
+        <div class="audience-intro">
+          <p class="eyebrow">Для кого?</p>
+          <h2>
+            <span class="audience-title-main">Для тех,</span> 
+            <span class="audience-title-sub"><br />кто хочет понимать сны без мистификации и без банальных трактовок.</span>
+          </h2>
+        </div>
+
+        <div class="cards-grid audience-grid">
+          <article class="audience-card audience-card-repeat">
+            <p class="audience-card-kicker">Когда сон возвращается</p>
             <h3>Повторяющиеся сюжеты</h3>
             <p>Если сон снова и снова возвращает к одной теме.</p>
           </article>
 
-          <article class="info-card">
+          <article class="audience-card audience-card-symbol">
+            <p class="audience-card-kicker">Когда образ не отпускает</p>
             <h3>Сильные символы</h3>
             <p>Если образ «цепляет» и хочется понять, почему он появился сейчас.</p>
           </article>
 
-          <article class="info-card">
+          <article class="audience-card audience-card-reflect">
+            <p class="audience-card-kicker">Когда нужен ориентир</p>
             <h3>Саморефлексия</h3>
             <p>Если важно увидеть связь сна с текущими решениями и переживаниями.</p>
           </article>
@@ -181,34 +222,36 @@
       </section>
 
       <section class="section seo-text">
+        <div class="section-intro seo-intro narrow">
+          <h2><span>Как это работает</span></h2>
+        </div>
 
-      <h2>Как работает анализ снов</h2>
+        <div class="seo-grid">
+          <div class="seo-copy">
+            <p>
+              Анализ снов помогает заметить внутренние процессы психики через символы и образы, которые появляются во сне.
+              В юнгианском подходе сон рассматривается как сообщение бессознательного и может отражать эмоциональные конфликты,
+              переживания и внутренние изменения.
+            </p>
 
-      <p>
-      Анализ снов — это способ понять внутренние процессы психики через символы и образы,
-      которые появляются во сне. В юнгианской психологии сон рассматривается как
-      сообщение бессознательного и может отражать эмоциональные конфликты,
-      переживания и внутренние изменения.
-      </p>
+            <p>
+              Бот делает первый шаг: выделяет ключевые символы, обращает внимание на эмоции и предлагает вопросы
+              для самостоятельной интерпретации. Такой формат помогает лучше понять контекст сна и не сводить его
+              к шаблонным трактовкам.
+            </p>
+          </div>
 
-      <p>
-      Бот помогает сделать первый разбор сна: выделяет ключевые символы,
-      обращает внимание на эмоции и предлагает вопросы для самостоятельной
-      интерпретации. Такой формат помогает увидеть связь сна с текущей жизненной
-      ситуацией и лучше понять психологический контекст сна.
-      </p>
-
-      <h3>Что можно узнать из сна</h3>
-
-      <ul>
-      <li>какие символы являются центральными</li>
-      <li>какие эмоции сопровождают сон</li>
-      <li>какая жизненная ситуация может отражаться во сне</li>
-      <li>какие вопросы стоит задать себе после сна</li>
-      </ul>
-
+          <div class="seo-panel">
+            <p class="seo-panel-kicker">Что можно увидеть в первом разборе</p>
+            <ul>
+              <li>какие символы оказываются центральными</li>
+              <li>какие эмоции сопровождают сон</li>
+              <li>какая жизненная ситуация может в нём отражаться</li>
+              <li>какие вопросы стоит задать себе после сна</li>
+            </ul>
+          </div>
+        </div>
       </section>
-
     </main>
 
     <footer class="footer">
