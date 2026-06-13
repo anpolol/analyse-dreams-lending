@@ -287,23 +287,19 @@
         <button class="dm-close-btn" onclick="dmClose()" aria-label="Закрыть">×</button>
       </div>
 
-      <div id="dm-stage-input" class="dm-body">
-        <div class="dm-bubble dm-bubble-bot">
-          Расскажите свой сон — образы, ощущения, детали, которые запомнились. Я выделю ключевые символы и предложу направления для понимания.
-        </div>
-        <div class="dm-chips">
-          <button class="dm-chip" onclick="dmUseExample(this)">Я шёл к огромной луне над полем</button>
-          <button class="dm-chip" onclick="dmUseExample(this)">Снилось, что тону в воде</button>
-          <button class="dm-chip" onclick="dmUseExample(this)">Летал над домом детства</button>
-        </div>
-        <div class="dm-composer">
-          <textarea id="dm-dream-input" class="dm-textarea" placeholder="Мне снилось…" rows="3" oninput="dmToggleSend()"></textarea>
-          <button id="dm-submit-btn" class="dm-btn-primary" onclick="dmSubmitDream()" disabled>Анализировать →</button>
-        </div>
-      </div>
-
-      <div id="dm-stage-chat" class="dm-body" hidden>
+      <div id="dm-chat" class="dm-body">
         <div id="dm-messages" class="dm-messages"></div>
+        <div id="dm-input-area">
+          <div id="dm-chips" class="dm-chips">
+            <button class="dm-chip" onclick="dmUseExample(this)">Я шёл к огромной луне над полем</button>
+            <button class="dm-chip" onclick="dmUseExample(this)">Снилось, что тону в воде</button>
+            <button class="dm-chip" onclick="dmUseExample(this)">Летал над домом детства</button>
+          </div>
+          <div class="dm-composer">
+            <textarea id="dm-dream-input" class="dm-textarea" placeholder="Мне снилось…" rows="3" oninput="dmToggleSend()"></textarea>
+            <button id="dm-submit-btn" class="dm-btn-primary" onclick="dmSubmitDream()" disabled>Анализировать →</button>
+          </div>
+        </div>
       </div>
 
       <div id="dm-upsell" class="dm-upsell" hidden>
@@ -391,14 +387,12 @@
       var overlay = document.getElementById('dm-overlay');
       overlay.removeAttribute('hidden');
       document.body.style.overflow = 'hidden';
-      // reset state
-      document.getElementById('dm-stage-input').removeAttribute('hidden');
-      document.getElementById('dm-stage-chat').setAttribute('hidden', '');
       document.getElementById('dm-upsell').setAttribute('hidden', '');
       document.getElementById('dm-messages').innerHTML = '';
-      document.getElementById('dm-reply-row').setAttribute('hidden', '');
+      document.getElementById('dm-input-area').removeAttribute('hidden');
       document.getElementById('dm-dream-input').value = '';
       document.getElementById('dm-submit-btn').disabled = true;
+      addBubble('bot', 'Расскажите свой сон — образы, ощущения, детали, которые запомнились. Я выделю ключевые символы и предложу направления для понимания.');
       setTimeout(function () { document.getElementById('dm-dream-input').focus(); }, 50);
     };
 
@@ -423,9 +417,7 @@
       dmDreamText = input.value.trim();
       if (dmDreamText.length < 5) return;
 
-      document.getElementById('dm-stage-input').setAttribute('hidden', '');
-      document.getElementById('dm-stage-chat').removeAttribute('hidden');
-
+      document.getElementById('dm-input-area').setAttribute('hidden', '');
       addBubble('me', esc(dmDreamText));
 
       var tpl = getTpl(dmDreamText);
