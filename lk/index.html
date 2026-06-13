@@ -2244,7 +2244,7 @@ function DepthMeter({ stage }) {
   );
 }
 
-function DreamChat({ open, balance, onClose, onStart, onComplete, onGoTopUp }) {
+function DreamChat({ open, balance, onClose, onStart, onComplete, onGoTopUp, initialDream }) {
   const greeting = { from: "bot", node: <span>Привет! Расскажите свой сон в нескольких предложениях — а дальше мы разберём его в диалоге: я буду задавать вопросы, вы можете отвечать или спрашивать в ответ, пока не придём к инсайту.</span> };
   const [msgs, setMsgs] = useState([greeting]);
   const [text, setText] = useState("");
@@ -2256,7 +2256,7 @@ function DreamChat({ open, balance, onClose, onStart, onComplete, onGoTopUp }) {
   const scroller = useRef(null);
 
   useEffect(() => {
-    if (open) { setMsgs([greeting]); setText(""); setTyping(false); setStage(0); setSymbol(null); setDone(false); setEntry(null); }
+    if (open) { setMsgs([greeting]); setText(initialDream || ""); setTyping(false); setStage(0); setSymbol(null); setDone(false); setEntry(null); }
   }, [open]);
   useEffect(() => { if (scroller.current) scroller.current.scrollTop = scroller.current.scrollHeight; }, [msgs, typing]);
 
@@ -2400,6 +2400,21 @@ Object.assign(window, { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCa
       const [history, setHistory] = useState(SEED_HISTORY);
       const [chatOpen, setChatOpen] = useState(false);
       const [toast, setToast] = useState("");
+      const [pendingDream, setPendingDream] = useState("");
+
+      useEffect(() => {
+        try {
+          const raw = localStorage.getItem('ad_landing_context');
+          if (raw) {
+            const { dream, ts } = JSON.parse(raw);
+            if (Date.now() - ts < 600000) {
+              setPendingDream(dream || "");
+              setChatOpen(true);
+            }
+            localStorage.removeItem('ad_landing_context');
+          }
+        } catch (e) {}
+      }, []);
 
       useEffect(() => {
         try { localStorage.setItem(LS_KEY, JSON.stringify({ balance })); } catch (e) {}
@@ -2448,7 +2463,7 @@ Object.assign(window, { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCa
               <HistoryList items={history} />
             )}
           </div>
-          <DreamChat open={chatOpen} balance={balance} onClose={() => setChatOpen(false)} onStart={startAnalysis} onComplete={completeAnalysis} onGoTopUp={goTopUp} />
+          <DreamChat open={chatOpen} balance={balance} onClose={() => setChatOpen(false)} onStart={startAnalysis} onComplete={completeAnalysis} onGoTopUp={goTopUp} initialDream={pendingDream} />
           <Toast msg={toast} />
         </React.Fragment>
       );
