@@ -561,7 +561,6 @@ var _React = React,
   useRef = _React.useRef;
 var IMG = "..";
 var DECOR = "..";
-var BOT = "https://t.me/dreams_analyse_bot";
 var LS_KEY = "ad_lk_state_v1";
 var TARIFFS = [{
   id: "s",
@@ -1949,7 +1948,6 @@ const { useState, useEffect, useRef } = React;
 
 const IMG = "..";
 const DECOR = "..";
-const BOT = "https://t.me/dreams_analyse_bot";
 const LS_KEY = "ad_lk_state_v1";
 
 const TARIFFS = [
@@ -2534,6 +2532,7 @@ Object.assign(window, { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCa
       }, []);
 
       useEffect(() => {
+        if (!user) return;
         try {
           const raw = localStorage.getItem('ad_landing_context');
           if (raw) {
@@ -2545,7 +2544,7 @@ Object.assign(window, { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCa
             localStorage.removeItem('ad_landing_context');
           }
         } catch (e) {}
-      }, []);
+      }, [user]);
 
       useEffect(() => {
         try { localStorage.setItem(LS_KEY, JSON.stringify({ balance })); } catch (e) {}
