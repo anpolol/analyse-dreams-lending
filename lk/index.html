@@ -2136,37 +2136,21 @@ function HistoryList({ items }) {
 }
 
 function HistoryItem({ it }) {
-  const [open, setOpen] = useState(false);
   return (
     <Card variant="raised" padding={0} style={{ overflow: "hidden" }}>
-      <button
-        onClick={() => setOpen((o) => !o)}
-        style={{ width: "100%", textAlign: "left", border: "none", background: "transparent", cursor: "pointer", padding: "22px 26px", display: "flex", gap: 16, alignItems: "flex-start", fontFamily: "var(--font-sans)" }}
-      >
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8, flexWrap: "wrap" }}>
-            <span style={{ fontSize: "0.8rem", fontWeight: 700, color: "var(--text-faint)", letterSpacing: "0.04em", textTransform: "uppercase" }}>{it.date}</span>
-            <h3 style={{ margin: 0, fontSize: "1.2rem", fontWeight: 800, color: "var(--text-strong)" }}>{it.title}</h3>
-            {it.turns ? <span style={{ fontSize: "0.78rem", color: "var(--text-faint)", fontWeight: 600 }}>· {it.turns} {plural(it.turns, "шаг", "шага", "шагов")} диалога</span> : null}
-          </div>
-          <p style={{ margin: "0 0 12px", color: "var(--text-muted)", lineHeight: 1.45, maxWidth: "52rem", display: "-webkit-box", WebkitLineClamp: open ? "unset" : 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{it.dream}</p>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
-            {it.symbols.map((s) => <Badge key={s} variant="cyan">{s}</Badge>)}
-          </div>
+      <div style={{ padding: "22px 26px" }}>
+        <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 12 }}>
+          <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--text-faint)", letterSpacing: "0.04em", textTransform: "uppercase", flexShrink: 0 }}>{it.date}</span>
+          <h3 style={{ margin: 0, fontSize: "1.15rem", fontWeight: 800, color: "var(--text-strong)" }}>{it.title}</h3>
         </div>
-        <span aria-hidden="true" style={{ flex: "none", marginTop: 4, color: "var(--text-muted)", transform: open ? "rotate(180deg)" : "none", transition: "transform 200ms var(--ease-out)", fontSize: "1.1rem" }}>⌄</span>
-      </button>
-      {open && (
-        <div style={{ padding: "0 26px 24px", display: "flex", flexDirection: "column", gap: 16, borderTop: "1px solid var(--border-subtle)" }}>
-          <Field label="Эмоциональный тон"><span style={{ color: "var(--text-muted)" }}>{it.emotion}</span></Field>
-          <div style={{ marginTop: 16, padding: "18px 20px", borderRadius: 18, background: "var(--paper-100)", border: "1px solid var(--border-subtle)" }}>
-            <p style={{ margin: "0 0 6px", fontSize: "0.78rem", fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--text-strong)", display: "flex", alignItems: "center", gap: 8 }}>
-              <span aria-hidden="true" style={{ color: "var(--cyan-500)" }}>✦</span>Инсайт
-            </p>
-            <p style={{ margin: 0, color: "var(--text-body)", lineHeight: 1.55, fontWeight: 500 }}>{it.insight}</p>
-          </div>
+        <p style={{ margin: "0 0 16px", color: "var(--text-muted)", lineHeight: 1.55 }}>{it.dream}</p>
+        <div style={{ padding: "16px 18px", borderRadius: 16, background: "var(--paper-100)", border: "1px solid var(--border-subtle)" }}>
+          <p style={{ margin: "0 0 6px", fontSize: "0.75rem", fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--text-strong)", display: "flex", alignItems: "center", gap: 6 }}>
+            <span aria-hidden="true" style={{ color: "var(--cyan-500)" }}>✦</span>Инсайт
+          </p>
+          <p style={{ margin: 0, color: "var(--text-body)", lineHeight: 1.55, fontWeight: 500 }}>{it.insight}</p>
         </div>
-      )}
+      </div>
     </Card>
   );
 }
