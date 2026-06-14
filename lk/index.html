@@ -1941,11 +1941,7 @@ const TARIFFS = [
 const SEED_HISTORY = [];
 
 function loadState() {
-  try {
-    const raw = localStorage.getItem(LS_KEY);
-    if (raw) return JSON.parse(raw);
-  } catch (e) {}
-  return { balance: 12 };
+  return {};
 }
 
 // Prefer inlined data-URI assets (for offline/standalone), fall back to file paths.
@@ -2141,9 +2137,9 @@ function HistoryItem({ it }) {
       <div style={{ padding: "22px 26px" }}>
         <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 12 }}>
           <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--text-faint)", letterSpacing: "0.04em", textTransform: "uppercase", flexShrink: 0 }}>{it.date}</span>
-          <h3 style={{ margin: 0, fontSize: "1.15rem", fontWeight: 800, color: "var(--text-strong)" }}>{it.title}</h3>
+          <h3 style={{ margin: 0, fontSize: "1.15rem", fontWeight: 800, color: "var(--text-strong)" }}>{it.dream_title}</h3>
         </div>
-        <p style={{ margin: "0 0 16px", color: "var(--text-muted)", lineHeight: 1.55 }}>{it.dream}</p>
+        <p style={{ margin: "0 0 16px", color: "var(--text-muted)", lineHeight: 1.55 }}>{it.dream_description}</p>
         <div style={{ padding: "16px 18px", borderRadius: 16, background: "var(--paper-100)", border: "1px solid var(--border-subtle)" }}>
           <p style={{ margin: "0 0 6px", fontSize: "0.75rem", fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--text-strong)", display: "flex", alignItems: "center", gap: 6 }}>
             <span aria-hidden="true" style={{ color: "var(--cyan-500)" }}>✦</span>Инсайт
@@ -2165,43 +2161,19 @@ function Field({ label, children }) {
 }
 
 /* ---------- Dream dialogue engine ---------- */
-function detectSymbol(text) {
-  const t = (text || "").toLowerCase();
-  if (t.includes("вод") || t.includes("море") || t.includes("река") || t.includes("тон")) return "Вода";
-  if (t.includes("дом") || t.includes("комнат") || t.includes("двер")) return "Дом";
-  if (t.includes("лет") || t.includes("полёт") || t.includes("полет") || t.includes("паде")) return "Полёт";
-  if (t.includes("луна") || t.includes("ноч") || t.includes("звёзд") || t.includes("звезд")) return "Луна";
-  if (t.includes("лес") || t.includes("дерев") || t.includes("чащ")) return "Лес";
-  return "Дорога";
-}
+const API_BASE = 'https://api.analysedreams.ru';
 
-const SYMBOL_INSIGHT = {
-  "Вода": "сильные чувства просятся, чтобы их признали, а не сдерживали — стоит дать им место наяву.",
-  "Дом": "вы перестраиваете внутреннее пространство и впускаете в себя стороны, которых раньше избегали.",
-  "Полёт": "вам важно вернуть ощущение свободы и опоры — там, где сейчас вы держитесь слишком крепко.",
-  "Луна": "вы готовы прислушаться к интуиции там, где логика молчит, и довериться неочевидному.",
-  "Лес": "неизвестность, через которую вы идёте, — это часть пути, а не тупик; в ней есть ориентиры.",
-  "Дорога": "вы уже в движении к важному выбору, даже если цель пока в тумане — направление верное.",
-};
-
-const TITLE = { "Вода": "Вода и глубина", "Дом": "Дом и пространство", "Полёт": "Полёт", "Луна": "Луна", "Лес": "Лес", "Дорога": "Дорога" };
-
-// Bot turns 1..3 ask, turn 4 delivers the insight. Returns {text, final, data?}.
-function botTurn(stage, symbol) {
-  if (stage === 1) {
-    return { text: `Вижу здесь сильный образ — «${symbol.toLowerCase()}», и рядом ещё мотивы порога и тени. Прежде чем идти глубже: какое чувство во сне было самым сильным?` };
+async function callAnalyse(email, apiMsgs, isEnded) {
+  const res = await fetch(`${API_BASE}/analyse/run`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, dream_title: '', is_ended: isEnded, messages: apiMsgs }),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw Object.assign(new Error(body.detail || `HTTP ${res.status}`), { status: res.status });
   }
-  if (stage === 2) {
-    return { text: "Спасибо, это важный ключ. А где наяву — в эти дни — вы встречаете похожее чувство или похожую ситуацию?" };
-  }
-  if (stage === 3) {
-    return { text: `Звучит честно. Последний вопрос перед итогом: если бы «${symbol.toLowerCase()}» из сна могло обратиться к вам, что бы оно попросило вас заметить?` };
-  }
-  // stage 4 → insight
-  return {
-    final: true,
-    text: `Кажется, мы нащупали суть: ${SYMBOL_INSIGHT[symbol]} Это не финальная истина, а опора — с ней можно жить дальше и наблюдать.`,
-  };
+  return res.json();
 }
 
 function Bubble({ from, children }) {
@@ -2241,74 +2213,72 @@ function DepthMeter({ stage }) {
   );
 }
 
-function DreamChat({ open, balance, onClose, onStart, onComplete, onGoTopUp, initialDream }) {
+function DreamChat({ open, balance, onClose, onStart, onComplete, onGoTopUp, onBalanceUpdate, initialDream, email }) {
   const greeting = { from: "bot", node: <span>Привет! Расскажите свой сон в нескольких предложениях — а дальше мы разберём его в диалоге: я буду задавать вопросы, вы можете отвечать или спрашивать в ответ, пока не придём к инсайту.</span> };
   const [msgs, setMsgs] = useState([greeting]);
+  const [apiMsgs, setApiMsgs] = useState([]);
   const [text, setText] = useState("");
   const [typing, setTyping] = useState(false);
-  const [stage, setStage] = useState(0);     // 0 = no dream yet; 1..3 dialogue; 4 = insight
-  const [symbol, setSymbol] = useState(null);
+  const [stage, setStage] = useState(0);
   const [done, setDone] = useState(false);
-  const [entry, setEntry] = useState(null);  // built once at start, finalized at insight
+  const [entry, setEntry] = useState(null);
   const scroller = useRef(null);
 
   useEffect(() => {
-    if (open) { setMsgs([greeting]); setText(initialDream || ""); setTyping(false); setStage(0); setSymbol(null); setDone(false); setEntry(null); }
+    if (open) { setMsgs([greeting]); setText(initialDream || ""); setTyping(false); setStage(0); setDone(false); setEntry(null); setApiMsgs([]); }
   }, [open]);
   useEffect(() => { if (scroller.current) scroller.current.scrollTop = scroller.current.scrollHeight; }, [msgs, typing]);
 
   if (!open) return null;
   const noBalance = balance <= 0 && stage === 0;
 
-  function pushBot(stageForTurn, sym, draftEntry) {
+  async function runTurn(newApiMsgs, isEnded) {
     setTyping(true);
-    setTimeout(() => {
-      const turn = botTurn(stageForTurn, sym);
+    try {
+      const data = await callAnalyse(email, newApiMsgs, isEnded);
       setTyping(false);
-      if (turn.final) {
-        setMsgs((m) => [...m, { from: "bot", node: <InsightBubble text={turn.text} /> }]);
+      const result = data.result;
+      const botText = result.messages[result.messages.length - 1].content;
+      setApiMsgs([...newApiMsgs, { role: 'assistant', content: botText }]);
+
+      const isInsight = isEnded || newApiMsgs.length >= 7;
+      if (isInsight) {
+        setMsgs((m) => [...m, { from: "bot", node: <InsightBubble text={botText} /> }]);
         setStage(4);
         setDone(true);
-        const finalEntry = { ...draftEntry, insight: SYMBOL_INSIGHT[sym], turns: stageForTurn };
-        onComplete(finalEntry);
+        onComplete({ ...(entry || {}), title: result.dream_title || todayLabel(), insight: botText });
+        if (onBalanceUpdate) onBalanceUpdate(data.dreams_balance);
       } else {
-        setMsgs((m) => [...m, { from: "bot", node: <span>{turn.text}</span> }]);
-        setStage(stageForTurn);
+        setMsgs((m) => [...m, { from: "bot", node: <span>{botText}</span> }]);
+        setStage((s) => s + 1);
       }
-    }, 1000);
+    } catch (err) {
+      setTyping(false);
+      if (err.status === 402) onGoTopUp();
+    }
   }
 
   function send() {
     const value = text.trim();
     if (!value || typing || done) return;
+    if (stage === 0 && balance <= 0) return;
 
-    // First message = the dream → opens the session (charges 1 разбор)
+    const newApiMsgs = [...apiMsgs, { role: 'user', content: value }];
+    setApiMsgs(newApiMsgs);
+    setMsgs((m) => [...m, { from: "me", node: <span>{value}</span> }]);
+    setText("");
+
     if (stage === 0) {
-      if (balance <= 0) return;
-      const sym = detectSymbol(value);
-      const draft = { id: Date.now(), date: todayLabel(), title: TITLE[sym], dream: value, symbols: [sym, "Порог", "Тень"], emotion: "—" };
-      setSymbol(sym);
-      setEntry(draft);
-      setMsgs((m) => [...m, { from: "me", node: <span>{value}</span> }]);
-      setText("");
       onStart();
-      pushBot(1, sym, draft);
-      return;
+      setEntry({ id: Date.now(), date: todayLabel(), dream: value });
     }
 
-    // Subsequent answers / questions deepen the dialogue
-    const nextStage = stage + 1;
-    setMsgs((m) => [...m, { from: "me", node: <span>{value}</span> }]);
-    // remember the user's first answer as the emotional tone
-    const draft = stage === 1 ? { ...entry, emotion: value.length > 60 ? value.slice(0, 57) + "…" : value } : entry;
-    if (stage === 1) setEntry(draft);
-    setText("");
-    pushBot(nextStage, symbol, draft);
+    runTurn(newApiMsgs, false);
   }
 
   function summarizeNow() {
     if (typing || done || stage === 0) return;
-    pushBot(4, symbol, entry);
+    runTurn(apiMsgs, true);
   }
 
   const examples = ["Я шёл по дороге к огромной луне над полем", "Снилось, что я тону в спокойной воде", "Летал над домом детства"];
@@ -2458,7 +2428,7 @@ Object.assign(window, { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCa
       const [authLoading, setAuthLoading] = useState(true);
       const initial = loadState();
       const [tab, setTab] = useState("cabinet");
-      const [balance, setBalance] = useState(initial.balance);
+      const [balance, setBalance] = useState(0);
       const [history, setHistory] = useState(SEED_HISTORY);
       const [chatOpen, setChatOpen] = useState(false);
       const [toast, setToast] = useState("");
@@ -2472,6 +2442,13 @@ Object.assign(window, { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCa
         const { data: { subscription } } = window._supabase.auth.onAuthStateChange((_event, session) => {
           setUser(session?.user ?? null);
           setAuthLoading(false);
+          if (_event === 'SIGNED_IN' && session?.user?.email) {
+            fetch('http://89.124.95.228:8100/user/register', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email: session.user.email })
+            }).catch(() => {});
+          }
         });
         return () => subscription.unsubscribe();
       }, []);
@@ -2492,8 +2469,17 @@ Object.assign(window, { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCa
       }, [user]);
 
       useEffect(() => {
-        try { localStorage.setItem(LS_KEY, JSON.stringify({ balance })); } catch (e) {}
-      }, [balance]);
+        if (!user?.email) return;
+        fetch(`http://89.124.95.228:8100/history/?email=${encodeURIComponent(user.email)}`)
+          .then(r => r.ok ? r.json() : [])
+          .then(data => { if (Array.isArray(data)) setHistory(data); })
+          .catch(() => {});
+        fetch(`http://89.124.95.228:8100/payment/balance?email=${encodeURIComponent(user.email)}`)
+          .then(r => r.ok ? r.json() : null)
+          .then(data => { if (data?.dreams_balance != null) setBalance(data.dreams_balance); })
+          .catch(() => {});
+      }, [user]);
+
 
       if (authLoading) return (
         <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-wash)', color: 'var(--text-muted)', fontFamily: 'var(--font-sans)' }}>
@@ -2522,9 +2508,8 @@ Object.assign(window, { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCa
       function completeAnalysis(entry) {
         setHistory((h) => [entry, ...h]);
       }
-      function startAnalysis() {
-        setBalance((b) => Math.max(0, b - 1));
-      }
+      function startAnalysis() {}
+      function updateBalance(b) { setBalance(b); }
       function goTopUp() {
         setChatOpen(false);
         setTab("cabinet");
@@ -2546,7 +2531,7 @@ Object.assign(window, { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCa
               <HistoryList items={history} />
             )}
           </div>
-          <DreamChat open={chatOpen} balance={balance} onClose={() => setChatOpen(false)} onStart={startAnalysis} onComplete={completeAnalysis} onGoTopUp={goTopUp} initialDream={pendingDream} />
+          <DreamChat open={chatOpen} balance={balance} onClose={() => setChatOpen(false)} onStart={startAnalysis} onComplete={completeAnalysis} onGoTopUp={goTopUp} onBalanceUpdate={updateBalance} initialDream={pendingDream} email={user.email} />
           <Toast msg={toast} />
         </React.Fragment>
       );
