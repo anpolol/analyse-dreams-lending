@@ -2447,7 +2447,10 @@ Object.assign(window, { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCa
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ email: session.user.email })
-            }).catch(() => {});
+            })
+              .then(r => r.ok ? r.json() : null)
+              .then(data => { if (data?.dreams_balance != null) setBalance(data.dreams_balance); })
+              .catch(() => {});
           }
         });
         return () => subscription.unsubscribe();
@@ -2473,10 +2476,6 @@ Object.assign(window, { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCa
         fetch(`http://89.124.95.228:8100/history/?email=${encodeURIComponent(user.email)}`)
           .then(r => r.ok ? r.json() : [])
           .then(data => { if (Array.isArray(data)) setHistory(data); })
-          .catch(() => {});
-        fetch(`http://89.124.95.228:8100/payment/balance?email=${encodeURIComponent(user.email)}`)
-          .then(r => r.ok ? r.json() : null)
-          .then(data => { if (data?.dreams_balance != null) setBalance(data.dreams_balance); })
           .catch(() => {});
       }, [user]);
 
