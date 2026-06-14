@@ -1903,11 +1903,16 @@ function Field({ label, children }) {
 /* ---------- Dream dialogue engine ---------- */
 const API_BASE = 'https://api.analysedreams.ru';
 
-async function callAnalyse(email, apiMsgs, isEnded) {
+async function authHeaders() {
+  const { data: { session } } = await window._supabase.auth.getSession();
+  return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` };
+}
+
+async function callAnalyse(apiMsgs, isEnded) {
   const res = await fetch(`${API_BASE}/analyse/run`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, dream_title: '', is_ended: isEnded, messages: apiMsgs }),
+    headers: await authHeaders(),
+    body: JSON.stringify({ dream_title: '', is_ended: isEnded, messages: apiMsgs }),
   });
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
@@ -1976,7 +1981,7 @@ function DreamChat({ open, balance, onClose, onStart, onComplete, onGoTopUp, onB
   async function runTurn(newApiMsgs, isEnded) {
     setTyping(true);
     try {
-      const data = await callAnalyse(email, newApiMsgs, isEnded);
+      const data = await callAnalyse(newApiMsgs, isEnded);
       setTyping(false);
       const result = data.result;
       let botText = result.messages[result.messages.length - 1].content;
@@ -2204,15 +2209,14 @@ Object.assign(window, { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCa
           setAuthLoading(false);
           if (session?.user?.email) {
             const email = session.user.email;
-            fetch('https://api.analysedreams.ru/user/register', {
+            authHeaders().then(headers => fetch('https://api.analysedreams.ru/user/register', {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ email })
-            })
+              headers,
+            }))
               .then(r => r.ok ? r.json() : null)
-              .then(data => {
+              .then(async data => {
                 if (data?.dreams_balance != null) setBalance(data.dreams_balance);
-                return fetch(`https://api.analysedreams.ru/history/?email=${encodeURIComponent(email)}`);
+                return fetch('https://api.analysedreams.ru/history/', { headers: await authHeaders() });
               })
               .then(r => r.ok ? r.json() : [])
               .then(data => { if (Array.isArray(data)) setHistory(data); })
@@ -2263,7 +2267,7 @@ Object.assign(window, { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCa
         await window._supabase.auth.signOut();
       }
       function completeAnalysis() {
-        fetch(`https://api.analysedreams.ru/history/?email=${encodeURIComponent(user.email)}`)
+        authHeaders().then(headers => fetch('https://api.analysedreams.ru/history/', { headers }))
           .then(r => r.ok ? r.json() : [])
           .then(data => { if (Array.isArray(data)) setHistory(data); })
           .catch(() => {});
