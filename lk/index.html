@@ -2222,10 +2222,11 @@ function DreamChat({ open, balance, onClose, onStart, onComplete, onGoTopUp, onB
   const [stage, setStage] = useState(0);
   const [done, setDone] = useState(false);
   const [entry, setEntry] = useState(null);
+  const [errMsg, setErrMsg] = useState("");
   const scroller = useRef(null);
 
   useEffect(() => {
-    if (open) { setMsgs([greeting]); setText(initialDream || ""); setTyping(false); setStage(0); setDone(false); setEntry(null); setApiMsgs([]); }
+    if (open) { setMsgs([greeting]); setText(initialDream || ""); setTyping(false); setStage(0); setDone(false); setEntry(null); setApiMsgs([]); setErrMsg(""); }
   }, [open]);
   useEffect(() => { if (scroller.current) scroller.current.scrollTop = scroller.current.scrollHeight; }, [msgs, typing]);
 
@@ -2254,7 +2255,9 @@ function DreamChat({ open, balance, onClose, onStart, onComplete, onGoTopUp, onB
       }
     } catch (err) {
       setTyping(false);
+      console.error("analyse/run error:", err);
       if (err.status === 402) onGoTopUp();
+      else setErrMsg(err.message || "Ошибка соединения с сервером. Попробуйте ещё раз.");
     }
   }
 
@@ -2302,6 +2305,9 @@ function DreamChat({ open, balance, onClose, onStart, onComplete, onGoTopUp, onB
         <div ref={scroller} style={{ flex: 1, overflowY: "auto", padding: 18, display: "flex", flexDirection: "column", gap: 12 }}>
           {msgs.map((m, i) => <Bubble key={i} from={m.from}>{m.node}</Bubble>)}
           {typing && <Bubble from="bot"><span style={{ color: "var(--text-muted)" }}>печатает…</span></Bubble>}
+          {errMsg && (
+            <div style={{ padding: "10px 14px", borderRadius: 12, background: "rgba(194,86,107,0.10)", border: "1px solid rgba(194,86,107,0.3)", color: "var(--danger-500)", fontSize: "0.86rem", lineHeight: 1.4 }}>⚠ {errMsg}</div>
+          )}
           {stage === 0 && !typing && !noBalance && (
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 4 }}>
               {examples.map((e) => <button key={e} onClick={() => setText(e)} style={{ textAlign: "left", border: "1px solid var(--border-subtle)", background: "var(--paper-000)", color: "var(--text-body)", borderRadius: 14, padding: "8px 12px", fontSize: "0.82rem", cursor: "pointer", fontFamily: "var(--font-sans)" }}>{e}</button>)}
@@ -2443,13 +2449,19 @@ Object.assign(window, { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCa
           setUser(session?.user ?? null);
           setAuthLoading(false);
           if (session?.user?.email) {
+            const email = session.user.email;
             fetch('https://api.analysedreams.ru/user/register', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ email: session.user.email })
+              body: JSON.stringify({ email })
             })
               .then(r => r.ok ? r.json() : null)
-              .then(data => { if (data?.dreams_balance != null) setBalance(data.dreams_balance); })
+              .then(data => {
+                if (data?.dreams_balance != null) setBalance(data.dreams_balance);
+                return fetch(`https://api.analysedreams.ru/history/?email=${encodeURIComponent(email)}`);
+              })
+              .then(r => r.ok ? r.json() : [])
+              .then(data => { if (Array.isArray(data)) setHistory(data); })
               .catch(() => {});
           }
         });
@@ -2469,14 +2481,6 @@ Object.assign(window, { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCa
             localStorage.removeItem('ad_landing_context');
           }
         } catch (e) {}
-      }, [user]);
-
-      useEffect(() => {
-        if (!user?.email) return;
-        fetch(`https://api.analysedreams.ru/history/?email=${encodeURIComponent(user.email)}`)
-          .then(r => r.ok ? r.json() : [])
-          .then(data => { if (Array.isArray(data)) setHistory(data); })
-          .catch(() => {});
       }, [user]);
 
 
