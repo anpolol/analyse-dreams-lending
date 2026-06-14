@@ -2443,7 +2443,7 @@ Object.assign(window, { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCa
           setUser(session?.user ?? null);
           setAuthLoading(false);
           if (session?.user?.email) {
-            fetch('http://89.124.95.228:8100/user/register', {
+            fetch('https://api.analysedreams.ru/user/register', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ email: session.user.email })
@@ -2473,7 +2473,7 @@ Object.assign(window, { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCa
 
       useEffect(() => {
         if (!user?.email) return;
-        fetch(`http://89.124.95.228:8100/history/?email=${encodeURIComponent(user.email)}`)
+        fetch(`https://api.analysedreams.ru/history/?email=${encodeURIComponent(user.email)}`)
           .then(r => r.ok ? r.json() : [])
           .then(data => { if (Array.isArray(data)) setHistory(data); })
           .catch(() => {});
