@@ -2262,8 +2262,11 @@ Object.assign(window, { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCa
       async function signOut() {
         await window._supabase.auth.signOut();
       }
-      function completeAnalysis(entry) {
-        setHistory((h) => [entry, ...h]);
+      function completeAnalysis() {
+        fetch(`https://api.analysedreams.ru/history/?email=${encodeURIComponent(user.email)}`)
+          .then(r => r.ok ? r.json() : [])
+          .then(data => { if (Array.isArray(data)) setHistory(data); })
+          .catch(() => {});
       }
       function startAnalysis() {}
       function updateBalance(b) { setBalance(b); }
