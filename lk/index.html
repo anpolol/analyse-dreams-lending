@@ -1903,9 +1903,12 @@ function Field({ label, children }) {
 /* ---------- Dream dialogue engine ---------- */
 const API_BASE = 'https://api.analysedreams.ru';
 
-async function authHeaders() {
-  const { data: { session } } = await window._supabase.auth.getSession();
-  return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` };
+async function authHeaders(token) {
+  if (!token) {
+    const { data: { session } } = await window._supabase.auth.getSession();
+    token = session?.access_token;
+  }
+  return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
 }
 
 async function callAnalyse(apiMsgs, isEnded) {
@@ -2207,16 +2210,16 @@ Object.assign(window, { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCa
         const { data: { subscription } } = window._supabase.auth.onAuthStateChange((_event, session) => {
           setUser(session?.user ?? null);
           setAuthLoading(false);
-          if (session?.user?.email) {
-            const email = session.user.email;
-            authHeaders().then(headers => fetch('https://api.analysedreams.ru/user/register', {
+          if (session?.access_token) {
+            const token = session.access_token;
+            authHeaders(token).then(headers => fetch('https://api.analysedreams.ru/user/register', {
               method: 'POST',
               headers,
             }))
               .then(r => r.ok ? r.json() : null)
               .then(async data => {
                 if (data?.dreams_balance != null) setBalance(data.dreams_balance);
-                return fetch('https://api.analysedreams.ru/history/', { headers: await authHeaders() });
+                return fetch('https://api.analysedreams.ru/history/', { headers: await authHeaders(token) });
               })
               .then(r => r.ok ? r.json() : [])
               .then(data => { if (Array.isArray(data)) setHistory(data); })
