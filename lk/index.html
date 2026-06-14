@@ -322,24 +322,7 @@ var _React = React,
 var IMG = "..";
 var DECOR = "..";
 var LS_KEY = "ad_lk_state_v1";
-var TARIFFS = [{
-  id: "s",
-  count: 5,
-  price: 150,
-  note: "30 ₽ за разбор"
-}, {
-  id: "m",
-  count: 20,
-  price: 500,
-  note: "25 ₽ за разбор",
-  popular: true
-}, {
-  id: "l",
-  count: 50,
-  price: 1000,
-  note: "20 ₽ за разбор",
-  best: true
-}];
+var TARIFFS = [];
 var SEED_HISTORY = [];
 function loadState() {
   try {
@@ -581,6 +564,7 @@ function BalanceCard(_ref4) {
 /* ---------- Tariffs ---------- */
 function TariffGrid(_ref5) {
   var onBuy = _ref5.onBuy;
+  var tariffs = _ref5.tariffs || TARIFFS;
   return /*#__PURE__*/React.createElement("section", null, /*#__PURE__*/React.createElement(SectionHead, {
     eyebrow: "\u041F\u043E\u043F\u043E\u043B\u043D\u0438\u0442\u044C \u0431\u0430\u043B\u0430\u043D\u0441",
     title: "\u0412\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u043F\u0430\u043A\u0435\u0442 \u0440\u0430\u0437\u0431\u043E\u0440\u043E\u0432"
@@ -590,7 +574,7 @@ function TariffGrid(_ref5) {
       gridTemplateColumns: "repeat(3, minmax(0,1fr))",
       gap: 18
     }
-  }, TARIFFS.map(function (t) {
+  }, tariffs.map(function (t) {
     return /*#__PURE__*/React.createElement(TariffCard, {
       key: t.id,
       t: t,
@@ -1692,11 +1676,7 @@ const IMG = "..";
 const DECOR = "..";
 const LS_KEY = "ad_lk_state_v1";
 
-const TARIFFS = [
-  { id: "s", count: 5, price: 150, note: "30 ₽ за разбор" },
-  { id: "m", count: 20, price: 500, note: "25 ₽ за разбор", popular: true },
-  { id: "l", count: 50, price: 1000, note: "20 ₽ за разбор", best: true },
-];
+const TARIFFS = [];
 
 const SEED_HISTORY = [];
 
@@ -1796,12 +1776,12 @@ function BalanceCard({ balance, onAnalyze }) {
 }
 
 /* ---------- Tariffs ---------- */
-function TariffGrid({ onBuy }) {
+function TariffGrid({ onBuy, tariffs }) {
   return (
     <section>
       <SectionHead eyebrow="Пополнить баланс" title="Выберите пакет разборов" />
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0,1fr))", gap: 18 }}>
-        {TARIFFS.map((t) => <TariffCard key={t.id} t={t} onBuy={onBuy} />)}
+        {tariffs.map((t) => <TariffCard key={t.id} t={t} onBuy={onBuy} />)}
       </div>
     </section>
   );
@@ -2194,9 +2174,17 @@ Object.assign(window, { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCa
       const [tab, setTab] = useState("cabinet");
       const [balance, setBalance] = useState(0);
       const [history, setHistory] = useState(SEED_HISTORY);
+      const [tariffs, setTariffs] = useState(TARIFFS);
       const [chatOpen, setChatOpen] = useState(false);
       const [toast, setToast] = useState("");
       const [pendingDream, setPendingDream] = useState("");
+
+      useEffect(() => {
+        fetch('https://api.analysedreams.ru/tariffs/')
+          .then(r => r.ok ? r.json() : null)
+          .then(data => { if (Array.isArray(data)) setTariffs(data); })
+          .catch(() => {});
+      }, []);
 
       useEffect(() => {
         window._supabase.auth.getSession().then(({ data: { session } }) => {
@@ -2285,7 +2273,7 @@ Object.assign(window, { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCa
             {tab === "cabinet" ? (
               <div className="lk-stack">
                 <BalanceCard balance={balance} onAnalyze={() => setChatOpen(true)} />
-                <TariffGrid onBuy={buyTariff} />
+                <TariffGrid onBuy={buyTariff} tariffs={tariffs} />
                 <NotebookCard onGet={getNotebook} />
               </div>
             ) : (
