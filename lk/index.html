@@ -1979,7 +1979,8 @@ function DreamChat({ open, balance, onClose, onStart, onComplete, onGoTopUp, onB
       const data = await callAnalyse(email, newApiMsgs, isEnded);
       setTyping(false);
       const result = data.result;
-      const botText = result.messages[result.messages.length - 1].content;
+      let botText = result.messages[result.messages.length - 1].content;
+      try { const p = JSON.parse(botText); if (p.insight) botText = p.insight; } catch (e) {}
       setApiMsgs([...newApiMsgs, { role: 'assistant', content: botText }]);
 
       const isInsight = isEnded || newApiMsgs.length >= 7;

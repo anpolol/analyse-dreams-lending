@@ -402,7 +402,9 @@
         var msgs = data.result && data.result.messages;
         var last = msgs && msgs[msgs.length - 1];
         if (last && last.content) {
-          var paras = last.content.split('\n\n').map(function (p) {
+          var content = last.content;
+          try { var parsed = JSON.parse(content); if (parsed.insight) content = parsed.insight; } catch (e) {}
+          var paras = content.split('\n\n').map(function (p) {
             return '<p style="margin:0 0 10px 0">' + esc(p) + '</p>';
           }).join('');
           addBubble('bot', '<div>' + paras + '</div>');
