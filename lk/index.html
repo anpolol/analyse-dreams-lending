@@ -2044,8 +2044,10 @@ function DreamChat({ open, balance, onClose, onStart, onComplete, onGoTopUp, onB
     runTurn(apiMsgs, true);
   }
 
+  const hasSent = msgs.some(m => m.from === "me");
+
   return (
-    <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 70, background: "rgba(11,20,38,0.62)", backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+    <div onClick={hasSent ? undefined : onClose} style={{ position: "fixed", inset: 0, zIndex: 70, background: "rgba(11,20,38,0.62)", backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
       <div onClick={(e) => e.stopPropagation()} style={{ width: "min(480px, 100%)", height: "min(700px, 92vh)", background: "var(--surface-soft)", borderRadius: 28, overflow: "hidden", boxShadow: "var(--shadow-xl)", display: "flex", flexDirection: "column" }}>
         {/* Header */}
         <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 18px", background: "var(--navy-800)", color: "#f9ffff" }}>
@@ -2056,7 +2058,9 @@ function DreamChat({ open, balance, onClose, onStart, onComplete, onGoTopUp, onB
               ? <p style={{ margin: 0, fontSize: "0.8rem", color: "rgba(249,255,255,0.7)" }}>В балансе: {balance} {plural(balance, "разбор", "разбора", "разборов")}</p>
               : <DepthMeter stage={stage} />}
           </div>
-          <button onClick={onClose} aria-label="Закрыть" style={{ background: "rgba(255,255,255,0.1)", border: "none", color: "#f9ffff", width: 32, height: 32, borderRadius: 999, cursor: "pointer", fontSize: 18, lineHeight: 1 }}>×</button>
+          {!hasSent && (
+            <button onClick={onClose} aria-label="Закрыть" style={{ background: "rgba(255,255,255,0.1)", border: "none", color: "#f9ffff", width: 32, height: 32, borderRadius: 999, cursor: "pointer", fontSize: 18, lineHeight: 1 }}>×</button>
+          )}
         </div>
 
         {/* Messages */}
