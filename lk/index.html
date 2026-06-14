@@ -1876,7 +1876,7 @@ function HistoryItem({ it }) {
     <Card variant="raised" padding={0} style={{ overflow: "hidden" }}>
       <div style={{ padding: "22px 26px" }}>
         <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 12 }}>
-          <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--text-faint)", letterSpacing: "0.04em", textTransform: "uppercase", flexShrink: 0 }}>{it.date}</span>
+          <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--text-faint)", letterSpacing: "0.04em", textTransform: "uppercase", flexShrink: 0 }}>{formatDate(it.date)}</span>
           <h3 style={{ margin: 0, fontSize: "1.15rem", fontWeight: 800, color: "var(--text-strong)" }}>{it.dream_title}</h3>
         </div>
         <p style={{ margin: "0 0 16px", color: "var(--text-muted)", lineHeight: 1.55 }}>{it.dream_description}</p>
@@ -2087,6 +2087,13 @@ function todayLabel() {
   const M = ["января","февраля","марта","апреля","мая","июня","июля","августа","сентября","октября","ноября","декабря"];
   const d = new Date();
   return d.getDate() + " " + M[d.getMonth()];
+}
+
+function formatDate(raw) {
+  const M = ["января","февраля","марта","апреля","мая","июня","июля","августа","сентября","октября","ноября","декабря"];
+  const d = new Date(raw);
+  if (isNaN(d)) return raw;
+  return d.getDate() + " " + M[d.getMonth()] + " " + d.getFullYear();
 }
 
 /* ---------- Toast ---------- */
