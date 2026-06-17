@@ -356,7 +356,7 @@
   <script type="text/babel">/* global React, DesignSystem_041ca9 */
 // Личный кабинет «Анализ снов» — sections & guided dream-dialogue.
 const { Button, GhostButton, Eyebrow, Badge, Card, Input, Sparkle } = window.DesignSystem_041ca9;
-const { useState, useEffect, useRef } = React;
+const { useState, useEffect, useLayoutEffect, useRef } = React;
 
 const IMG = "..";
 const DECOR = "..";
@@ -441,97 +441,134 @@ function Tabs({ value, onChange }) {
 }
 
 /* ---------- Archetypes / Constellation ---------- */
-// Deterministic scatter across the card using the golden angle — looks like a star field,
-// but stays stable across re-renders since it only depends on index/count.
-function archetypeLayout(count) {
-  const GOLDEN_ANGLE = 137.508;
-  return Array.from({ length: count }).map((_, i) => {
-    const t = count <= 1 ? 0 : i / (count - 1);
-    const angle = (i * GOLDEN_ANGLE) % 360;
-    const radius = 16 + t * 34;
-    const rad = (angle * Math.PI) / 180;
-    return {
-      x: 50 + radius * Math.cos(rad),
-      y: 50 + radius * Math.sin(rad) * 0.72,
-    };
-  });
-}
+// Small fixed dots scattered inside a locked card to sell the "night sky" veil look.
+const VEIL_DOTS = [
+  { left: "14%", top: "20%" }, { right: "16%", top: "30%" },
+  { right: "20%", bottom: "18%" }, { left: "22%", bottom: "14%" },
+];
 
-function ArchetypeCard({ symbol, pos, onSelect }) {
+function ArchetypeCard({ symbol, onSelect, cardRef }) {
   const locked = !symbol.is_revealed;
   return (
-    <button
-      onClick={() => !locked && onSelect(symbol.id)}
-      title={locked ? "Раскрывается во время разбора сна" : symbol.name}
-      style={{
-        position: "absolute", left: `${pos.x}%`, top: `${pos.y}%`, transform: "translate(-50%, -50%)",
-        display: "flex", flexDirection: "column", alignItems: "center", gap: 6,
-        border: "none", background: "transparent", cursor: locked ? "default" : "pointer", padding: 0, width: 88,
-      }}
-    >
-      <span style={{
-        width: 56, height: 56, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center",
-        background: locked ? "rgba(249,255,255,0.06)" : "var(--paper-050)",
-        border: locked ? "1.5px dashed rgba(249,255,255,0.3)" : "2px solid var(--cyan-300)",
-        boxShadow: locked ? "none" : "var(--shadow-glow)",
-        overflow: "hidden", flexShrink: 0,
-      }}>
+    <div ref={cardRef} style={{ width: 192, display: "flex", flexDirection: "column", gap: 12 }}>
+      <button
+        onClick={() => !locked && onSelect(symbol.id)}
+        disabled={locked}
+        title={locked ? symbol.name : symbol.name}
+        style={{
+          position: "relative", width: "100%", height: 160, padding: 0, overflow: "hidden",
+          borderRadius: "var(--radius-xl)", cursor: locked ? "default" : "pointer",
+          border: locked ? "1.5px dashed rgba(249,255,255,0.32)" : "none",
+          background: locked ? "rgba(249,255,255,0.05)" : "var(--paper-000)",
+          boxShadow: locked ? "none" : "var(--shadow-lg)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+        }}
+      >
         {locked ? (
-          <span style={{ color: "rgba(249,255,255,0.45)", fontSize: "1.1rem" }}>?</span>
+          <React.Fragment>
+            {VEIL_DOTS.map((d, i) => (
+              <span key={i} style={{ position: "absolute", ...d, width: 3, height: 3, borderRadius: 999, background: "rgba(249,255,255,0.4)" }} />
+            ))}
+            <span style={{ color: "var(--cyan-300)", fontSize: "1.7rem" }}>✦</span>
+          </React.Fragment>
         ) : symbol.image_url ? (
           <img src={symbol.image_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
         ) : (
-          <span style={{ color: "var(--navy-800)", fontSize: "1.3rem" }}>✦</span>
+          <span style={{ color: "var(--navy-800)", fontSize: "1.7rem" }}>✦</span>
         )}
-      </span>
-      <span style={{
-        fontSize: "0.72rem", fontWeight: 700, textAlign: "center", lineHeight: 1.2,
-        color: locked ? "rgba(249,255,255,0.35)" : "rgba(249,255,255,0.92)",
-        whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 88,
-      }}>
-        {locked ? "?" : symbol.name}
-      </span>
-      {!locked && symbol.dreams.length > 0 && (
-        <span style={{
-          fontSize: "0.66rem", fontWeight: 700, color: "var(--navy-800)", background: "var(--cyan-300)",
-          borderRadius: 999, padding: "1px 7px",
+      </button>
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
+        <p style={{ margin: 0, fontWeight: 800, fontSize: "1.02rem", color: "rgba(249,255,255,0.95)" }}>{symbol.name}</p>
+        {!locked && symbol.dreams.length > 0 && (
+          <span style={{
+            flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 4,
+            fontSize: "0.78rem", fontWeight: 700, color: "var(--navy-800)", background: "var(--cyan-300)",
+            borderRadius: 999, padding: "3px 9px",
+          }}>
+            ✦ {symbol.dreams.length}
+          </span>
+        )}
+      </div>
+      {locked && (
+        <p style={{
+          margin: 0, color: "rgba(249,255,255,0.55)", fontSize: "0.86rem", lineHeight: 1.4,
+          display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden",
         }}>
-          {symbol.dreams.length}
-        </span>
+          {symbol.description}
+        </p>
       )}
-    </button>
+    </div>
+  );
+}
+
+// Decorative-only slot: hints that more (unnamed) archetypes wait beyond the named set.
+function MysteryArchetypeCard() {
+  return (
+    <div style={{ width: 192, display: "flex", flexDirection: "column", gap: 12 }}>
+      <div style={{
+        position: "relative", width: "100%", height: 160, borderRadius: "var(--radius-xl)", overflow: "hidden",
+        border: "1.5px dashed rgba(143,214,232,0.65)", background: "rgba(249,255,255,0.05)",
+        boxShadow: "var(--shadow-glow)", display: "flex", alignItems: "center", justifyContent: "center",
+      }}>
+        {VEIL_DOTS.map((d, i) => (
+          <span key={i} style={{ position: "absolute", ...d, width: 3, height: 3, borderRadius: 999, background: "rgba(249,255,255,0.4)" }} />
+        ))}
+        <span style={{ color: "rgba(249,255,255,0.6)", fontSize: "1.7rem", fontWeight: 800 }}>?</span>
+      </div>
+      <p style={{ margin: 0, fontWeight: 800, fontSize: "1.02rem", color: "rgba(249,255,255,0.95)" }}>Скрытый архетип</p>
+      <p style={{ margin: 0, color: "rgba(249,255,255,0.55)", fontSize: "0.86rem", lineHeight: 1.4 }}>
+        Ещё не проявился. Появится, когда сны дадут достаточно материала.
+      </p>
+    </div>
   );
 }
 
 function ConstellationGraph({ symbols, connections, onSelect }) {
-  const layout = archetypeLayout(symbols.length);
-  const posById = {};
-  symbols.forEach((s, i) => { posById[s.id] = layout[i]; });
+  const containerRef = useRef(null);
+  const cardRefs = useRef({});
+  const [lines, setLines] = useState([]);
+
+  useLayoutEffect(() => {
+    function measure() {
+      const containerEl = containerRef.current;
+      if (!containerEl) return;
+      const containerRect = containerEl.getBoundingClientRect();
+      const centers = {};
+      Object.keys(cardRefs.current).forEach((id) => {
+        const el = cardRefs.current[id];
+        if (!el) return;
+        const r = el.getBoundingClientRect();
+        centers[id] = { x: r.left + r.width / 2 - containerRect.left, y: r.top + r.height / 2 - containerRect.top };
+      });
+      setLines(connections.map((c) => {
+        const a = centers[c.a], b = centers[c.b];
+        return a && b ? { x1: a.x, y1: a.y, x2: b.x, y2: b.y, strength: c.strength } : null;
+      }).filter(Boolean));
+    }
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [symbols, connections]);
 
   return (
-    <div style={{
-      position: "relative", minHeight: 420, borderRadius: "var(--radius-2xl)", overflow: "hidden",
+    <div ref={containerRef} style={{
+      position: "relative", borderRadius: "var(--radius-2xl)", overflow: "hidden", padding: 28,
       background: "radial-gradient(circle at 30% 20%, rgba(143,214,232,0.18), transparent 55%), linear-gradient(160deg, var(--navy-900), var(--navy-800))",
       boxShadow: "var(--shadow-xl)",
     }}>
-      <DecorImg k="dotted-s" size={26} opacity={0.5} style={{ position: "absolute", left: "6%", top: "10%" }} />
-      <DecorImg k="dotted-s" size={18} opacity={0.35} style={{ position: "absolute", right: "10%", top: "68%" }} />
-      <DecorImg k="sparkle" size={22} opacity={0.55} style={{ position: "absolute", right: "18%", top: "16%" }} />
-      <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}>
-        {connections.map((c, i) => {
-          const a = posById[c.a], b = posById[c.b];
-          if (!a || !b) return null;
-          return (
-            <line
-              key={i}
-              x1={`${a.x}%`} y1={`${a.y}%`} x2={`${b.x}%`} y2={`${b.y}%`}
-              stroke="rgba(143,214,232,0.5)"
-              strokeWidth={Math.min(1 + c.strength * 0.6, 4)}
-            />
-          );
-        })}
+      <DecorImg k="dotted-s" size={20} opacity={0.4} style={{ position: "absolute", left: "4%", top: "8%" }} />
+      <DecorImg k="dotted-s" size={16} opacity={0.3} style={{ position: "absolute", right: "5%", bottom: "10%" }} />
+      <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none" }}>
+        {lines.map((l, i) => (
+          <line key={i} x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2} stroke="rgba(143,214,232,0.5)" strokeWidth={Math.min(1 + l.strength * 0.6, 4)} />
+        ))}
       </svg>
-      {symbols.map((s) => <ArchetypeCard key={s.id} symbol={s} pos={posById[s.id]} onSelect={onSelect} />)}
+      <div style={{ position: "relative", display: "flex", flexWrap: "wrap", gap: 28 }}>
+        {symbols.map((s) => (
+          <ArchetypeCard key={s.id} symbol={s} onSelect={onSelect} cardRef={(el) => { cardRefs.current[s.id] = el; }} />
+        ))}
+        <MysteryArchetypeCard />
+      </div>
     </div>
   );
 }
@@ -561,7 +598,7 @@ function ArchetypesTab({ archetypes, connections, onSelect, onModel }) {
   );
 }
 
-function ArchetypeDetail({ symbol, onClose }) {
+function ArchetypeDetail({ symbol, onClose, onOpenDream }) {
   if (!symbol) return null;
   return (
     <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 90, background: "rgba(11,20,38,0.62)", backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
@@ -581,7 +618,12 @@ function ArchetypeDetail({ symbol, onClose }) {
             <p style={{ margin: "0 0 10px", fontSize: "0.75rem", fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--text-strong)" }}>Проявления в снах</p>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {symbol.dreams.map((d, i) => (
-                <div key={i} style={{ padding: "12px 14px", borderRadius: 14, background: "var(--paper-100)", border: "1px solid var(--border-subtle)" }}>
+                <div
+                  key={i}
+                  onClick={() => onOpenDream(d.dream_id)}
+                  title="Открыть сон в истории"
+                  style={{ padding: "12px 14px", borderRadius: 14, background: "var(--paper-100)", border: "1px solid var(--border-subtle)", cursor: "pointer" }}
+                >
                   <div style={{ display: "flex", justifyContent: "space-between", gap: 10, marginBottom: 4 }}>
                     <span style={{ fontWeight: 700, color: "var(--text-strong)", fontSize: "0.92rem" }}>{d.dream_title}</span>
                     <span style={{ fontSize: "0.75rem", color: "var(--text-faint)", flexShrink: 0 }}>{formatDate(d.date)}</span>
@@ -723,7 +765,7 @@ function SectionHead({ eyebrow, title }) {
 }
 
 /* ---------- History ---------- */
-function HistoryList({ items }) {
+function HistoryList({ items, focusId }) {
   if (!items.length) {
     return (
       <Card variant="soft" style={{ textAlign: "center", padding: 48 }}>
@@ -733,16 +775,26 @@ function HistoryList({ items }) {
   }
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-      {items.map((it) => <HistoryItem key={it.id} it={it} />)}
+      {items.map((it) => <HistoryItem key={it.id} it={it} focusId={focusId} />)}
     </div>
   );
 }
 
-function HistoryItem({ it }) {
+function HistoryItem({ it, focusId }) {
   const [open, setOpen] = useState(false);
+  const wrapRef = useRef(null);
+
+  useEffect(() => {
+    if (focusId === it.id) {
+      setOpen(true);
+      if (wrapRef.current) wrapRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [focusId]);
+
   return (
     <React.Fragment>
-      <Card variant="raised" padding={0} style={{ overflow: "hidden" }}>
+      <div ref={wrapRef}>
+      <Card variant="raised" padding={0} style={{ overflow: "hidden", boxShadow: focusId === it.id ? "0 0 0 2px var(--cyan-400)" : undefined }}>
         <div style={{ padding: "22px 26px" }}>
           <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 12 }}>
             <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--text-faint)", letterSpacing: "0.04em", textTransform: "uppercase", flexShrink: 0 }}>{formatDate(it.date)}</span>
@@ -757,6 +809,7 @@ function HistoryItem({ it }) {
           </div>
         </div>
       </Card>
+      </div>
       {open && (
         <div onClick={() => setOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 90, background: "rgba(11,20,38,0.62)", backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
           <div onClick={(e) => e.stopPropagation()} style={{ width: "min(560px, 100%)", maxHeight: "min(640px, 90vh)", overflowY: "auto", background: "var(--surface-soft)", borderRadius: 24, boxShadow: "var(--shadow-xl)", padding: "24px 26px" }}>
@@ -1086,6 +1139,7 @@ Object.assign(window, { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCa
       const [history, setHistory] = useState(SEED_HISTORY);
       const [archetypes, setArchetypes] = useState({ symbols: [], connections: [] });
       const [selectedArchetypeId, setSelectedArchetypeId] = useState(null);
+      const [focusDreamId, setFocusDreamId] = useState(null);
       const [tariffs, setTariffs] = useState(TARIFFS);
       const [chatOpen, setChatOpen] = useState(false);
       const [toast, setToast] = useState("");
@@ -1222,6 +1276,15 @@ Object.assign(window, { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCa
           flash("Не удалось отменить подписку, попробуй ещё раз");
         }
       }
+      function changeTab(t) {
+        setFocusDreamId(null);
+        setTab(t);
+      }
+      function openDreamFromArchetype(dreamId) {
+        setSelectedArchetypeId(null);
+        setFocusDreamId(dreamId);
+        setTab("history");
+      }
       function goTopUp() {
         setChatOpen(false);
         setPendingDream("");
@@ -1233,7 +1296,7 @@ Object.assign(window, { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCa
         <React.Fragment>
           <div data-screen-label="Личный кабинет">
             <Header email={user.email} onSignOut={signOut} />
-            <Tabs value={tab} onChange={setTab} />
+            <Tabs value={tab} onChange={changeTab} />
             {tab === "cabinet" ? (
               <div className="lk-stack">
                 <BalanceCard balance={balance} subscription={subscription} onAnalyze={() => setChatOpen(true)} onCancelSubscription={cancelSubscription} />
@@ -1243,11 +1306,11 @@ Object.assign(window, { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCa
             ) : tab === "archetypes" ? (
               <ArchetypesTab archetypes={archetypes.symbols} connections={archetypes.connections} onSelect={setSelectedArchetypeId} onModel={() => setChatOpen(true)} />
             ) : (
-              <HistoryList items={history} />
+              <HistoryList items={history} focusId={focusDreamId} />
             )}
           </div>
           <DreamChat open={chatOpen} balance={balance} onClose={() => { setChatOpen(false); setPendingDream(""); }} onStart={startAnalysis} onComplete={completeAnalysis} onGoTopUp={goTopUp} onBalanceUpdate={updateBalance} initialDream={pendingDream} email={user.email} />
-          <ArchetypeDetail symbol={archetypes.symbols.find(s => s.id === selectedArchetypeId)} onClose={() => setSelectedArchetypeId(null)} />
+          <ArchetypeDetail symbol={archetypes.symbols.find(s => s.id === selectedArchetypeId)} onClose={() => setSelectedArchetypeId(null)} onOpenDream={openDreamFromArchetype} />
           <Toast msg={toast} />
         </React.Fragment>
       );
