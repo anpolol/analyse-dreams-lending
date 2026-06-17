@@ -620,7 +620,10 @@ function ConstellationGraph({ symbols, connections, onSelect }) {
     if (Math.abs(dx) > 4 || Math.abs(dy) > 4) d.moved = true;
     if (d.moved) {
       el.scrollLeft = d.scrollLeft - dx;
-      el.scrollTop = d.scrollTop - dy;
+      // Vertical drag is left to native touch scrolling on touch devices (see
+      // touchAction: "pan-y" below) so the page can still be scrolled once the
+      // sky's own scroll is exhausted — only mouse drags pan it via JS here.
+      if (e.pointerType !== "touch") el.scrollTop = d.scrollTop - dy;
     }
   }
   function onPointerUp() {
@@ -642,10 +645,11 @@ function ConstellationGraph({ symbols, connections, onSelect }) {
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
       onPointerLeave={onPointerUp}
+      onPointerCancel={onPointerUp}
       onClickCapture={onClickCapture}
       style={{
         width: "100vw", marginLeft: "calc(50% - 50vw)", marginRight: "calc(50% - 50vw)", marginBottom: -80,
-        borderRadius: 0, overflow: "auto", touchAction: "none", userSelect: "none",
+        borderRadius: 0, overflow: "auto", touchAction: "pan-y", userSelect: "none",
         cursor: grabbing ? "grabbing" : "grab",
         background: "radial-gradient(circle at 30% 20%, rgba(143,214,232,0.18), transparent 55%), linear-gradient(160deg, var(--navy-900), var(--navy-800))",
         boxShadow: "var(--shadow-xl)", padding: 8,
