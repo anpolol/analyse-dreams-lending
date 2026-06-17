@@ -453,7 +453,7 @@ function BalanceCard({ balance, onAnalyze }) {
 function TariffGrid({ onBuy, tariffs }) {
   return (
     <section>
-      <SectionHead eyebrow="Пополнить баланс" title="Выберите пакет разборов" />
+      <SectionHead eyebrow="Пополнить баланс" title="Выберите тариф" />
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0,1fr))", gap: 18 }}>
         {tariffs.map((t) => <TariffCard key={t.id} t={t} onBuy={onBuy} />)}
       </div>
@@ -463,6 +463,7 @@ function TariffGrid({ onBuy, tariffs }) {
 
 function TariffCard({ t, onBuy }) {
   const [hover, setHover] = useState(false);
+  const isSubscription = t.type === "subscription";
   return (
     <article
       onMouseEnter={() => setHover(true)}
@@ -470,24 +471,29 @@ function TariffCard({ t, onBuy }) {
       style={{
         position: "relative", background: "var(--surface-raised)", borderRadius: "var(--radius-2xl)",
         padding: "26px 24px 24px",
-        boxShadow: t.popular ? "var(--shadow-lg)" : "var(--shadow-sm)",
-        border: t.popular ? "1.5px solid var(--cyan-400)" : "1px solid var(--border-subtle)",
+        boxShadow: (t.popular || isSubscription) ? "var(--shadow-lg)" : "var(--shadow-sm)",
+        border: isSubscription ? "1.5px solid var(--cyan-400)" : t.popular ? "1.5px solid var(--cyan-400)" : "1px solid var(--border-subtle)",
         transform: hover ? "translateY(-3px)" : "none",
         transition: "transform 200ms var(--ease-out), box-shadow 200ms var(--ease-out)",
         display: "flex", flexDirection: "column", gap: 14,
       }}
     >
-      {t.popular && <Badge variant="cyan" style={{ position: "absolute", top: -12, left: 24 }}>Популярный</Badge>}
-      {t.best && <Badge variant="cream" style={{ position: "absolute", top: -12, left: 24 }}>Выгодно</Badge>}
+      {isSubscription && <Badge variant="cyan" style={{ position: "absolute", top: -12, left: 24 }}>Подписка</Badge>}
+      {!isSubscription && t.popular && <Badge variant="cyan" style={{ position: "absolute", top: -12, left: 24 }}>Популярный</Badge>}
+      {!isSubscription && t.best && <Badge variant="cream" style={{ position: "absolute", top: -12, left: 24 }}>Выгодно</Badge>}
       <div>
-        <p style={{ margin: 0, fontSize: "2.6rem", fontWeight: 800, lineHeight: 0.9, letterSpacing: "-0.02em", color: "var(--text-strong)" }}>{t.count}</p>
-        <p style={{ margin: "6px 0 0", color: "var(--text-muted)", fontWeight: 600 }}>{plural(t.count, "разбор", "разбора", "разборов")}</p>
+        <p style={{ margin: 0, fontSize: "2.6rem", fontWeight: 800, lineHeight: 0.9, letterSpacing: "-0.02em", color: "var(--text-strong)" }}>
+          {isSubscription ? "∞" : t.count}
+        </p>
+        <p style={{ margin: "6px 0 0", color: "var(--text-muted)", fontWeight: 600 }}>
+          {isSubscription ? "разборов в месяц" : plural(t.count, "разбор", "разбора", "разборов")}
+        </p>
       </div>
       <div style={{ marginTop: "auto" }}>
         <p style={{ margin: "0 0 2px", fontSize: "1.5rem", fontWeight: 800, color: "var(--text-strong)" }}>{t.price} ₽</p>
         <p style={{ margin: 0, fontSize: "0.82rem", color: "var(--text-faint)", fontWeight: 600 }}>{t.note}</p>
       </div>
-      <Button fullWidth size="sm" onClick={() => onBuy(t)}>Купить</Button>
+      <Button fullWidth size="sm" onClick={() => onBuy(t)}>{isSubscription ? "Подписаться" : "Купить"}</Button>
     </article>
   );
 }
@@ -936,17 +942,24 @@ Object.assign(window, { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCa
       async function buyTariff(t) {
         try {
           const { data: { session } } = await window._supabase.auth.getSession();
-          const res = await fetch('https://api.analysedreams.ru/payment/checkout', {
+          const isSubscription = t.type === "subscription";
+          const url = isSubscription
+            ? 'https://api.analysedreams.ru/payment/subscribe'
+            : 'https://api.analysedreams.ru/payment/checkout';
+          const body = isSubscription ? undefined : JSON.stringify({ tariff_id: t.id });
+          const res = await fetch(url, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
               'Authorization': `Bearer ${session.access_token}`,
             },
-            body: JSON.stringify({ tariff_id: t.id }),
+            body,
           });
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          // TODO: обработать ответ платёжной системы (редирект, модалка и т.д.)
-          flash(`Переход к оплате: ${t.price} ₽`);
+          const data = await res.json();
+          if (data.payment_url) {
+            window.location.href = data.payment_url;
+          }
         } catch (err) {
           flash('Ошибка при оплате, попробуй ещё раз');
         }
