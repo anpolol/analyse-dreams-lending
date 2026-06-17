@@ -447,19 +447,31 @@ const VEIL_DOTS = [
   { right: "20%", bottom: "18%" }, { left: "22%", bottom: "14%" },
 ];
 
+// The card itself — image area + name + (locked) description — all sitting on one
+// solid backing panel, so it reads as a distinct tile even when the constellation
+// scatters cards close together.
+const CARD_W = 200;
+
 function ArchetypeCard({ symbol, onSelect, cardRef }) {
   const locked = !symbol.is_revealed;
   return (
-    <div ref={cardRef} style={{ width: 192, display: "flex", flexDirection: "column", gap: 12 }}>
+    <div
+      ref={cardRef}
+      style={{
+        boxSizing: "border-box", width: CARD_W, display: "flex", flexDirection: "column", gap: 10,
+        padding: 14, borderRadius: "var(--radius-xl)",
+        background: locked ? "var(--navy-800)" : "var(--paper-000)",
+        border: locked ? "1.5px dashed rgba(249,255,255,0.32)" : "1px solid var(--border-subtle)",
+        boxShadow: "var(--shadow-lg)",
+      }}
+    >
       <button
         onClick={() => onSelect(symbol.id)}
         title={symbol.name}
         style={{
-          position: "relative", width: "100%", height: 160, padding: 0, overflow: "hidden",
-          borderRadius: "var(--radius-xl)", cursor: "pointer",
-          border: locked ? "1.5px dashed rgba(249,255,255,0.32)" : "none",
-          background: locked ? "rgba(249,255,255,0.05)" : "var(--paper-000)",
-          boxShadow: locked ? "none" : "var(--shadow-lg)",
+          position: "relative", width: "100%", height: 150, padding: 0, overflow: "hidden",
+          borderRadius: "var(--radius-md)", cursor: "pointer", border: "none",
+          background: locked ? "rgba(249,255,255,0.06)" : "var(--paper-050)",
           display: "flex", alignItems: "center", justifyContent: "center",
         }}
       >
@@ -477,7 +489,7 @@ function ArchetypeCard({ symbol, onSelect, cardRef }) {
         )}
       </button>
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
-        <p style={{ margin: 0, fontWeight: 800, fontSize: "1.02rem", color: "rgba(249,255,255,0.95)" }}>{symbol.name}</p>
+        <p style={{ margin: 0, fontWeight: 800, fontSize: "1rem", color: locked ? "rgba(249,255,255,0.95)" : "var(--text-strong)" }}>{symbol.name}</p>
         {!locked && symbol.dreams.length > 0 && (
           <span style={{
             flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 4,
@@ -490,7 +502,7 @@ function ArchetypeCard({ symbol, onSelect, cardRef }) {
       </div>
       {locked && (
         <p style={{
-          margin: 0, color: "rgba(249,255,255,0.55)", fontSize: "0.86rem", lineHeight: 1.4,
+          margin: 0, color: "rgba(249,255,255,0.55)", fontSize: "0.84rem", lineHeight: 1.4,
           display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden",
         }}>
           {symbol.description}
@@ -503,19 +515,23 @@ function ArchetypeCard({ symbol, onSelect, cardRef }) {
 // Decorative-only slot: hints that more (unnamed) archetypes wait beyond the named set.
 function MysteryArchetypeCard() {
   return (
-    <div style={{ width: 192, display: "flex", flexDirection: "column", gap: 12 }}>
+    <div style={{
+      boxSizing: "border-box", width: CARD_W, display: "flex", flexDirection: "column", gap: 10,
+      padding: 14, borderRadius: "var(--radius-xl)",
+      background: "var(--navy-800)", border: "1.5px dashed rgba(143,214,232,0.65)",
+      boxShadow: "var(--shadow-glow)",
+    }}>
       <div style={{
-        position: "relative", width: "100%", height: 160, borderRadius: "var(--radius-xl)", overflow: "hidden",
-        border: "1.5px dashed rgba(143,214,232,0.65)", background: "rgba(249,255,255,0.05)",
-        boxShadow: "var(--shadow-glow)", display: "flex", alignItems: "center", justifyContent: "center",
+        position: "relative", width: "100%", height: 150, borderRadius: "var(--radius-md)", overflow: "hidden",
+        background: "rgba(249,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "center",
       }}>
         {VEIL_DOTS.map((d, i) => (
           <span key={i} style={{ position: "absolute", ...d, width: 3, height: 3, borderRadius: 999, background: "rgba(249,255,255,0.4)" }} />
         ))}
         <span style={{ color: "rgba(249,255,255,0.6)", fontSize: "1.7rem", fontWeight: 800 }}>?</span>
       </div>
-      <p style={{ margin: 0, fontWeight: 800, fontSize: "1.02rem", color: "rgba(249,255,255,0.95)" }}>Скрытый архетип</p>
-      <p style={{ margin: 0, color: "rgba(249,255,255,0.55)", fontSize: "0.86rem", lineHeight: 1.4 }}>
+      <p style={{ margin: 0, fontWeight: 800, fontSize: "1rem", color: "rgba(249,255,255,0.95)" }}>Скрытый архетип</p>
+      <p style={{ margin: 0, color: "rgba(249,255,255,0.55)", fontSize: "0.84rem", lineHeight: 1.4 }}>
         Ещё не проявился. Появится, когда сны дадут достаточно материала.
       </p>
     </div>
@@ -529,10 +545,10 @@ function pseudoRandom(seed) {
   return x - Math.floor(x);
 }
 
-// Places cards on a loose grid, then jitters each one within its cell — looks
-// scattered like a constellation but cards never collide into an unreadable pile.
+// Places cards on a loose grid, then nudges each one within its cell by an amount
+// small enough that neighbouring cards never collide — looks scattered, stays readable.
 function scatterPositions(count) {
-  const CELL_W = 220, CELL_H = 250, PADDING = 60;
+  const CELL_W = 260, CELL_H = 340, PADDING = 50, JITTER = 22;
   const columns = Math.max(2, Math.ceil(Math.sqrt(count * 1.4)));
   const rows = Math.ceil(count / columns);
   const positions = Array.from({ length: count }).map((_, i) => {
@@ -540,8 +556,8 @@ function scatterPositions(count) {
     const row = Math.floor(i / columns);
     const baseX = PADDING + col * CELL_W + CELL_W / 2;
     const baseY = PADDING + row * CELL_H + CELL_H / 2;
-    const jitterX = (pseudoRandom(i * 2 + 1) - 0.5) * CELL_W * 0.6;
-    const jitterY = (pseudoRandom(i * 2 + 2) - 0.5) * CELL_H * 0.55;
+    const jitterX = (pseudoRandom(i * 2 + 1) - 0.5) * 2 * JITTER;
+    const jitterY = (pseudoRandom(i * 2 + 2) - 0.5) * 2 * JITTER;
     return { x: baseX + jitterX, y: baseY + jitterY };
   });
   return { positions, width: columns * CELL_W + PADDING * 2, height: rows * CELL_H + PADDING * 2 };
