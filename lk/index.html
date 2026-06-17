@@ -639,7 +639,7 @@ function ConstellationGraph({ symbols, connections, onSelect }) {
       onPointerLeave={onPointerUp}
       onClickCapture={onClickCapture}
       style={{
-        width: "100vw", marginLeft: "calc(50% - 50vw)", marginRight: "calc(50% - 50vw)",
+        width: "100vw", marginLeft: "calc(50% - 50vw)", marginRight: "calc(50% - 50vw)", marginBottom: -80,
         borderRadius: 0, overflow: "auto", touchAction: "none", userSelect: "none",
         cursor: grabbing ? "grabbing" : "grab",
         background: "radial-gradient(circle at 30% 20%, rgba(143,214,232,0.18), transparent 55%), linear-gradient(160deg, var(--navy-900), var(--navy-800))",
@@ -678,8 +678,18 @@ function ArchetypesTab({ archetypes, connections, onSelect, onModel }) {
           <h2 style={{ margin: "8px 0 0", fontSize: "clamp(1.3rem, 2.4vw, 1.8rem)", fontWeight: 800, letterSpacing: "-0.01em", color: "var(--text-strong)" }}>Созвездие архетипов</h2>
           <p style={{ margin: "8px 0 0", color: "var(--text-muted)" }}>Раскрыто {revealed} из {total} архетипов</p>
         </div>
-        <GhostButton onClick={onModel}>Разобрать сон ✦</GhostButton>
+        <Button
+          onClick={onModel}
+          style={{
+            background: "var(--cyan-300)", color: "var(--navy-800)",
+            fontSize: "1.1rem", fontWeight: 800, padding: "18px 32px",
+            boxShadow: "var(--shadow-glow)",
+          }}
+        >
+          Разобрать сон →
+        </Button>
       </div>
+      <p style={{ margin: 0, color: "var(--text-faint)", fontSize: "0.85rem" }}>Каждый разбор сна может раскрыть новый архетип и связать его с уже найденными.</p>
       {total === 0 ? (
         <Card variant="soft" style={{ textAlign: "center", padding: 48 }}>
           <p style={{ margin: 0, color: "var(--text-muted)" }}>Созвездие пока пусто — оно появится после первого разбора сна.</p>
@@ -687,7 +697,6 @@ function ArchetypesTab({ archetypes, connections, onSelect, onModel }) {
       ) : (
         <ConstellationGraph symbols={archetypes} connections={connections} onSelect={onSelect} />
       )}
-      <p style={{ margin: 0, color: "var(--text-faint)", fontSize: "0.85rem" }}>Каждый разбор сна может раскрыть новый архетип и связать его с уже найденными.</p>
     </div>
   );
 }
@@ -807,33 +816,31 @@ function BalanceCard({ balance, subscription, onAnalyze }) {
 }
 
 /* ---------- Tariffs ---------- */
-function TariffGrid({ onBuy, tariffs, subscription, onCancelSubscription }) {
+function TariffGrid({ onBuy, tariffs }) {
   return (
     <section>
       <SectionHead eyebrow="Пополнить баланс" title="Выберите тариф" />
-      {subscription?.active && (
-        <div style={{
-          display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 16,
-          padding: "20px 24px", borderRadius: "var(--radius-lg)", background: "var(--surface-raised)",
-          border: "1px solid var(--border-subtle)", boxShadow: "var(--shadow-sm)", marginBottom: 20,
-        }}>
-          <p style={{ margin: 0, color: "var(--text-body)", fontWeight: 600 }}>У вас активна безлимитная подписка.</p>
-          <button
-            onClick={onCancelSubscription}
-            style={{
-              border: "1.5px solid var(--danger-500)", background: "rgba(194,86,107,0.08)",
-              color: "var(--danger-500)", fontWeight: 700, fontSize: "0.95rem",
-              padding: "12px 22px", borderRadius: "var(--radius-md)", cursor: "pointer", fontFamily: "var(--font-sans)",
-            }}
-          >
-            Отменить подписку
-          </button>
-        </div>
-      )}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0,1fr))", gap: 18 }}>
         {tariffs.map((t) => <TariffCard key={t.id} t={t} onBuy={onBuy} />)}
       </div>
     </section>
+  );
+}
+
+function CancelSubscriptionLink({ onCancel }) {
+  return (
+    <div style={{ display: "flex", justifyContent: "center" }}>
+      <button
+        onClick={onCancel}
+        style={{
+          border: "1.5px solid var(--danger-500)", background: "rgba(194,86,107,0.08)",
+          color: "var(--danger-500)", fontWeight: 700, fontSize: "0.95rem",
+          padding: "12px 22px", borderRadius: "var(--radius-md)", cursor: "pointer", fontFamily: "var(--font-sans)",
+        }}
+      >
+        Отменить подписку
+      </button>
+    </div>
   );
 }
 
@@ -929,6 +936,7 @@ function HistoryList({ items, focusId }) {
 
 function HistoryItem({ it, focusId }) {
   const [open, setOpen] = useState(false);
+  const [previewHover, setPreviewHover] = useState(false);
   const wrapRef = useRef(null);
 
   useEffect(() => {
@@ -946,17 +954,29 @@ function HistoryItem({ it, focusId }) {
       <div ref={wrapRef}>
       <Card variant="night" padding={0} style={{
         position: "relative", overflow: "hidden",
-        background: "radial-gradient(circle at 22% 10%, rgba(143,214,232,0.2), transparent 55%), linear-gradient(160deg, var(--navy-900), var(--navy-800))",
+        background: "radial-gradient(circle at 22% 10%, rgba(143,214,232,0.3), transparent 55%), linear-gradient(160deg, var(--navy-800), var(--navy-700))",
         boxShadow: focused ? "0 0 0 2px var(--cyan-400), 0 0 36px rgba(143,214,232,0.5)" : "var(--shadow-lg)",
       }}>
         <DecorImg k="dotted-l" size={160} opacity={0.28} style={{ position: "absolute", right: -30, top: -30 }} />
         <div style={{ position: "relative", padding: "28px 30px" }}>
           <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 14 }}>
-            <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "rgba(249,255,255,0.5)", letterSpacing: "0.04em", textTransform: "uppercase", flexShrink: 0 }}>{formatDate(it.date)}</span>
+            <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "rgba(249,255,255,0.55)", letterSpacing: "0.04em", textTransform: "uppercase", flexShrink: 0 }}>{formatDate(it.date)}</span>
             <h3 style={{ margin: 0, fontSize: "1.3rem", fontWeight: 800, color: "var(--paper-050)" }}>{it.dream_title}</h3>
           </div>
-          <p onClick={() => setOpen(true)} style={{ margin: "0 0 18px", color: "rgba(249,255,255,0.72)", lineHeight: 1.6, cursor: "pointer", fontSize: "1.02rem" }}>{it.dream_short}</p>
-          <div style={{ padding: "18px 20px", borderRadius: 16, background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.14)" }}>
+          <div
+            onClick={() => setOpen(true)}
+            onMouseEnter={() => setPreviewHover(true)}
+            onMouseLeave={() => setPreviewHover(false)}
+            style={{
+              margin: "0 0 16px", padding: "14px 16px", borderRadius: 14, cursor: "pointer",
+              background: previewHover ? "rgba(255,255,255,0.14)" : "rgba(255,255,255,0.07)",
+              border: "1px solid rgba(255,255,255,0.18)",
+              transition: "background 160ms var(--ease-out)",
+            }}
+          >
+            <p style={{ margin: 0, color: "rgba(249,255,255,0.85)", lineHeight: 1.6, fontSize: "1.02rem" }}>{it.dream_short}</p>
+          </div>
+          <div style={{ padding: "18px 20px", borderRadius: 16, background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.16)" }}>
             <p style={{ margin: "0 0 8px", fontSize: "0.78rem", fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--cyan-300)", display: "flex", alignItems: "center", gap: 6 }}>
               <span aria-hidden="true">✦</span>Инсайт
             </p>
@@ -967,18 +987,15 @@ function HistoryItem({ it, focusId }) {
       </div>
       {open && (
         <div onClick={() => setOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 90, background: "rgba(11,20,38,0.7)", backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
-          <div onClick={(e) => e.stopPropagation()} style={{
+          <div style={{
             position: "relative", width: "min(560px, 100%)", maxHeight: "min(640px, 90vh)", overflowY: "auto", overflowX: "hidden",
-            background: "radial-gradient(circle at 22% 8%, rgba(143,214,232,0.2), transparent 55%), linear-gradient(160deg, var(--navy-900), var(--navy-800))",
+            background: "radial-gradient(circle at 22% 8%, rgba(143,214,232,0.3), transparent 55%), linear-gradient(160deg, var(--navy-800), var(--navy-700))",
             borderRadius: 24, boxShadow: "var(--shadow-xl)", padding: "26px 28px",
           }}>
             <DecorImg k="dotted-l" size={160} opacity={0.22} style={{ position: "absolute", right: -30, top: -30 }} />
-            <div style={{ position: "relative", display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, marginBottom: 16 }}>
-              <div>
-                <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "rgba(249,255,255,0.5)", letterSpacing: "0.04em", textTransform: "uppercase" }}>{formatDate(it.date)}</span>
-                <h3 style={{ margin: "4px 0 0", fontSize: "1.3rem", fontWeight: 800, color: "var(--paper-050)" }}>{it.dream_title}</h3>
-              </div>
-              <button onClick={() => setOpen(false)} style={{ border: "none", background: "rgba(255,255,255,0.12)", color: "var(--paper-050)", width: 32, height: 32, borderRadius: "50%", cursor: "pointer", fontSize: 16, lineHeight: 1, flexShrink: 0 }}>×</button>
+            <div style={{ position: "relative", marginBottom: 16 }}>
+              <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "rgba(249,255,255,0.55)", letterSpacing: "0.04em", textTransform: "uppercase" }}>{formatDate(it.date)}</span>
+              <h3 style={{ margin: "4px 0 0", fontSize: "1.3rem", fontWeight: 800, color: "var(--paper-050)" }}>{it.dream_title}</h3>
             </div>
             <p style={{ position: "relative", margin: 0, color: "rgba(249,255,255,0.85)", lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{it.dream_description}</p>
           </div>
@@ -1220,11 +1237,11 @@ function Toast({ msg }) {
   );
 }
 
-Object.assign(window, { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCard, TariffGrid, NotebookCard, HistoryList, ArchetypesTab, ArchetypeDetail, Toast, DreamChat });
+Object.assign(window, { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCard, TariffGrid, NotebookCard, CancelSubscriptionLink, HistoryList, ArchetypesTab, ArchetypeDetail, Toast, DreamChat });
 </script>
   <script type="text/babel">
     const { useState, useEffect, useRef } = React;
-    const { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCard, TariffGrid, NotebookCard, HistoryList, ArchetypesTab, ArchetypeDetail, Toast, DreamChat } = window;
+    const { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCard, TariffGrid, NotebookCard, CancelSubscriptionLink, HistoryList, ArchetypesTab, ArchetypeDetail, Toast, DreamChat } = window;
 
     function LoginScreen() {
       const [email, setEmail] = useState(() => { try { return localStorage.getItem('ad_last_email') || ""; } catch(e) { return ""; } });
@@ -1460,8 +1477,9 @@ Object.assign(window, { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCa
             {tab === "cabinet" ? (
               <div className="lk-stack">
                 <BalanceCard balance={balance} subscription={subscription} onAnalyze={() => setChatOpen(true)} />
-                <TariffGrid onBuy={buyTariff} tariffs={tariffs} subscription={subscription} onCancelSubscription={cancelSubscription} />
+                <TariffGrid onBuy={buyTariff} tariffs={tariffs} />
                 <NotebookCard onGet={getNotebook} />
+                {subscription.active && <CancelSubscriptionLink onCancel={cancelSubscription} />}
               </div>
             ) : tab === "archetypes" ? (
               <ArchetypesTab archetypes={archetypes.symbols} connections={archetypes.connections} onSelect={setSelectedArchetypeId} onModel={() => setChatOpen(true)} />
