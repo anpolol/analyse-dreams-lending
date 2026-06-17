@@ -319,8 +319,8 @@
 
     function Input(p) {
       var s = Object.assign({ fontFamily:"Manrope,system-ui,sans-serif", fontSize:"1rem", color:"#1e2d44", background:"#fff", border:"1.5px solid " + css.border, borderRadius:14, padding:"12px 14px", outline:"none", resize:"none", boxSizing:"border-box", width:"100%" }, p.style || {});
-      if (p.multiline) return e("textarea", { rows: p.rows||3, value: p.value, placeholder: p.placeholder, onChange: p.onChange, onKeyDown: p.onKeyDown, style: s });
-      return e("input", { type:"text", value: p.value, placeholder: p.placeholder, onChange: p.onChange, onKeyDown: p.onKeyDown, style: s });
+      if (p.multiline) return e("textarea", { rows: p.rows||3, value: p.value, placeholder: p.placeholder, onChange: p.onChange, onKeyDown: p.onKeyDown, maxLength: p.maxLength, style: s });
+      return e("input", { type:"text", value: p.value, placeholder: p.placeholder, onChange: p.onChange, onKeyDown: p.onKeyDown, maxLength: p.maxLength, style: s });
     }
 
     function Eyebrow(p) {
@@ -673,6 +673,7 @@ function DreamChat({ open, balance, onClose, onStart, onComplete, onGoTopUp, onB
   useEffect(() => {
     if (open) { setMsgs([greeting]); setText(initialDream || ""); setTyping(false); setStage(0); setDone(false); setEntry(null); setApiMsgs([]); setErrMsg(""); }
   }, [open]);
+
   useEffect(() => { if (scroller.current) scroller.current.scrollTop = scroller.current.scrollHeight; }, [msgs, typing]);
 
   if (!open) return null;
@@ -777,9 +778,12 @@ function DreamChat({ open, balance, onClose, onStart, onComplete, onGoTopUp, onB
                 <button onClick={summarizeNow} style={{ border: "none", background: "transparent", color: "var(--text-link)", fontWeight: 700, fontSize: "0.84rem", cursor: "pointer", fontFamily: "var(--font-sans)", padding: "4px 6px" }}>Достаточно, подведи итог →</button>
               </div>
             )}
-            <div style={{ padding: 14, display: "flex", gap: 10, alignItems: "flex-end" }}>
-              <Input multiline rows={1} value={text} placeholder={stage === 0 ? "Опишите свой сон…" : "Ответьте или задайте свой вопрос…"} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }} style={{ flex: 1, minHeight: 48 }} />
-              <Button size="sm" onClick={send} style={{ minHeight: 48 }}>Отправить</Button>
+            <div style={{ padding: 14, display: "flex", flexDirection: "column", gap: 6 }}>
+              <div style={{ display: "flex", gap: 10, alignItems: "flex-end" }}>
+                <Input multiline rows={1} maxLength={1000} value={text} placeholder={stage === 0 ? "Опишите свой сон…" : "Ответьте или задайте свой вопрос…"} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }} style={{ flex: 1, minHeight: 48 }} />
+                <Button size="sm" onClick={send} style={{ minHeight: 48 }}>Отправить</Button>
+              </div>
+              <span style={{ alignSelf: "flex-end", fontSize: "0.72rem", color: text.length >= 1000 ? "var(--danger-500)" : "var(--text-muted)" }}>{text.length}/1000</span>
             </div>
           </div>
         )}
@@ -1018,6 +1022,7 @@ Object.assign(window, { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCa
       }
       function goTopUp() {
         setChatOpen(false);
+        setPendingDream("");
         setTab("cabinet");
         flash("Выберите пакет разборов");
       }
@@ -1037,7 +1042,7 @@ Object.assign(window, { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCa
               <HistoryList items={history} />
             )}
           </div>
-          <DreamChat open={chatOpen} balance={balance} onClose={() => setChatOpen(false)} onStart={startAnalysis} onComplete={completeAnalysis} onGoTopUp={goTopUp} onBalanceUpdate={updateBalance} initialDream={pendingDream} email={user.email} />
+          <DreamChat open={chatOpen} balance={balance} onClose={() => { setChatOpen(false); setPendingDream(""); }} onStart={startAnalysis} onComplete={completeAnalysis} onGoTopUp={goTopUp} onBalanceUpdate={updateBalance} initialDream={pendingDream} email={user.email} />
           <Toast msg={toast} />
         </React.Fragment>
       );

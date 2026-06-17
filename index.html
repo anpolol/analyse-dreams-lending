@@ -39,7 +39,7 @@
     .dm-overlay[hidden],.dm-upsell[hidden]{display:none!important}
     .dm-overlay{position:fixed;inset:0;z-index:200;background:rgba(11,20,38,.72);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:20px;animation:dm-fade .2s ease}
     @keyframes dm-fade{from{opacity:0}to{opacity:1}}
-    .dm-panel{width:min(480px,100%);max-height:min(680px,92vh);background:#f4f8f9;border-radius:28px;overflow:hidden;box-shadow:0 32px 80px rgba(11,20,38,.4);display:flex;flex-direction:column;position:relative;animation:dm-up .22s cubic-bezier(.22,1,.36,1)}
+    .dm-panel{width:min(540px,100%);max-height:min(760px,94vh);background:#f4f8f9;border-radius:28px;overflow:hidden;box-shadow:0 32px 80px rgba(11,20,38,.4);display:flex;flex-direction:column;position:relative;animation:dm-up .22s cubic-bezier(.22,1,.36,1)}
     @keyframes dm-up{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
     .dm-header{display:flex;align-items:center;gap:12px;padding:14px 18px;background:#172236;color:#f4f8f9;flex-shrink:0}
     .dm-logo{width:40px;height:40px;border-radius:50%;object-fit:cover}
@@ -48,17 +48,20 @@
     .dm-hdr-sub{margin:0;font-size:.8rem;color:rgba(244,248,249,.65)}
     .dm-close-btn{background:rgba(255,255,255,.1);border:none;color:#f4f8f9;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:18px;line-height:1;flex-shrink:0;transition:background .15s}
     .dm-close-btn:hover{background:rgba(255,255,255,.2)}
-    .dm-body{overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:12px}
+    .dm-body{flex:1;min-height:0;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:12px}
     .dm-bubble{max-width:85%;padding:12px 16px;border-radius:18px;font-size:.92rem;line-height:1.6;font-family:inherit}
     .dm-bubble-bot{background:#fff;color:#1e2d44;border-bottom-left-radius:4px;align-self:flex-start;box-shadow:0 1px 4px rgba(0,0,0,.08)}
     .dm-bubble-me{background:#172236;color:#f4f8f9;border-bottom-right-radius:4px;align-self:flex-end}
     .dm-typing-ind{color:#8099b0;font-size:.88rem}
+    .dm-bubble-blurred{filter:blur(4.5px);user-select:none;pointer-events:none}
     .dm-chips{display:flex;flex-wrap:wrap;gap:8px}
     .dm-chip{border:1px solid #d0dce8;background:#fff;color:#1e2d44;border-radius:14px;padding:7px 12px;font-size:.82rem;cursor:pointer;font-family:inherit;text-align:left;transition:border-color .15s,background .15s}
     .dm-chip:hover{border-color:#172236;background:#f0f5f8}
     .dm-composer{margin-top:auto;display:flex;flex-direction:column;gap:10px}
     .dm-textarea{width:100%;border:1.5px solid #d0dce8;border-radius:14px;padding:12px 14px;font-size:.92rem;font-family:inherit;color:#1e2d44;background:#fff;resize:none;box-sizing:border-box;outline:none;transition:border-color .15s;min-height:80px}
     .dm-textarea:focus{border-color:#172236}
+    .dm-char-count{align-self:flex-end;font-size:.72rem;color:#8099b0}
+    .dm-char-count.dm-char-count-max{color:#c0392b}
     .dm-btn-primary{background:#172236;color:#f4f8f9;border:none;border-radius:14px;padding:13px 20px;font-size:.95rem;font-weight:600;cursor:pointer;font-family:inherit;transition:opacity .15s}
     .dm-btn-primary:disabled{opacity:.35;cursor:not-allowed}
     .dm-btn-primary:not(:disabled):hover{opacity:.85}
@@ -295,7 +298,8 @@
             <button class="dm-chip" onclick="dmUseExample(this)">Летал над домом детства</button>
           </div>
           <div class="dm-composer">
-            <textarea id="dm-dream-input" class="dm-textarea" placeholder="Мне снилось…" rows="3" oninput="dmToggleSend()"></textarea>
+            <textarea id="dm-dream-input" class="dm-textarea" placeholder="Мне снилось…" rows="3" maxlength="1000" oninput="dmToggleSend()"></textarea>
+            <span id="dm-char-count" class="dm-char-count">0/1000</span>
             <button id="dm-submit-btn" class="dm-btn-primary" onclick="dmSubmitDream()" disabled>Готово →</button>
           </div>
         </div>
@@ -314,8 +318,6 @@
   <script>
   (function () {
     var dmDreamText = '';
-
-    var API_BASE = 'https://api.analysedreams.ru';
 
     function esc(s) {
       return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -354,6 +356,7 @@
       document.getElementById('dm-input-area').removeAttribute('hidden');
       document.getElementById('dm-dream-input').value = '';
       document.getElementById('dm-submit-btn').disabled = true;
+      dmToggleSend();
       addBubble('bot', 'Расскажите свой сон — образы, ощущения, детали, которые запомнились. Я выделю ключевые символы и предложу направления для понимания.');
       setTimeout(function () { document.getElementById('dm-dream-input').focus(); }, 50);
     };
@@ -364,8 +367,11 @@
     };
 
     window.dmToggleSend = function () {
-      var val = document.getElementById('dm-dream-input').value.trim();
-      document.getElementById('dm-submit-btn').disabled = val.length < 5;
+      var raw = document.getElementById('dm-dream-input').value;
+      document.getElementById('dm-submit-btn').disabled = raw.trim().length < 5;
+      var counter = document.getElementById('dm-char-count');
+      counter.textContent = raw.length + '/1000';
+      counter.classList.toggle('dm-char-count-max', raw.length >= 1000);
     };
 
     window.dmUseExample = function (btn) {
@@ -373,6 +379,11 @@
       dmToggleSend();
       document.getElementById('dm-dream-input').focus();
     };
+
+    var DM_PREVIEW_HTML = '<div class="dm-bubble-blurred">'
+      + '<p style="margin:0 0 10px 0">Вижу несколько ключевых символов и эмоциональный узел между ними — похоже, сон отражает внутренний конфликт, который сейчас актуален для вас.</p>'
+      + '<p style="margin:0">Есть направление для понимания, но чтобы раскрыть его полностью и продолжить диалог до инсайта, нужно продолжить в личном кабинете.</p>'
+      + '</div>';
 
     window.dmSubmitDream = function () {
       var input = document.getElementById('dm-dream-input');
@@ -383,38 +394,11 @@
       addBubble('me', esc(dmDreamText));
       showTyping();
 
-      var email = '';
-      try { email = localStorage.getItem('ad_last_email') || ''; } catch (e) {}
-
-      fetch(API_BASE + '/analyse/run', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: email,
-          dream_title: '',
-          is_ended: false,
-          messages: [{ role: 'user', content: dmDreamText }]
-        })
-      })
-      .then(function (res) { return res.json(); })
-      .then(function (data) {
+      setTimeout(function () {
         hideTyping();
-        var msgs = data.result && data.result.messages;
-        var last = msgs && msgs[msgs.length - 1];
-        if (last && last.content) {
-          var content = last.content;
-          try { var parsed = JSON.parse(content); if (parsed.insight) content = parsed.insight; } catch (e) {}
-          var paras = content.split('\n\n').map(function (p) {
-            return '<p style="margin:0 0 10px 0">' + esc(p) + '</p>';
-          }).join('');
-          addBubble('bot', '<div>' + paras + '</div>');
-        }
+        addBubble('bot', DM_PREVIEW_HTML);
         document.getElementById('dm-upsell').removeAttribute('hidden');
-      })
-      .catch(function () {
-        hideTyping();
-        document.getElementById('dm-upsell').removeAttribute('hidden');
-      });
+      }, 1200);
     };
 
 
