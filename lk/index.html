@@ -399,8 +399,7 @@ function Header({ email, onSignOut }) {
         Анализ снов
       </span>
       <div style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
-        <span style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "8px 14px", borderRadius: 999, background: "var(--surface-card)", border: "1px solid var(--border-subtle)", fontSize: "0.9rem", color: "var(--text-body)", fontWeight: 600 }}>
-          <span aria-hidden="true" style={{ width: 7, height: 7, borderRadius: 999, background: "var(--success-500)" }}></span>
+        <span style={{ display: "inline-flex", alignItems: "center", padding: "8px 14px", borderRadius: 999, background: "var(--surface-card)", border: "1px solid var(--border-subtle)", fontSize: "0.9rem", color: "var(--text-body)", fontWeight: 600 }}>
           {email}
         </span>
         <GhostButton size="sm" onClick={onSignOut}>Выйти</GhostButton>
