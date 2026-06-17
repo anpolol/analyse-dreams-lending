@@ -452,12 +452,11 @@ function ArchetypeCard({ symbol, onSelect, cardRef }) {
   return (
     <div ref={cardRef} style={{ width: 192, display: "flex", flexDirection: "column", gap: 12 }}>
       <button
-        onClick={() => !locked && onSelect(symbol.id)}
-        disabled={locked}
-        title={locked ? symbol.name : symbol.name}
+        onClick={() => onSelect(symbol.id)}
+        title={symbol.name}
         style={{
           position: "relative", width: "100%", height: 160, padding: 0, overflow: "hidden",
-          borderRadius: "var(--radius-xl)", cursor: locked ? "default" : "pointer",
+          borderRadius: "var(--radius-xl)", cursor: "pointer",
           border: locked ? "1.5px dashed rgba(249,255,255,0.32)" : "none",
           background: locked ? "rgba(249,255,255,0.05)" : "var(--paper-000)",
           boxShadow: locked ? "none" : "var(--shadow-lg)",
@@ -523,10 +522,38 @@ function MysteryArchetypeCard() {
   );
 }
 
+// Deterministic pseudo-random in [0, 1) — same seed always gives the same value,
+// so the scatter doesn't jump around on every re-render.
+function pseudoRandom(seed) {
+  const x = Math.sin(seed * 12.9898) * 43758.5453;
+  return x - Math.floor(x);
+}
+
+// Places cards on a loose grid, then jitters each one within its cell — looks
+// scattered like a constellation but cards never collide into an unreadable pile.
+function scatterPositions(count) {
+  const CELL_W = 220, CELL_H = 250, PADDING = 60;
+  const columns = Math.max(2, Math.ceil(Math.sqrt(count * 1.4)));
+  const rows = Math.ceil(count / columns);
+  const positions = Array.from({ length: count }).map((_, i) => {
+    const col = i % columns;
+    const row = Math.floor(i / columns);
+    const baseX = PADDING + col * CELL_W + CELL_W / 2;
+    const baseY = PADDING + row * CELL_H + CELL_H / 2;
+    const jitterX = (pseudoRandom(i * 2 + 1) - 0.5) * CELL_W * 0.6;
+    const jitterY = (pseudoRandom(i * 2 + 2) - 0.5) * CELL_H * 0.55;
+    return { x: baseX + jitterX, y: baseY + jitterY };
+  });
+  return { positions, width: columns * CELL_W + PADDING * 2, height: rows * CELL_H + PADDING * 2 };
+}
+
 function ConstellationGraph({ symbols, connections, onSelect }) {
   const containerRef = useRef(null);
   const cardRefs = useRef({});
   const [lines, setLines] = useState([]);
+
+  const { positions, width, height } = scatterPositions(symbols.length + 1);
+  const mysteryPos = positions[symbols.length];
 
   useLayoutEffect(() => {
     function measure() {
@@ -551,23 +578,27 @@ function ConstellationGraph({ symbols, connections, onSelect }) {
   }, [symbols, connections]);
 
   return (
-    <div ref={containerRef} style={{
-      position: "relative", borderRadius: "var(--radius-2xl)", overflow: "hidden", padding: 28,
+    <div style={{
+      borderRadius: "var(--radius-2xl)", overflow: "auto",
       background: "radial-gradient(circle at 30% 20%, rgba(143,214,232,0.18), transparent 55%), linear-gradient(160deg, var(--navy-900), var(--navy-800))",
-      boxShadow: "var(--shadow-xl)",
+      boxShadow: "var(--shadow-xl)", padding: 8,
     }}>
-      <DecorImg k="dotted-s" size={20} opacity={0.4} style={{ position: "absolute", left: "4%", top: "8%" }} />
-      <DecorImg k="dotted-s" size={16} opacity={0.3} style={{ position: "absolute", right: "5%", bottom: "10%" }} />
-      <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none" }}>
-        {lines.map((l, i) => (
-          <line key={i} x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2} stroke="rgba(143,214,232,0.5)" strokeWidth={Math.min(1 + l.strength * 0.6, 4)} />
+      <div ref={containerRef} style={{ position: "relative", width, minHeight: height, margin: "0 auto" }}>
+        <DecorImg k="dotted-s" size={20} opacity={0.4} style={{ position: "absolute", left: "4%", top: "8%" }} />
+        <DecorImg k="dotted-s" size={16} opacity={0.3} style={{ position: "absolute", right: "5%", bottom: "10%" }} />
+        <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none" }}>
+          {lines.map((l, i) => (
+            <line key={i} x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2} stroke="rgba(143,214,232,0.5)" strokeWidth={Math.min(1 + l.strength * 0.6, 4)} />
+          ))}
+        </svg>
+        {symbols.map((s, i) => (
+          <div key={s.id} style={{ position: "absolute", left: positions[i].x, top: positions[i].y, transform: "translate(-50%, -50%)" }}>
+            <ArchetypeCard symbol={s} onSelect={onSelect} cardRef={(el) => { cardRefs.current[s.id] = el; }} />
+          </div>
         ))}
-      </svg>
-      <div style={{ position: "relative", display: "flex", flexWrap: "wrap", gap: 28 }}>
-        {symbols.map((s) => (
-          <ArchetypeCard key={s.id} symbol={s} onSelect={onSelect} cardRef={(el) => { cardRefs.current[s.id] = el; }} />
-        ))}
-        <MysteryArchetypeCard />
+        <div style={{ position: "absolute", left: mysteryPos.x, top: mysteryPos.y, transform: "translate(-50%, -50%)" }}>
+          <MysteryArchetypeCard />
+        </div>
       </div>
     </div>
   );
@@ -600,35 +631,48 @@ function ArchetypesTab({ archetypes, connections, onSelect, onModel }) {
 
 function ArchetypeDetail({ symbol, onClose, onOpenDream }) {
   if (!symbol) return null;
+  const locked = !symbol.is_revealed;
   return (
     <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 90, background: "rgba(11,20,38,0.62)", backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
-      <div onClick={(e) => e.stopPropagation()} style={{ width: "min(480px, 100%)", maxHeight: "min(640px, 90vh)", overflowY: "auto", background: "var(--surface-soft)", borderRadius: 24, boxShadow: "var(--shadow-xl)", padding: "24px 26px" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, marginBottom: 14 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <span style={{ width: 48, height: 48, borderRadius: "50%", overflow: "hidden", flexShrink: 0, background: "var(--paper-100)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              {symbol.image_url ? <img src={symbol.image_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <span style={{ color: "var(--cyan-500)" }}>✦</span>}
-            </span>
-            <h3 style={{ margin: 0, fontSize: "1.2rem", fontWeight: 800, color: "var(--text-strong)" }}>{symbol.name}</h3>
-          </div>
-          <button onClick={onClose} aria-label="Закрыть" style={{ border: "none", background: "rgba(0,0,0,0.06)", width: 32, height: 32, borderRadius: "50%", cursor: "pointer", fontSize: 16, lineHeight: 1, flexShrink: 0 }}>×</button>
+      <div onClick={(e) => e.stopPropagation()} style={{ position: "relative", width: "min(480px, 100%)", maxHeight: "min(640px, 90vh)", overflowY: "auto", background: "var(--surface-soft)", borderRadius: 24, boxShadow: "var(--shadow-xl)", padding: "24px 26px" }}>
+        <button onClick={onClose} aria-label="Закрыть" style={{ position: "absolute", top: -14, right: -14, border: "none", background: "var(--surface-soft)", boxShadow: "var(--shadow-md)", width: 32, height: 32, borderRadius: "50%", cursor: "pointer", fontSize: 16, lineHeight: 1 }}>×</button>
+        <div style={{
+          position: "relative", width: "100%", height: 200, borderRadius: "var(--radius-xl)", overflow: "hidden", marginBottom: 18,
+          background: locked ? "radial-gradient(circle at 30% 20%, rgba(143,214,232,0.18), transparent 55%), linear-gradient(160deg, var(--navy-900), var(--navy-800))" : "var(--paper-000)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+        }}>
+          {locked ? (
+            <React.Fragment>
+              {VEIL_DOTS.map((d, i) => (
+                <span key={i} style={{ position: "absolute", ...d, width: 3, height: 3, borderRadius: 999, background: "rgba(249,255,255,0.4)" }} />
+              ))}
+              <span style={{ color: "var(--cyan-300)", fontSize: "2rem" }}>✦</span>
+            </React.Fragment>
+          ) : symbol.image_url ? (
+            <img src={symbol.image_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          ) : (
+            <span style={{ color: "var(--navy-800)", fontSize: "2rem" }}>✦</span>
+          )}
         </div>
+        <h3 style={{ margin: "0 0 10px", fontSize: "1.3rem", fontWeight: 800, color: "var(--text-strong)" }}>{symbol.name}</h3>
         <p style={{ margin: "0 0 18px", color: "var(--text-body)", lineHeight: 1.6 }}>{symbol.description}</p>
-        {symbol.dreams.length > 0 && (
+        {locked ? (
+          <div style={{ padding: "14px 16px", borderRadius: 14, background: "var(--paper-100)", border: "1px solid var(--border-subtle)" }}>
+            <p style={{ margin: 0, color: "var(--text-muted)", lineHeight: 1.5 }}>Этот архетип ещё не проявился в ваших снах. Разберите сон — и, возможно, он заполнится.</p>
+          </div>
+        ) : symbol.dreams.length > 0 && (
           <div>
-            <p style={{ margin: "0 0 10px", fontSize: "0.75rem", fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--text-strong)" }}>Проявления в снах</p>
+            <p style={{ margin: "0 0 10px", fontSize: "0.75rem", fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--text-strong)" }}>Сны, где проявился</p>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {symbol.dreams.map((d, i) => (
-                <div
-                  key={i}
-                  onClick={() => onOpenDream(d.dream_id)}
-                  title="Открыть сон в истории"
-                  style={{ padding: "12px 14px", borderRadius: 14, background: "var(--paper-100)", border: "1px solid var(--border-subtle)", cursor: "pointer" }}
-                >
-                  <div style={{ display: "flex", justifyContent: "space-between", gap: 10, marginBottom: 4 }}>
-                    <span style={{ fontWeight: 700, color: "var(--text-strong)", fontSize: "0.92rem" }}>{d.dream_title}</span>
-                    <span style={{ fontSize: "0.75rem", color: "var(--text-faint)", flexShrink: 0 }}>{formatDate(d.date)}</span>
+                <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, padding: "12px 14px", borderRadius: 14, background: "var(--paper-100)", border: "1px solid var(--border-subtle)" }}>
+                  <div>
+                    <p style={{ margin: 0, fontWeight: 700, color: "var(--text-strong)", fontSize: "0.92rem" }}>{d.dream_title}</p>
+                    <p style={{ margin: "2px 0 0", fontSize: "0.75rem", color: "var(--text-faint)" }}>{formatDate(d.date)}</p>
                   </div>
-                  {d.manifestation && <p style={{ margin: 0, color: "var(--text-muted)", fontSize: "0.88rem", lineHeight: 1.45 }}>{d.manifestation}</p>}
+                  <button onClick={() => onOpenDream(d.dream_id)} style={{ flexShrink: 0, border: "none", background: "transparent", color: "var(--cyan-500)", fontWeight: 700, fontSize: "0.85rem", cursor: "pointer", padding: 0 }}>
+                    В историю →
+                  </button>
                 </div>
               ))}
             </div>
