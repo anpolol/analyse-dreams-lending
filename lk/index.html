@@ -134,9 +134,10 @@
 
   /* Signature page background wash */
   --bg-wash:
-    radial-gradient(920px 580px at 12% 2%, rgba(186,234,245,0.72), transparent 58%),
-    radial-gradient(820px 560px at 96% 8%, rgba(23,34,54,0.12), transparent 60%),
-    linear-gradient(180deg, #edf8fb 0%, #f9ffff 28%, #f9ffff 100%),
+    radial-gradient(1100px 720px at 6% -6%, rgba(143,214,232,0.9), transparent 56%),
+    radial-gradient(900px 640px at 102% 2%, rgba(23,34,54,0.26), transparent 58%),
+    radial-gradient(820px 600px at 46% 112%, rgba(92,188,212,0.4), transparent 60%),
+    linear-gradient(180deg, #d8eff6 0%, #eefafc 26%, #f9ffff 100%),
     var(--paper-050); /* @kind color */
 }
 
@@ -271,7 +272,7 @@
 
 </style>
 <style>
-  body { margin: 0; background: var(--bg-wash); min-height: 100vh; font-family: var(--font-sans); }
+  body { margin: 0; background: var(--bg-wash); min-height: 100vh; font-family: var(--font-sans); overflow-x: hidden; }
   #root { width: min(980px, calc(100% - 32px)); margin: 0 auto; padding: 32px 0 80px; }
   .lk-stack { display: flex; flex-direction: column; gap: 40px; }
   @media (max-width: 760px) {
@@ -488,8 +489,8 @@ function ArchetypeCard({ symbol, onSelect, cardRef }) {
           <span style={{ color: "var(--navy-800)", fontSize: "1.7rem" }}>✦</span>
         )}
       </button>
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
-        <p style={{ margin: 0, fontWeight: 800, fontSize: "1rem", color: locked ? "rgba(249,255,255,0.95)" : "var(--text-strong)" }}>{symbol.name}</p>
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8, minWidth: 0 }}>
+        <p style={{ margin: 0, flex: 1, minWidth: 0, fontWeight: 800, fontSize: "1rem", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", color: locked ? "rgba(249,255,255,0.95)" : "var(--text-strong)" }}>{symbol.name}</p>
         {!locked && symbol.dreams.length > 0 && (
           <span style={{
             flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 4,
@@ -502,7 +503,7 @@ function ArchetypeCard({ symbol, onSelect, cardRef }) {
       </div>
       {locked && (
         <p style={{
-          margin: 0, color: "rgba(249,255,255,0.55)", fontSize: "0.84rem", lineHeight: 1.4,
+          margin: 0, height: 56, color: "rgba(249,255,255,0.55)", fontSize: "0.84rem", lineHeight: 1.4,
           display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden",
         }}>
           {symbol.description}
@@ -530,8 +531,8 @@ function MysteryArchetypeCard() {
         ))}
         <span style={{ color: "rgba(249,255,255,0.6)", fontSize: "1.7rem", fontWeight: 800 }}>?</span>
       </div>
-      <p style={{ margin: 0, fontWeight: 800, fontSize: "1rem", color: "rgba(249,255,255,0.95)" }}>Скрытый архетип</p>
-      <p style={{ margin: 0, color: "rgba(249,255,255,0.55)", fontSize: "0.84rem", lineHeight: 1.4 }}>
+      <p style={{ margin: 0, fontWeight: 800, fontSize: "1rem", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", color: "rgba(249,255,255,0.95)" }}>Скрытый архетип</p>
+      <p style={{ margin: 0, height: 56, overflow: "hidden", color: "rgba(249,255,255,0.55)", fontSize: "0.84rem", lineHeight: 1.4 }}>
         Ещё не проявился. Появится, когда сны дадут достаточно материала.
       </p>
     </div>
@@ -548,7 +549,7 @@ function pseudoRandom(seed) {
 // Places cards on a loose grid, then nudges each one within its cell by an amount
 // small enough that neighbouring cards never collide — looks scattered, stays readable.
 function scatterPositions(count) {
-  const CELL_W = 260, CELL_H = 340, PADDING = 50, JITTER = 22;
+  const CELL_W = 300, CELL_H = 380, PADDING = 50, JITTER = 22;
   const columns = Math.max(2, Math.ceil(Math.sqrt(count * 1.4)));
   const rows = Math.ceil(count / columns);
   const positions = Array.from({ length: count }).map((_, i) => {
@@ -564,9 +565,12 @@ function scatterPositions(count) {
 }
 
 function ConstellationGraph({ symbols, connections, onSelect }) {
+  const scrollRef = useRef(null);
   const containerRef = useRef(null);
   const cardRefs = useRef({});
   const [lines, setLines] = useState([]);
+  const [grabbing, setGrabbing] = useState(false);
+  const drag = useRef({ active: false, moved: false, startX: 0, startY: 0, scrollLeft: 0, scrollTop: 0 });
 
   const { positions, width, height } = scatterPositions(symbols.length + 1);
   const mysteryPos = positions[symbols.length];
@@ -593,12 +597,55 @@ function ConstellationGraph({ symbols, connections, onSelect }) {
     return () => window.removeEventListener("resize", measure);
   }, [symbols, connections]);
 
+  // Drag-to-pan the sky — grab anywhere (including on a card) and slide to
+  // reveal archetypes scattered further out. A small movement threshold keeps
+  // plain taps/clicks on cards working as before.
+  function onPointerDown(e) {
+    if (e.button !== undefined && e.button !== 0) return;
+    const el = scrollRef.current;
+    if (!el) return;
+    drag.current = { active: true, moved: false, startX: e.clientX, startY: e.clientY, scrollLeft: el.scrollLeft, scrollTop: el.scrollTop };
+    setGrabbing(true);
+  }
+  function onPointerMove(e) {
+    const d = drag.current;
+    if (!d.active) return;
+    const el = scrollRef.current;
+    const dx = e.clientX - d.startX, dy = e.clientY - d.startY;
+    if (Math.abs(dx) > 4 || Math.abs(dy) > 4) d.moved = true;
+    if (d.moved) {
+      el.scrollLeft = d.scrollLeft - dx;
+      el.scrollTop = d.scrollTop - dy;
+    }
+  }
+  function onPointerUp() {
+    drag.current.active = false;
+    setGrabbing(false);
+  }
+  function onClickCapture(e) {
+    if (drag.current.moved) {
+      e.preventDefault();
+      e.stopPropagation();
+      drag.current.moved = false;
+    }
+  }
+
   return (
-    <div style={{
-      borderRadius: "var(--radius-2xl)", overflow: "auto",
-      background: "radial-gradient(circle at 30% 20%, rgba(143,214,232,0.18), transparent 55%), linear-gradient(160deg, var(--navy-900), var(--navy-800))",
-      boxShadow: "var(--shadow-xl)", padding: 8,
-    }}>
+    <div
+      ref={scrollRef}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+      onPointerLeave={onPointerUp}
+      onClickCapture={onClickCapture}
+      style={{
+        width: "100vw", marginLeft: "calc(50% - 50vw)", marginRight: "calc(50% - 50vw)",
+        borderRadius: 0, overflow: "auto", touchAction: "none", userSelect: "none",
+        cursor: grabbing ? "grabbing" : "grab",
+        background: "radial-gradient(circle at 30% 20%, rgba(143,214,232,0.18), transparent 55%), linear-gradient(160deg, var(--navy-900), var(--navy-800))",
+        boxShadow: "var(--shadow-xl)", padding: 8,
+      }}
+    >
       <div ref={containerRef} style={{ position: "relative", width, minHeight: height, margin: "0 auto" }}>
         <DecorImg k="dotted-s" size={20} opacity={0.4} style={{ position: "absolute", left: "4%", top: "8%" }} />
         <DecorImg k="dotted-s" size={16} opacity={0.3} style={{ position: "absolute", right: "5%", bottom: "10%" }} />
@@ -645,12 +692,40 @@ function ArchetypesTab({ archetypes, connections, onSelect, onModel }) {
   );
 }
 
+function DreamHistoryRow({ d, onOpen }) {
+  const [hover, setHover] = useState(false);
+  return (
+    <button
+      onClick={() => onOpen(d.dream_id)}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      style={{
+        display: "flex", alignItems: "center", gap: 12,
+        width: "100%", textAlign: "left", border: "none", cursor: "pointer", fontFamily: "var(--font-sans)",
+        padding: "14px 16px", borderRadius: 14,
+        background: hover ? "var(--cyan-100)" : "var(--paper-100)",
+        boxShadow: hover ? "var(--shadow-sm)" : "none",
+        transform: hover ? "translateX(2px)" : "none",
+        transition: "background 160ms var(--ease-out), transform 160ms var(--ease-out), box-shadow 160ms var(--ease-out)",
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+        <span aria-hidden="true" style={{ flexShrink: 0, width: 28, height: 28, borderRadius: 999, background: "var(--cyan-300)", color: "var(--navy-800)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.85rem" }}>✦</span>
+        <div style={{ minWidth: 0 }}>
+          <p style={{ margin: 0, fontWeight: 700, color: "var(--text-strong)", fontSize: "0.92rem", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{d.manifestation || d.dream_title}</p>
+          <p style={{ margin: "2px 0 0", fontSize: "0.75rem", color: "var(--text-faint)" }}>{formatDate(d.date)}</p>
+        </div>
+      </div>
+    </button>
+  );
+}
+
 function ArchetypeDetail({ symbol, onClose, onOpenDream }) {
   if (!symbol) return null;
   const locked = !symbol.is_revealed;
   return (
     <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 90, background: "rgba(11,20,38,0.62)", backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
-      <div onClick={(e) => e.stopPropagation()} style={{ position: "relative", width: "min(480px, 100%)", maxHeight: "min(640px, 90vh)", overflowY: "auto", background: "var(--surface-soft)", borderRadius: 24, boxShadow: "var(--shadow-xl)", padding: "24px 26px" }}>
+      <div style={{ position: "relative", width: "min(480px, 100%)", maxHeight: "min(640px, 90vh)", overflowY: "auto", background: "var(--surface-soft)", borderRadius: 24, boxShadow: "var(--shadow-xl)", padding: "24px 26px" }}>
         <button onClick={onClose} aria-label="Закрыть" style={{ position: "absolute", top: -14, right: -14, border: "none", background: "var(--surface-soft)", boxShadow: "var(--shadow-md)", width: 32, height: 32, borderRadius: "50%", cursor: "pointer", fontSize: 16, lineHeight: 1 }}>×</button>
         <div style={{
           position: "relative", width: "100%", height: 200, borderRadius: "var(--radius-xl)", overflow: "hidden", marginBottom: 18,
@@ -681,15 +756,7 @@ function ArchetypeDetail({ symbol, onClose, onOpenDream }) {
             <p style={{ margin: "0 0 10px", fontSize: "0.75rem", fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--text-strong)" }}>Сны, где проявился</p>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {symbol.dreams.map((d, i) => (
-                <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, padding: "12px 14px", borderRadius: 14, background: "var(--paper-100)", border: "1px solid var(--border-subtle)" }}>
-                  <div>
-                    <p style={{ margin: 0, fontWeight: 700, color: "var(--text-strong)", fontSize: "0.92rem" }}>{d.dream_title}</p>
-                    <p style={{ margin: "2px 0 0", fontSize: "0.75rem", color: "var(--text-faint)" }}>{formatDate(d.date)}</p>
-                  </div>
-                  <button onClick={() => onOpenDream(d.dream_id)} style={{ flexShrink: 0, border: "none", background: "transparent", color: "var(--cyan-500)", fontWeight: 700, fontSize: "0.85rem", cursor: "pointer", padding: 0 }}>
-                    В историю →
-                  </button>
-                </div>
+                <DreamHistoryRow key={i} d={d} onOpen={onOpenDream} />
               ))}
             </div>
           </div>
@@ -700,7 +767,7 @@ function ArchetypeDetail({ symbol, onClose, onOpenDream }) {
 }
 
 /* ---------- Balance ---------- */
-function BalanceCard({ balance, subscription, onAnalyze, onCancelSubscription }) {
+function BalanceCard({ balance, subscription, onAnalyze }) {
   const untilDate = subscription.until ? new Date(subscription.until).toLocaleDateString("ru-RU", { day: "numeric", month: "long" }) : null;
   return (
     <Card variant="night" padding={0} style={{ position: "relative", overflow: "hidden" }}>
@@ -723,15 +790,16 @@ function BalanceCard({ balance, subscription, onAnalyze, onCancelSubscription })
           </p>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 10, alignItems: "flex-end" }}>
-          <Button tone="onDark" onClick={onAnalyze}>Разобрать сон →</Button>
-          {subscription.active && (
-            <button
-              onClick={onCancelSubscription}
-              style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(249,255,255,0.45)", fontSize: "0.8rem", textDecoration: "underline", padding: 0 }}
-            >
-              Отменить подписку
-            </button>
-          )}
+          <Button
+            onClick={onAnalyze}
+            style={{
+              background: "var(--cyan-300)", color: "var(--navy-800)",
+              fontSize: "1.1rem", fontWeight: 800, padding: "18px 32px",
+              boxShadow: "var(--shadow-glow)",
+            }}
+          >
+            Разобрать сон →
+          </Button>
         </div>
       </div>
     </Card>
@@ -739,10 +807,29 @@ function BalanceCard({ balance, subscription, onAnalyze, onCancelSubscription })
 }
 
 /* ---------- Tariffs ---------- */
-function TariffGrid({ onBuy, tariffs }) {
+function TariffGrid({ onBuy, tariffs, subscription, onCancelSubscription }) {
   return (
     <section>
       <SectionHead eyebrow="Пополнить баланс" title="Выберите тариф" />
+      {subscription?.active && (
+        <div style={{
+          display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 16,
+          padding: "20px 24px", borderRadius: "var(--radius-lg)", background: "var(--surface-raised)",
+          border: "1px solid var(--border-subtle)", boxShadow: "var(--shadow-sm)", marginBottom: 20,
+        }}>
+          <p style={{ margin: 0, color: "var(--text-body)", fontWeight: 600 }}>У вас активна безлимитная подписка.</p>
+          <button
+            onClick={onCancelSubscription}
+            style={{
+              border: "1.5px solid var(--danger-500)", background: "rgba(194,86,107,0.08)",
+              color: "var(--danger-500)", fontWeight: 700, fontSize: "0.95rem",
+              padding: "12px 22px", borderRadius: "var(--radius-md)", cursor: "pointer", fontFamily: "var(--font-sans)",
+            }}
+          >
+            Отменить подписку
+          </button>
+        </div>
+      )}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0,1fr))", gap: 18 }}>
         {tariffs.map((t) => <TariffCard key={t.id} t={t} onBuy={onBuy} />)}
       </div>
@@ -851,36 +938,49 @@ function HistoryItem({ it, focusId }) {
     }
   }, [focusId]);
 
+  const focused = focusId === it.id;
+  const insightText = (() => { try { const p = JSON.parse(it.insight); return p.insight || it.insight; } catch (e) { return it.insight; } })();
+
   return (
     <React.Fragment>
       <div ref={wrapRef}>
-      <Card variant="raised" padding={0} style={{ overflow: "hidden", boxShadow: focusId === it.id ? "0 0 0 2px var(--cyan-400)" : undefined }}>
-        <div style={{ padding: "22px 26px" }}>
-          <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 12 }}>
-            <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--text-faint)", letterSpacing: "0.04em", textTransform: "uppercase", flexShrink: 0 }}>{formatDate(it.date)}</span>
-            <h3 style={{ margin: 0, fontSize: "1.15rem", fontWeight: 800, color: "var(--text-strong)" }}>{it.dream_title}</h3>
+      <Card variant="night" padding={0} style={{
+        position: "relative", overflow: "hidden",
+        background: "radial-gradient(circle at 22% 10%, rgba(143,214,232,0.2), transparent 55%), linear-gradient(160deg, var(--navy-900), var(--navy-800))",
+        boxShadow: focused ? "0 0 0 2px var(--cyan-400), 0 0 36px rgba(143,214,232,0.5)" : "var(--shadow-lg)",
+      }}>
+        <DecorImg k="dotted-l" size={160} opacity={0.28} style={{ position: "absolute", right: -30, top: -30 }} />
+        <div style={{ position: "relative", padding: "28px 30px" }}>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 14 }}>
+            <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "rgba(249,255,255,0.5)", letterSpacing: "0.04em", textTransform: "uppercase", flexShrink: 0 }}>{formatDate(it.date)}</span>
+            <h3 style={{ margin: 0, fontSize: "1.3rem", fontWeight: 800, color: "var(--paper-050)" }}>{it.dream_title}</h3>
           </div>
-          <p onClick={() => setOpen(true)} style={{ margin: "0 0 16px", color: "var(--text-muted)", lineHeight: 1.55, cursor: "pointer" }}>{it.dream_short}</p>
-          <div style={{ padding: "16px 18px", borderRadius: 16, background: "var(--paper-100)", border: "1px solid var(--border-subtle)" }}>
-            <p style={{ margin: "0 0 6px", fontSize: "0.75rem", fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--text-strong)", display: "flex", alignItems: "center", gap: 6 }}>
-              <span aria-hidden="true" style={{ color: "var(--cyan-500)" }}>✦</span>Инсайт
+          <p onClick={() => setOpen(true)} style={{ margin: "0 0 18px", color: "rgba(249,255,255,0.72)", lineHeight: 1.6, cursor: "pointer", fontSize: "1.02rem" }}>{it.dream_short}</p>
+          <div style={{ padding: "18px 20px", borderRadius: 16, background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.14)" }}>
+            <p style={{ margin: "0 0 8px", fontSize: "0.78rem", fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--cyan-300)", display: "flex", alignItems: "center", gap: 6 }}>
+              <span aria-hidden="true">✦</span>Инсайт
             </p>
-            <p style={{ margin: 0, color: "var(--text-body)", lineHeight: 1.55, fontWeight: 500 }}>{(() => { try { const p = JSON.parse(it.insight); return p.insight || it.insight; } catch(e) { return it.insight; } })()}</p>
+            <p style={{ margin: 0, color: "var(--paper-050)", lineHeight: 1.6, fontWeight: 500, fontSize: "1.05rem" }}>{insightText}</p>
           </div>
         </div>
       </Card>
       </div>
       {open && (
-        <div onClick={() => setOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 90, background: "rgba(11,20,38,0.62)", backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
-          <div onClick={(e) => e.stopPropagation()} style={{ width: "min(560px, 100%)", maxHeight: "min(640px, 90vh)", overflowY: "auto", background: "var(--surface-soft)", borderRadius: 24, boxShadow: "var(--shadow-xl)", padding: "24px 26px" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, marginBottom: 14 }}>
+        <div onClick={() => setOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 90, background: "rgba(11,20,38,0.7)", backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+          <div onClick={(e) => e.stopPropagation()} style={{
+            position: "relative", width: "min(560px, 100%)", maxHeight: "min(640px, 90vh)", overflowY: "auto", overflowX: "hidden",
+            background: "radial-gradient(circle at 22% 8%, rgba(143,214,232,0.2), transparent 55%), linear-gradient(160deg, var(--navy-900), var(--navy-800))",
+            borderRadius: 24, boxShadow: "var(--shadow-xl)", padding: "26px 28px",
+          }}>
+            <DecorImg k="dotted-l" size={160} opacity={0.22} style={{ position: "absolute", right: -30, top: -30 }} />
+            <div style={{ position: "relative", display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, marginBottom: 16 }}>
               <div>
-                <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--text-faint)", letterSpacing: "0.04em", textTransform: "uppercase" }}>{formatDate(it.date)}</span>
-                <h3 style={{ margin: "4px 0 0", fontSize: "1.2rem", fontWeight: 800, color: "var(--text-strong)" }}>{it.dream_title}</h3>
+                <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "rgba(249,255,255,0.5)", letterSpacing: "0.04em", textTransform: "uppercase" }}>{formatDate(it.date)}</span>
+                <h3 style={{ margin: "4px 0 0", fontSize: "1.3rem", fontWeight: 800, color: "var(--paper-050)" }}>{it.dream_title}</h3>
               </div>
-              <button onClick={() => setOpen(false)} style={{ border: "none", background: "rgba(0,0,0,0.06)", width: 32, height: 32, borderRadius: "50%", cursor: "pointer", fontSize: 16, lineHeight: 1, flexShrink: 0 }}>×</button>
+              <button onClick={() => setOpen(false)} style={{ border: "none", background: "rgba(255,255,255,0.12)", color: "var(--paper-050)", width: 32, height: 32, borderRadius: "50%", cursor: "pointer", fontSize: 16, lineHeight: 1, flexShrink: 0 }}>×</button>
             </div>
-            <p style={{ margin: 0, color: "var(--text-body)", lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{it.dream_description}</p>
+            <p style={{ position: "relative", margin: 0, color: "rgba(249,255,255,0.85)", lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{it.dream_description}</p>
           </div>
         </div>
       )}
@@ -1359,8 +1459,8 @@ Object.assign(window, { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCa
             <Tabs value={tab} onChange={changeTab} />
             {tab === "cabinet" ? (
               <div className="lk-stack">
-                <BalanceCard balance={balance} subscription={subscription} onAnalyze={() => setChatOpen(true)} onCancelSubscription={cancelSubscription} />
-                <TariffGrid onBuy={buyTariff} tariffs={tariffs} />
+                <BalanceCard balance={balance} subscription={subscription} onAnalyze={() => setChatOpen(true)} />
+                <TariffGrid onBuy={buyTariff} tariffs={tariffs} subscription={subscription} onCancelSubscription={cancelSubscription} />
                 <NotebookCard onGet={getNotebook} />
               </div>
             ) : tab === "archetypes" ? (
