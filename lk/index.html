@@ -454,16 +454,22 @@ const VEIL_DOTS = [
 const CARD_W = 200;
 
 function ArchetypeCard({ symbol, onSelect, cardRef }) {
+  const [hover, setHover] = useState(false);
   const locked = !symbol.is_revealed;
   return (
     <div
       ref={cardRef}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
       style={{
         boxSizing: "border-box", width: CARD_W, display: "flex", flexDirection: "column", gap: 10,
         padding: 14, borderRadius: "var(--radius-xl)",
         background: locked ? "var(--navy-800)" : "var(--paper-000)",
         border: locked ? "1.5px dashed rgba(249,255,255,0.32)" : "1px solid var(--border-subtle)",
-        boxShadow: "var(--shadow-lg)",
+        boxShadow: hover ? "var(--shadow-xl)" : "var(--shadow-lg)",
+        transform: hover ? "translateY(-5px) scale(1.03)" : "none",
+        transition: "transform 200ms var(--ease-out), box-shadow 200ms var(--ease-out)",
+        cursor: "pointer",
       }}
     >
       <button
@@ -681,9 +687,9 @@ function ArchetypesTab({ archetypes, connections, onSelect, onModel }) {
         <Button
           onClick={onModel}
           style={{
-            background: "var(--cyan-300)", color: "var(--navy-800)",
+            background: "var(--navy-800)", color: "var(--cyan-300)",
             fontSize: "1.1rem", fontWeight: 800, padding: "18px 32px",
-            boxShadow: "var(--shadow-glow)",
+            boxShadow: "var(--shadow-xl)",
           }}
         >
           Разобрать сон →
