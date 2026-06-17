@@ -602,10 +602,13 @@ function ConstellationGraph({ symbols, connections, onSelect }) {
     return () => window.removeEventListener("resize", measure);
   }, [symbols, connections]);
 
-  // Drag-to-pan the sky — grab anywhere (including on a card) and slide to
-  // reveal archetypes scattered further out. A small movement threshold keeps
-  // plain taps/clicks on cards working as before.
+  // Drag-to-pan the sky for mouse users — grab anywhere (including on a card)
+  // and slide to reveal archetypes scattered further out. Touch is left to the
+  // browser's native two-axis scrolling (smooth, with inertia, and it chains
+  // to the page once the sky's own scroll is exhausted) — adding our own JS
+  // panning on top of that just fights the browser and feels janky.
   function onPointerDown(e) {
+    if (e.pointerType === "touch") return;
     if (e.button !== undefined && e.button !== 0) return;
     const el = scrollRef.current;
     if (!el) return;
@@ -620,10 +623,7 @@ function ConstellationGraph({ symbols, connections, onSelect }) {
     if (Math.abs(dx) > 4 || Math.abs(dy) > 4) d.moved = true;
     if (d.moved) {
       el.scrollLeft = d.scrollLeft - dx;
-      // Vertical drag is left to native touch scrolling on touch devices (see
-      // touchAction: "pan-y" below) so the page can still be scrolled once the
-      // sky's own scroll is exhausted — only mouse drags pan it via JS here.
-      if (e.pointerType !== "touch") el.scrollTop = d.scrollTop - dy;
+      el.scrollTop = d.scrollTop - dy;
     }
   }
   function onPointerUp() {
@@ -649,7 +649,7 @@ function ConstellationGraph({ symbols, connections, onSelect }) {
       onClickCapture={onClickCapture}
       style={{
         width: "100vw", marginLeft: "calc(50% - 50vw)", marginRight: "calc(50% - 50vw)", marginBottom: -80,
-        borderRadius: 0, overflow: "auto", touchAction: "pan-y", userSelect: "none",
+        borderRadius: 0, overflow: "auto", touchAction: "auto", userSelect: "none",
         cursor: grabbing ? "grabbing" : "grab",
         background: "radial-gradient(circle at 30% 20%, rgba(143,214,232,0.18), transparent 55%), linear-gradient(160deg, var(--navy-900), var(--navy-800))",
         boxShadow: "var(--shadow-xl)", padding: 8,
