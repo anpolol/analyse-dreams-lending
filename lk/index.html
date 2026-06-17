@@ -412,6 +412,7 @@ function Header({ email, onSignOut }) {
 function Tabs({ value, onChange }) {
   const items = [
     { id: "cabinet", label: "Кабинет" },
+    { id: "archetypes", label: "Созвездие архетипов" },
     { id: "history", label: "История" },
   ];
   return (
@@ -435,6 +436,163 @@ function Tabs({ value, onChange }) {
           </button>
         );
       })}
+    </div>
+  );
+}
+
+/* ---------- Archetypes / Constellation ---------- */
+// Deterministic scatter across the card using the golden angle — looks like a star field,
+// but stays stable across re-renders since it only depends on index/count.
+function archetypeLayout(count) {
+  const GOLDEN_ANGLE = 137.508;
+  return Array.from({ length: count }).map((_, i) => {
+    const t = count <= 1 ? 0 : i / (count - 1);
+    const angle = (i * GOLDEN_ANGLE) % 360;
+    const radius = 16 + t * 34;
+    const rad = (angle * Math.PI) / 180;
+    return {
+      x: 50 + radius * Math.cos(rad),
+      y: 50 + radius * Math.sin(rad) * 0.72,
+    };
+  });
+}
+
+function ArchetypeCard({ symbol, pos, onSelect }) {
+  const locked = !symbol.is_revealed;
+  return (
+    <button
+      onClick={() => !locked && onSelect(symbol.id)}
+      title={locked ? "Раскрывается во время разбора сна" : symbol.name}
+      style={{
+        position: "absolute", left: `${pos.x}%`, top: `${pos.y}%`, transform: "translate(-50%, -50%)",
+        display: "flex", flexDirection: "column", alignItems: "center", gap: 6,
+        border: "none", background: "transparent", cursor: locked ? "default" : "pointer", padding: 0, width: 88,
+      }}
+    >
+      <span style={{
+        width: 56, height: 56, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center",
+        background: locked ? "rgba(249,255,255,0.06)" : "var(--paper-050)",
+        border: locked ? "1.5px dashed rgba(249,255,255,0.3)" : "2px solid var(--cyan-300)",
+        boxShadow: locked ? "none" : "var(--shadow-glow)",
+        overflow: "hidden", flexShrink: 0,
+      }}>
+        {locked ? (
+          <span style={{ color: "rgba(249,255,255,0.45)", fontSize: "1.1rem" }}>?</span>
+        ) : symbol.image_url ? (
+          <img src={symbol.image_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+        ) : (
+          <span style={{ color: "var(--navy-800)", fontSize: "1.3rem" }}>✦</span>
+        )}
+      </span>
+      <span style={{
+        fontSize: "0.72rem", fontWeight: 700, textAlign: "center", lineHeight: 1.2,
+        color: locked ? "rgba(249,255,255,0.35)" : "rgba(249,255,255,0.92)",
+        whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 88,
+      }}>
+        {locked ? "?" : symbol.name}
+      </span>
+      {!locked && symbol.dreams.length > 0 && (
+        <span style={{
+          fontSize: "0.66rem", fontWeight: 700, color: "var(--navy-800)", background: "var(--cyan-300)",
+          borderRadius: 999, padding: "1px 7px",
+        }}>
+          {symbol.dreams.length}
+        </span>
+      )}
+    </button>
+  );
+}
+
+function ConstellationGraph({ symbols, connections, onSelect }) {
+  const layout = archetypeLayout(symbols.length);
+  const posById = {};
+  symbols.forEach((s, i) => { posById[s.id] = layout[i]; });
+
+  return (
+    <div style={{
+      position: "relative", minHeight: 420, borderRadius: "var(--radius-2xl)", overflow: "hidden",
+      background: "radial-gradient(circle at 30% 20%, rgba(143,214,232,0.18), transparent 55%), linear-gradient(160deg, var(--navy-900), var(--navy-800))",
+      boxShadow: "var(--shadow-xl)",
+    }}>
+      <DecorImg k="dotted-s" size={26} opacity={0.5} style={{ position: "absolute", left: "6%", top: "10%" }} />
+      <DecorImg k="dotted-s" size={18} opacity={0.35} style={{ position: "absolute", right: "10%", top: "68%" }} />
+      <DecorImg k="sparkle" size={22} opacity={0.55} style={{ position: "absolute", right: "18%", top: "16%" }} />
+      <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}>
+        {connections.map((c, i) => {
+          const a = posById[c.a], b = posById[c.b];
+          if (!a || !b) return null;
+          return (
+            <line
+              key={i}
+              x1={`${a.x}%`} y1={`${a.y}%`} x2={`${b.x}%`} y2={`${b.y}%`}
+              stroke="rgba(143,214,232,0.5)"
+              strokeWidth={Math.min(1 + c.strength * 0.6, 4)}
+            />
+          );
+        })}
+      </svg>
+      {symbols.map((s) => <ArchetypeCard key={s.id} symbol={s} pos={posById[s.id]} onSelect={onSelect} />)}
+    </div>
+  );
+}
+
+function ArchetypesTab({ archetypes, connections, onSelect, onModel }) {
+  const total = archetypes.length;
+  const revealed = archetypes.filter((s) => s.is_revealed).length;
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 16, alignItems: "flex-end", justifyContent: "space-between" }}>
+        <div>
+          <Eyebrow>Карта снов</Eyebrow>
+          <h2 style={{ margin: "8px 0 0", fontSize: "clamp(1.3rem, 2.4vw, 1.8rem)", fontWeight: 800, letterSpacing: "-0.01em", color: "var(--text-strong)" }}>Созвездие архетипов</h2>
+          <p style={{ margin: "8px 0 0", color: "var(--text-muted)" }}>Раскрыто {revealed} из {total} архетипов</p>
+        </div>
+        <GhostButton onClick={onModel}>Разобрать сон ✦</GhostButton>
+      </div>
+      {total === 0 ? (
+        <Card variant="soft" style={{ textAlign: "center", padding: 48 }}>
+          <p style={{ margin: 0, color: "var(--text-muted)" }}>Созвездие пока пусто — оно появится после первого разбора сна.</p>
+        </Card>
+      ) : (
+        <ConstellationGraph symbols={archetypes} connections={connections} onSelect={onSelect} />
+      )}
+      <p style={{ margin: 0, color: "var(--text-faint)", fontSize: "0.85rem" }}>Каждый разбор сна может раскрыть новый архетип и связать его с уже найденными.</p>
+    </div>
+  );
+}
+
+function ArchetypeDetail({ symbol, onClose }) {
+  if (!symbol) return null;
+  return (
+    <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 90, background: "rgba(11,20,38,0.62)", backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ width: "min(480px, 100%)", maxHeight: "min(640px, 90vh)", overflowY: "auto", background: "var(--surface-soft)", borderRadius: 24, boxShadow: "var(--shadow-xl)", padding: "24px 26px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, marginBottom: 14 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <span style={{ width: 48, height: 48, borderRadius: "50%", overflow: "hidden", flexShrink: 0, background: "var(--paper-100)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              {symbol.image_url ? <img src={symbol.image_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <span style={{ color: "var(--cyan-500)" }}>✦</span>}
+            </span>
+            <h3 style={{ margin: 0, fontSize: "1.2rem", fontWeight: 800, color: "var(--text-strong)" }}>{symbol.name}</h3>
+          </div>
+          <button onClick={onClose} aria-label="Закрыть" style={{ border: "none", background: "rgba(0,0,0,0.06)", width: 32, height: 32, borderRadius: "50%", cursor: "pointer", fontSize: 16, lineHeight: 1, flexShrink: 0 }}>×</button>
+        </div>
+        <p style={{ margin: "0 0 18px", color: "var(--text-body)", lineHeight: 1.6 }}>{symbol.description}</p>
+        {symbol.dreams.length > 0 && (
+          <div>
+            <p style={{ margin: "0 0 10px", fontSize: "0.75rem", fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--text-strong)" }}>Проявления в снах</p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {symbol.dreams.map((d, i) => (
+                <div key={i} style={{ padding: "12px 14px", borderRadius: 14, background: "var(--paper-100)", border: "1px solid var(--border-subtle)" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", gap: 10, marginBottom: 4 }}>
+                    <span style={{ fontWeight: 700, color: "var(--text-strong)", fontSize: "0.92rem" }}>{d.dream_title}</span>
+                    <span style={{ fontSize: "0.75rem", color: "var(--text-faint)", flexShrink: 0 }}>{formatDate(d.date)}</span>
+                  </div>
+                  {d.manifestation && <p style={{ margin: 0, color: "var(--text-muted)", fontSize: "0.88rem", lineHeight: 1.45 }}>{d.manifestation}</p>}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -849,11 +1007,11 @@ function Toast({ msg }) {
   );
 }
 
-Object.assign(window, { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCard, TariffGrid, NotebookCard, HistoryList, Toast, DreamChat });
+Object.assign(window, { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCard, TariffGrid, NotebookCard, HistoryList, ArchetypesTab, ArchetypeDetail, Toast, DreamChat });
 </script>
   <script type="text/babel">
     const { useState, useEffect, useRef } = React;
-    const { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCard, TariffGrid, NotebookCard, HistoryList, Toast, DreamChat } = window;
+    const { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCard, TariffGrid, NotebookCard, HistoryList, ArchetypesTab, ArchetypeDetail, Toast, DreamChat } = window;
 
     function LoginScreen() {
       const [email, setEmail] = useState(() => { try { return localStorage.getItem('ad_last_email') || ""; } catch(e) { return ""; } });
@@ -926,6 +1084,8 @@ Object.assign(window, { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCa
       const [balance, setBalance] = useState(0);
       const [subscription, setSubscription] = useState({ active: false, until: null });
       const [history, setHistory] = useState(SEED_HISTORY);
+      const [archetypes, setArchetypes] = useState({ symbols: [], connections: [] });
+      const [selectedArchetypeId, setSelectedArchetypeId] = useState(null);
       const [tariffs, setTariffs] = useState(TARIFFS);
       const [chatOpen, setChatOpen] = useState(false);
       const [toast, setToast] = useState("");
@@ -965,6 +1125,7 @@ Object.assign(window, { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCa
               .then(r => r.ok ? r.json() : [])
               .then(data => { if (Array.isArray(data)) setHistory(data); })
               .catch(() => {});
+            loadArchetypes();
           }
         });
         return () => subscription.unsubscribe();
@@ -1031,11 +1192,18 @@ Object.assign(window, { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCa
       async function signOut() {
         await window._supabase.auth.signOut();
       }
+      function loadArchetypes() {
+        authHeaders().then(headers => fetch('https://api.analysedreams.ru/symbols/archetypes', { headers }))
+          .then(r => r.ok ? r.json() : null)
+          .then(data => { if (data && Array.isArray(data.symbols)) setArchetypes(data); })
+          .catch(() => {});
+      }
       function completeAnalysis() {
         authHeaders().then(headers => fetch('https://api.analysedreams.ru/history/', { headers }))
           .then(r => r.ok ? r.json() : [])
           .then(data => { if (Array.isArray(data)) setHistory(data); })
           .catch(() => {});
+        loadArchetypes();
       }
       function startAnalysis() {}
       function updateBalance(b) { setBalance(b); }
@@ -1072,11 +1240,14 @@ Object.assign(window, { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCa
                 <TariffGrid onBuy={buyTariff} tariffs={tariffs} />
                 <NotebookCard onGet={getNotebook} />
               </div>
+            ) : tab === "archetypes" ? (
+              <ArchetypesTab archetypes={archetypes.symbols} connections={archetypes.connections} onSelect={setSelectedArchetypeId} onModel={() => setChatOpen(true)} />
             ) : (
               <HistoryList items={history} />
             )}
           </div>
           <DreamChat open={chatOpen} balance={balance} onClose={() => { setChatOpen(false); setPendingDream(""); }} onStart={startAnalysis} onComplete={completeAnalysis} onGoTopUp={goTopUp} onBalanceUpdate={updateBalance} initialDream={pendingDream} email={user.email} />
+          <ArchetypeDetail symbol={archetypes.symbols.find(s => s.id === selectedArchetypeId)} onClose={() => setSelectedArchetypeId(null)} />
           <Toast msg={toast} />
         </React.Fragment>
       );
