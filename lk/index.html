@@ -416,7 +416,7 @@ function Tabs({ value, onChange }) {
     { id: "history", label: "История" },
   ];
   return (
-    <div style={{ display: "inline-flex", gap: 4, padding: 4, borderRadius: 999, background: "var(--surface-card)", border: "1px solid var(--border-subtle)", marginBottom: 28 }}>
+    <div style={{ display: "inline-flex", gap: 4, padding: 4, borderRadius: "var(--radius-md)", background: "var(--surface-card)", border: "1px solid var(--border-subtle)", marginBottom: 28 }}>
       {items.map((it) => {
         const active = value === it.id;
         return (
@@ -424,7 +424,7 @@ function Tabs({ value, onChange }) {
             key={it.id}
             onClick={() => onChange(it.id)}
             style={{
-              border: "none", cursor: "pointer", padding: "10px 22px", borderRadius: 999,
+              border: "none", cursor: "pointer", padding: "10px 22px", borderRadius: "var(--radius-sm)",
               fontFamily: "var(--font-sans)", fontWeight: 700, fontSize: "0.95rem",
               transition: "all 160ms var(--ease-out)",
               background: active ? "var(--navy-800)" : "transparent",
@@ -676,7 +676,7 @@ function ConstellationGraph({ symbols, connections, onSelect }) {
   );
 }
 
-function ArchetypesTab({ archetypes, connections, onSelect, onModel }) {
+function ArchetypesTab({ archetypes, connections, onSelect, onModel, analyzeReady }) {
   const total = archetypes.length;
   const revealed = archetypes.filter((s) => s.is_revealed).length;
   return (
@@ -689,13 +689,14 @@ function ArchetypesTab({ archetypes, connections, onSelect, onModel }) {
         </div>
         <Button
           onClick={onModel}
+          disabled={!analyzeReady}
           style={{
             background: "var(--navy-800)", color: "var(--cyan-300)",
             fontSize: "1.1rem", fontWeight: 800, padding: "18px 32px",
             boxShadow: "var(--shadow-xl)",
           }}
         >
-          Разобрать сон →
+          {analyzeReady ? "Разобрать сон →" : "Готовим аккаунт…"}
         </Button>
       </div>
       <p style={{ margin: 0, color: "var(--text-faint)", fontSize: "0.85rem" }}>Каждый разбор сна может раскрыть новый архетип и связать его с уже найденными.</p>
@@ -785,7 +786,7 @@ function ArchetypeDetail({ symbol, onClose, onOpenDream }) {
 }
 
 /* ---------- Balance ---------- */
-function BalanceCard({ balance, subscription, onAnalyze }) {
+function BalanceCard({ balance, subscription, onAnalyze, analyzeReady }) {
   const untilDate = subscription.until ? new Date(subscription.until).toLocaleDateString("ru-RU", { day: "numeric", month: "long" }) : null;
   return (
     <Card variant="night" padding={0} style={{ position: "relative", overflow: "hidden" }}>
@@ -795,7 +796,9 @@ function BalanceCard({ balance, subscription, onAnalyze }) {
         <div style={{ minWidth: 240 }}>
           <Eyebrow tone="onDark">{subscription.active ? "Подписка активна" : "Ваш баланс"}</Eyebrow>
           <p style={{ margin: "16px 0 0", fontSize: "clamp(2.6rem, 6vw, 3.6rem)", fontWeight: 800, lineHeight: 0.9, letterSpacing: "-0.02em", color: "var(--paper-050)" }}>
-            {subscription.active
+            {!analyzeReady
+              ? <span style={{ fontSize: "1.4rem", fontWeight: 700, color: "rgba(249,255,255,0.7)" }}>загрузка…</span>
+              : subscription.active
               ? <span>∞ <span style={{ fontSize: "1.4rem", fontWeight: 700, color: "rgba(249,255,255,0.7)" }}>разборов</span></span>
               : <span>{balance} <span style={{ fontSize: "1.4rem", fontWeight: 700, color: "rgba(249,255,255,0.7)" }}>{plural(balance, "разбор", "разбора", "разборов")}</span></span>
             }
@@ -810,13 +813,14 @@ function BalanceCard({ balance, subscription, onAnalyze }) {
         <div style={{ display: "flex", flexDirection: "column", gap: 10, alignItems: "flex-end" }}>
           <Button
             onClick={onAnalyze}
+            disabled={!analyzeReady}
             style={{
               background: "var(--cyan-300)", color: "var(--navy-800)",
               fontSize: "1.1rem", fontWeight: 800, padding: "18px 32px",
               boxShadow: "var(--shadow-glow)",
             }}
           >
-            Разобрать сон →
+            {analyzeReady ? "Разобрать сон →" : "Готовим аккаунт…"}
           </Button>
         </div>
       </div>
@@ -1321,6 +1325,7 @@ Object.assign(window, { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCa
       const initial = loadState();
       const [tab, setTab] = useState("cabinet");
       const [balance, setBalance] = useState(0);
+      const [analyzeReady, setAnalyzeReady] = useState(false);
       const [subscription, setSubscription] = useState({ active: false, until: null });
       const [history, setHistory] = useState(SEED_HISTORY);
       const [archetypes, setArchetypes] = useState({ symbols: [], connections: [] });
@@ -1355,6 +1360,7 @@ Object.assign(window, { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCa
               .then(r => r.ok ? r.json() : null)
               .then(async data => {
                 if (data?.dreams_balance != null) setBalance(data.dreams_balance);
+                setAnalyzeReady(true);
                 const balRes = await fetch('https://api.analysedreams.ru/payment/balance', { headers: await authHeaders(token) });
                 if (balRes.ok) {
                   const balData = await balRes.json();
@@ -1364,7 +1370,7 @@ Object.assign(window, { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCa
               })
               .then(r => r.ok ? r.json() : [])
               .then(data => { if (Array.isArray(data)) setHistory(data); })
-              .catch(() => {});
+              .catch(() => { setAnalyzeReady(true); });
             loadArchetypes();
           }
         });
@@ -1372,7 +1378,7 @@ Object.assign(window, { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCa
       }, []);
 
       useEffect(() => {
-        if (!user) return;
+        if (!user || !analyzeReady) return;
         try {
           const raw = localStorage.getItem('ad_landing_context');
           if (raw) {
@@ -1384,7 +1390,7 @@ Object.assign(window, { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCa
             localStorage.removeItem('ad_landing_context');
           }
         } catch (e) {}
-      }, [user]);
+      }, [user, analyzeReady]);
 
 
       if (authLoading) return (
@@ -1485,13 +1491,13 @@ Object.assign(window, { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCa
             <Tabs value={tab} onChange={changeTab} />
             {tab === "cabinet" ? (
               <div className="lk-stack">
-                <BalanceCard balance={balance} subscription={subscription} onAnalyze={() => setChatOpen(true)} />
+                <BalanceCard balance={balance} subscription={subscription} onAnalyze={() => setChatOpen(true)} analyzeReady={analyzeReady} />
                 <TariffGrid onBuy={buyTariff} tariffs={tariffs} />
                 <NotebookCard onGet={getNotebook} />
                 {subscription.active && <CancelSubscriptionLink onCancel={cancelSubscription} />}
               </div>
             ) : tab === "archetypes" ? (
-              <ArchetypesTab archetypes={archetypes.symbols} connections={archetypes.connections} onSelect={setSelectedArchetypeId} onModel={() => setChatOpen(true)} />
+              <ArchetypesTab archetypes={archetypes.symbols} connections={archetypes.connections} onSelect={setSelectedArchetypeId} onModel={() => setChatOpen(true)} analyzeReady={analyzeReady} />
             ) : (
               <HistoryList items={history} focusId={focusDreamId} />
             )}
