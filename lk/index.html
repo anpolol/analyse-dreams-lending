@@ -1405,24 +1405,24 @@ Object.assign(window, { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCa
           setAuthLoading(false);
           if (session?.access_token) {
             const token = session.access_token;
-            authHeaders(token).then(headers => fetch('https://api.analysedreams.ru/user/register', {
-              method: 'POST',
-              headers,
-            }))
-              .then(r => r.ok ? r.json() : null)
-              .then(async data => {
+            (async () => {
+              try {
+                const [regRes, balRes] = await Promise.all([
+                  authHeaders(token).then(headers => fetch('https://api.analysedreams.ru/user/register', { method: 'POST', headers })),
+                  authHeaders(token).then(headers => fetch('https://api.analysedreams.ru/payment/balance', { headers })),
+                ]);
+                const data = regRes.ok ? await regRes.json() : null;
+                const balData = balRes.ok ? await balRes.json() : null;
+                if (balData) setSubscription({ active: !!balData.subscription_active, until: balData.subscription_until, autoRenew: !!balData.subscription_auto_renew });
                 if (data?.dreams_balance != null) setBalance(data.dreams_balance);
                 setAnalyzeReady(true);
-                const balRes = await fetch('https://api.analysedreams.ru/payment/balance', { headers: await authHeaders(token) });
-                if (balRes.ok) {
-                  const balData = await balRes.json();
-                  setSubscription({ active: !!balData.subscription_active, until: balData.subscription_until, autoRenew: !!balData.subscription_auto_renew });
-                }
-                return fetch('https://api.analysedreams.ru/history/', { headers: await authHeaders(token) });
-              })
-              .then(r => r.ok ? r.json() : [])
-              .then(data => { if (Array.isArray(data)) setHistory(data); })
-              .catch(() => { setAnalyzeReady(true); });
+                const histRes = await fetch('https://api.analysedreams.ru/history/', { headers: await authHeaders(token) });
+                const hist = histRes.ok ? await histRes.json() : [];
+                if (Array.isArray(hist)) setHistory(hist);
+              } catch (e) {
+                setAnalyzeReady(true);
+              }
+            })();
             loadArchetypes();
           }
         });
