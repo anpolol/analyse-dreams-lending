@@ -837,27 +837,25 @@ function ArchetypeDetail({ symbol, onClose, onOpenDream }) {
 
 /* ---------- Balance ---------- */
 function BalanceCard({ balance, subscription, onAnalyze, analyzeReady }) {
-  const untilDate = subscription.until ? new Date(subscription.until).toLocaleDateString("ru-RU", { day: "numeric", month: "long" }) : null;
+  const subscribed = subscription.isSubscribed && subscription.autoRenew;
   return (
     <Card variant="night" padding={0} style={{ position: "relative", overflow: "hidden" }}>
       <DecorImg k="dotted-l" size={200} opacity={0.5} style={{ position: "absolute", right: -20, top: -30 }} />
       <DecorImg k="sparkle" size={42} opacity={0.8} style={{ position: "absolute", right: 150, top: 38 }} />
       <div style={{ position: "relative", padding: "34px 36px", display: "flex", flexWrap: "wrap", gap: 24, alignItems: "flex-end", justifyContent: "space-between" }}>
         <div style={{ minWidth: 240 }}>
-          <Eyebrow tone="onDark">{subscription.active ? "Подписка активна" : "Ваш баланс"}</Eyebrow>
+          <Eyebrow tone="onDark">{subscribed ? "Подписка активна" : "Ваш баланс"}</Eyebrow>
           <p style={{ margin: "16px 0 0", fontSize: "clamp(2.6rem, 6vw, 3.6rem)", fontWeight: 800, lineHeight: 0.9, letterSpacing: "-0.02em", color: "var(--paper-050)" }}>
             {!analyzeReady
               ? <span style={{ fontSize: "1.4rem", fontWeight: 700, color: "rgba(249,255,255,0.7)" }}>загрузка…</span>
-              : subscription.active
-              ? <span>∞ <span style={{ fontSize: "1.4rem", fontWeight: 700, color: "rgba(249,255,255,0.7)" }}>разборов</span></span>
               : <span>{balance} <span style={{ fontSize: "1.4rem", fontWeight: 700, color: "rgba(249,255,255,0.7)" }}>{plural(balance, "разбор", "разбора", "разборов")}</span></span>
             }
           </p>
           <p style={{ margin: "12px 0 0", color: "rgba(249,255,255,0.66)", fontSize: "0.95rem", maxWidth: "30rem", lineHeight: 1.45 }}>
-            {subscription.active
-              ? subscription.autoRenew
-                ? `Действует до ${untilDate}. Продлевается автоматически.`
-                : `Доступ действует до ${untilDate}. Автопродление отключено — подписка не продлится.`
+            {subscribed
+              ? "Когда разборы закончатся, мы автоматически продлим подписку и добавим ещё 30 разборов."
+              : subscription.isSubscribed
+              ? "Автопродление отключено — когда разборы закончатся, подписка не продлится."
               : "1 разбор — это целая беседа о сне: задавайте вопросы и отвечайте на встречные, пока не придёте к инсайту."
             }
           </p>
@@ -1378,7 +1376,7 @@ Object.assign(window, { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCa
       const [tab, setTab] = useState("cabinet");
       const [balance, setBalance] = useState(0);
       const [analyzeReady, setAnalyzeReady] = useState(false);
-      const [subscription, setSubscription] = useState({ active: false, until: null, autoRenew: true });
+      const [subscription, setSubscription] = useState({ isSubscribed: false, autoRenew: true });
       const [history, setHistory] = useState(SEED_HISTORY);
       const [archetypes, setArchetypes] = useState({ symbols: [], connections: [] });
       const [selectedArchetypeId, setSelectedArchetypeId] = useState(null);
@@ -1413,7 +1411,7 @@ Object.assign(window, { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCa
                 ]);
                 const data = regRes.ok ? await regRes.json() : null;
                 const balData = balRes.ok ? await balRes.json() : null;
-                if (balData) setSubscription({ active: !!balData.subscription_active, until: balData.subscription_until, autoRenew: !!balData.subscription_auto_renew });
+                if (balData) setSubscription({ isSubscribed: !!balData.is_subscribed, autoRenew: !!balData.subscription_auto_renew });
                 if (data?.dreams_balance != null) setBalance(data.dreams_balance);
                 setAnalyzeReady(true);
                 const histRes = await fetch('https://api.analysedreams.ru/history/', { headers: await authHeaders(token) });
@@ -1506,7 +1504,7 @@ Object.assign(window, { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCa
       function startAnalysis() {}
       function updateBalance(b) { setBalance(b); }
       async function cancelSubscription() {
-        if (!confirm("Отменить подписку? Доступ сохранится до конца оплаченного периода.")) return;
+        if (!confirm("Отменить подписку? Текущий баланс разборов останется, но мы не будем списывать новый цикл, когда он закончится.")) return;
         try {
           const { data: { session } } = await window._supabase.auth.getSession();
           const res = await fetch('https://api.analysedreams.ru/payment/subscription/cancel', {
@@ -1515,7 +1513,7 @@ Object.assign(window, { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCa
           });
           if (!res.ok) throw new Error();
           setSubscription(s => ({ ...s, autoRenew: false }));
-          flash("Подписка отменена. Доступ действует до конца периода.");
+          flash("Подписка отменена. Автопродление отключено.");
         } catch {
           flash("Не удалось отменить подписку, попробуй ещё раз");
         }
@@ -1546,7 +1544,7 @@ Object.assign(window, { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCa
                 <BalanceCard balance={balance} subscription={subscription} onAnalyze={() => setChatOpen(true)} analyzeReady={analyzeReady} />
                 <TariffGrid onBuy={buyTariff} tariffs={tariffs} />
                 <NotebookCard onGet={getNotebook} />
-                {subscription.active && subscription.autoRenew && <CancelSubscriptionLink onCancel={cancelSubscription} />}
+                {subscription.isSubscribed && subscription.autoRenew && <CancelSubscriptionLink onCancel={cancelSubscription} />}
               </div>
             ) : tab === "archetypes" ? (
               <ArchetypesTab archetypes={archetypes.symbols} connections={archetypes.connections} onSelect={setSelectedArchetypeId} onModel={() => setChatOpen(true)} analyzeReady={analyzeReady} />
