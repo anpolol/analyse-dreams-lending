@@ -569,6 +569,10 @@ function scatterPositions(count) {
   return { positions, width: columns * CELL_W + PADDING * 2, height: rows * CELL_H + PADDING * 2 };
 }
 
+// localStorage key for user-arranged card positions — keeps the constellation
+// layout how each visitor left it, scoped to this browser only.
+const ARCHETYPE_POSITIONS_KEY = "archetypePositions";
+
 function ConstellationGraph({ symbols, connections, onSelect }) {
   const scrollRef = useRef(null);
   const containerRef = useRef(null);
@@ -576,6 +580,10 @@ function ConstellationGraph({ symbols, connections, onSelect }) {
   const [lines, setLines] = useState([]);
   const [grabbing, setGrabbing] = useState(false);
   const drag = useRef({ active: false, moved: false, startX: 0, startY: 0, scrollLeft: 0, scrollTop: 0 });
+  const cardDrag = useRef({ active: false, moved: false, id: null, startX: 0, startY: 0, baseX: 0, baseY: 0 });
+  const [customPos, setCustomPos] = useState(() => {
+    try { return JSON.parse(localStorage.getItem(ARCHETYPE_POSITIONS_KEY) || "{}"); } catch { return {}; }
+  });
 
   const { positions, width, height } = scatterPositions(symbols.length + 1);
   const mysteryPos = positions[symbols.length];
@@ -600,7 +608,38 @@ function ConstellationGraph({ symbols, connections, onSelect }) {
     measure();
     window.addEventListener("resize", measure);
     return () => window.removeEventListener("resize", measure);
-  }, [symbols, connections]);
+  }, [symbols, connections, customPos]);
+
+  // Per-card drag-to-place — only for mouse users (touch keeps the native sky
+  // scroll above). Stops propagation so the sky's own pan-drag doesn't also
+  // fire when grabbing a card.
+  function onCardPointerDown(e, id, basePos) {
+    if (e.pointerType === "touch") return;
+    if (e.button !== undefined && e.button !== 0) return;
+    e.stopPropagation();
+    e.currentTarget.setPointerCapture(e.pointerId);
+    const current = customPos[id] || basePos;
+    cardDrag.current = { active: true, moved: false, id, startX: e.clientX, startY: e.clientY, baseX: current.x, baseY: current.y };
+  }
+  function onCardPointerMove(e) {
+    const d = cardDrag.current;
+    if (!d.active) return;
+    const dx = e.clientX - d.startX, dy = e.clientY - d.startY;
+    if (Math.abs(dx) > 4 || Math.abs(dy) > 4) d.moved = true;
+    if (d.moved) {
+      setCustomPos((prev) => ({ ...prev, [d.id]: { x: d.baseX + dx, y: d.baseY + dy } }));
+    }
+  }
+  function onCardPointerUp() {
+    const d = cardDrag.current;
+    if (d.active && d.moved) {
+      setCustomPos((prev) => {
+        try { localStorage.setItem(ARCHETYPE_POSITIONS_KEY, JSON.stringify(prev)); } catch {}
+        return prev;
+      });
+    }
+    d.active = false;
+  }
 
   // Drag-to-pan the sky for mouse users — grab anywhere (including on a card)
   // and slide to reveal archetypes scattered further out. Touch is left to the
@@ -631,10 +670,11 @@ function ConstellationGraph({ symbols, connections, onSelect }) {
     setGrabbing(false);
   }
   function onClickCapture(e) {
-    if (drag.current.moved) {
+    if (drag.current.moved || cardDrag.current.moved) {
       e.preventDefault();
       e.stopPropagation();
       drag.current.moved = false;
+      cardDrag.current.moved = false;
     }
   }
 
@@ -663,11 +703,21 @@ function ConstellationGraph({ symbols, connections, onSelect }) {
             <line key={i} x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2} stroke="rgba(143,214,232,0.5)" strokeWidth={Math.min(1 + l.strength * 0.6, 4)} />
           ))}
         </svg>
-        {symbols.map((s, i) => (
-          <div key={s.id} style={{ position: "absolute", left: positions[i].x, top: positions[i].y, transform: "translate(-50%, -50%)" }}>
-            <ArchetypeCard symbol={s} onSelect={onSelect} cardRef={(el) => { cardRefs.current[s.id] = el; }} />
-          </div>
-        ))}
+        {symbols.map((s, i) => {
+          const pos = customPos[s.id] || positions[i];
+          return (
+            <div
+              key={s.id}
+              onPointerDown={(e) => onCardPointerDown(e, s.id, positions[i])}
+              onPointerMove={onCardPointerMove}
+              onPointerUp={onCardPointerUp}
+              onPointerCancel={onCardPointerUp}
+              style={{ position: "absolute", left: pos.x, top: pos.y, transform: "translate(-50%, -50%)", cursor: "grab" }}
+            >
+              <ArchetypeCard symbol={s} onSelect={onSelect} cardRef={(el) => { cardRefs.current[s.id] = el; }} />
+            </div>
+          );
+        })}
         <div style={{ position: "absolute", left: mysteryPos.x, top: mysteryPos.y, transform: "translate(-50%, -50%)" }}>
           <MysteryArchetypeCard />
         </div>
@@ -685,7 +735,7 @@ function ArchetypesTab({ archetypes, connections, onSelect, onModel, analyzeRead
         <div>
           <Eyebrow>Карта снов</Eyebrow>
           <h2 style={{ margin: "8px 0 0", fontSize: "clamp(1.3rem, 2.4vw, 1.8rem)", fontWeight: 800, letterSpacing: "-0.01em", color: "var(--text-strong)" }}>Созвездие архетипов</h2>
-          <p style={{ margin: "8px 0 0", color: "var(--text-muted)" }}>Раскрыто {revealed} из {total} архетипов</p>
+          <p style={{ margin: "8px 0 0", color: "var(--text-muted)" }}>Раскрыто {revealed}</p>
         </div>
         <Button
           onClick={onModel}
@@ -805,7 +855,9 @@ function BalanceCard({ balance, subscription, onAnalyze, analyzeReady }) {
           </p>
           <p style={{ margin: "12px 0 0", color: "rgba(249,255,255,0.66)", fontSize: "0.95rem", maxWidth: "30rem", lineHeight: 1.45 }}>
             {subscription.active
-              ? `Действует до ${untilDate}. Продлевается автоматически.`
+              ? subscription.autoRenew
+                ? `Действует до ${untilDate}. Продлевается автоматически.`
+                : `Доступ действует до ${untilDate}. Автопродление отключено — подписка не продлится.`
               : "1 разбор — это целая беседа о сне: задавайте вопросы и отвечайте на встречные, пока не придёте к инсайту."
             }
           </p>
@@ -1326,7 +1378,7 @@ Object.assign(window, { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCa
       const [tab, setTab] = useState("cabinet");
       const [balance, setBalance] = useState(0);
       const [analyzeReady, setAnalyzeReady] = useState(false);
-      const [subscription, setSubscription] = useState({ active: false, until: null });
+      const [subscription, setSubscription] = useState({ active: false, until: null, autoRenew: true });
       const [history, setHistory] = useState(SEED_HISTORY);
       const [archetypes, setArchetypes] = useState({ symbols: [], connections: [] });
       const [selectedArchetypeId, setSelectedArchetypeId] = useState(null);
@@ -1364,7 +1416,7 @@ Object.assign(window, { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCa
                 const balRes = await fetch('https://api.analysedreams.ru/payment/balance', { headers: await authHeaders(token) });
                 if (balRes.ok) {
                   const balData = await balRes.json();
-                  setSubscription({ active: !!balData.subscription_active, until: balData.subscription_until });
+                  setSubscription({ active: !!balData.subscription_active, until: balData.subscription_until, autoRenew: !!balData.subscription_auto_renew });
                 }
                 return fetch('https://api.analysedreams.ru/history/', { headers: await authHeaders(token) });
               })
@@ -1462,7 +1514,7 @@ Object.assign(window, { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCa
             headers: { 'Authorization': `Bearer ${session.access_token}` },
           });
           if (!res.ok) throw new Error();
-          setSubscription(s => ({ ...s, active: false }));
+          setSubscription(s => ({ ...s, autoRenew: false }));
           flash("Подписка отменена. Доступ действует до конца периода.");
         } catch {
           flash("Не удалось отменить подписку, попробуй ещё раз");
@@ -1494,7 +1546,7 @@ Object.assign(window, { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCa
                 <BalanceCard balance={balance} subscription={subscription} onAnalyze={() => setChatOpen(true)} analyzeReady={analyzeReady} />
                 <TariffGrid onBuy={buyTariff} tariffs={tariffs} />
                 <NotebookCard onGet={getNotebook} />
-                {subscription.active && <CancelSubscriptionLink onCancel={cancelSubscription} />}
+                {subscription.active && subscription.autoRenew && <CancelSubscriptionLink onCancel={cancelSubscription} />}
               </div>
             ) : tab === "archetypes" ? (
               <ArchetypesTab archetypes={archetypes.symbols} connections={archetypes.connections} onSelect={setSelectedArchetypeId} onModel={() => setChatOpen(true)} analyzeReady={analyzeReady} />
