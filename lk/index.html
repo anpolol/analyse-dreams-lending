@@ -585,8 +585,15 @@ function ConstellationGraph({ symbols, connections, onSelect }) {
     try { return JSON.parse(localStorage.getItem(ARCHETYPE_POSITIONS_KEY) || "{}"); } catch { return {}; }
   });
 
-  const { positions, width, height } = scatterPositions(symbols.length + 1);
-  const mysteryPos = positions[symbols.length];
+  // The Self ("Самость") is the central archetype in Jungian theory — it's pinned
+  // in the middle of the sky and excluded from the scatter/drag logic that applies
+  // to every other card.
+  const selfSymbol = symbols.find((s) => s.id === "self" || s.name === "Самость");
+  const otherSymbols = symbols.filter((s) => s !== selfSymbol);
+
+  const { positions, width, height } = scatterPositions(otherSymbols.length + 1);
+  const mysteryPos = positions[otherSymbols.length];
+  const selfPos = { x: width / 2, y: height / 2 };
 
   useLayoutEffect(() => {
     function measure() {
@@ -703,7 +710,7 @@ function ConstellationGraph({ symbols, connections, onSelect }) {
             <line key={i} x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2} stroke="rgba(143,214,232,0.5)" strokeWidth={Math.min(1 + l.strength * 0.6, 4)} />
           ))}
         </svg>
-        {symbols.map((s, i) => {
+        {otherSymbols.map((s, i) => {
           const pos = customPos[s.id] || positions[i];
           return (
             <div
@@ -718,6 +725,14 @@ function ConstellationGraph({ symbols, connections, onSelect }) {
             </div>
           );
         })}
+        {selfSymbol && (
+          <div
+            key={selfSymbol.id}
+            style={{ position: "absolute", left: selfPos.x, top: selfPos.y, transform: "translate(-50%, -50%)", zIndex: 1 }}
+          >
+            <ArchetypeCard symbol={selfSymbol} onSelect={onSelect} cardRef={(el) => { cardRefs.current[selfSymbol.id] = el; }} />
+          </div>
+        )}
         {(() => {
           const pos = customPos.mystery || mysteryPos;
           return (
