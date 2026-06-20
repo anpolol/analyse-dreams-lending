@@ -718,9 +718,20 @@ function ConstellationGraph({ symbols, connections, onSelect }) {
             </div>
           );
         })}
-        <div style={{ position: "absolute", left: mysteryPos.x, top: mysteryPos.y, transform: "translate(-50%, -50%)" }}>
-          <MysteryArchetypeCard />
-        </div>
+        {(() => {
+          const pos = customPos.mystery || mysteryPos;
+          return (
+            <div
+              onPointerDown={(e) => onCardPointerDown(e, "mystery", mysteryPos)}
+              onPointerMove={onCardPointerMove}
+              onPointerUp={onCardPointerUp}
+              onPointerCancel={onCardPointerUp}
+              style={{ position: "absolute", left: pos.x, top: pos.y, transform: "translate(-50%, -50%)", cursor: "grab" }}
+            >
+              <MysteryArchetypeCard />
+            </div>
+          );
+        })()}
       </div>
     </div>
   );
