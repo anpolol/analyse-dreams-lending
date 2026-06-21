@@ -1,6 +1,19 @@
 <!DOCTYPE html>
 <html lang="ru"><head>
 <meta http-equiv="content-type" content="text/html; charset=UTF-8"><script>window.__resources = {};</script>
+<!-- Yandex.Metrika counter -->
+<script type="text/javascript">
+    (function(m,e,t,r,i,k,a){
+        m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+        m[i].l=1*new Date();
+        for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+        k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
+    })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=110038520', 'ym');
+
+    ym(110038520, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", referrer: document.referrer, url: location.href, accurateTrackBounce:true, trackLinks:true});
+</script>
+<noscript><div><img src="https://mc.yandex.ru/watch/110038520" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+<!-- /Yandex.Metrika counter -->
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -292,6 +305,7 @@
   .md-content strong { font-weight: 700; }
   .md-content code { background: rgba(0,0,0,0.06); border-radius: 4px; padding: 1px 5px; font-size: 0.92em; }
 </style>
+<script src="../analytics.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked@12/marked.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
@@ -588,7 +602,7 @@ function ConstellationGraph({ symbols, connections, onSelect }) {
   // The Self ("Самость") is the central archetype in Jungian theory — it's pinned
   // in the middle of the sky and excluded from the scatter/drag logic that applies
   // to every other card.
-  const selfSymbol = symbols.find((s) => s.id === "self" || s.name === "Самость");
+  const selfSymbol = symbols.find((s) => s.name === "Самость");
   const otherSymbols = symbols.filter((s) => s !== selfSymbol);
 
   const { positions, width, height } = scatterPositions(otherSymbols.length + 1);
@@ -1169,7 +1183,52 @@ function DepthMeter({ stage }) {
   );
 }
 
-function DreamChat({ open, balance, onClose, onStart, onComplete, onGoTopUp, onBalanceUpdate, initialDream, email }) {
+function SurveyWidget({ dreamsCompleted }) {
+  const [rating, setRating] = useState(null);
+  const [showComment, setShowComment] = useState(false);
+  const [comment, setComment] = useState("");
+  const [commentSent, setCommentSent] = useState(false);
+  const FACES = ["😞", "😕", "😐", "🙂", "😍"];
+
+  async function rate(value) {
+    setRating(value);
+    const { data: { session } } = await window._supabase.auth.getSession();
+    adTrack('survey_rated', { rating: value, dreams_completed: dreamsCompleted }, session?.access_token);
+  }
+
+  async function sendComment() {
+    if (!comment.trim()) return;
+    const { data: { session } } = await window._supabase.auth.getSession();
+    adTrack('survey_feedback_submitted', { comment: comment.trim(), dreams_completed: dreamsCompleted }, session?.access_token);
+    setCommentSent(true);
+  }
+
+  return (
+    <div style={{ marginTop: 4, paddingTop: 12, borderTop: "1px solid var(--border-subtle)", width: "100%" }}>
+      {rating == null ? (
+        <React.Fragment>
+          <p style={{ margin: "0 0 8px", fontSize: "0.82rem", color: "var(--text-muted)" }}>Как вам этот разбор?</p>
+          <div style={{ display: "flex", justifyContent: "center", gap: 10 }}>
+            {FACES.map((face, i) => (
+              <button key={i} onClick={() => rate(i + 1)} aria-label={`Оценка ${i + 1}`} style={{ border: "none", background: "transparent", fontSize: "1.5rem", cursor: "pointer", lineHeight: 1, padding: 4 }}>{face}</button>
+            ))}
+          </div>
+        </React.Fragment>
+      ) : commentSent ? (
+        <p style={{ margin: 0, fontSize: "0.82rem", color: "var(--text-muted)" }}>Спасибо!</p>
+      ) : showComment ? (
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <Input multiline rows={2} maxLength={500} value={comment} placeholder="Что хотите видеть ещё?" onChange={(e) => setComment(e.target.value)} style={{ width: "100%" }} />
+          <Button size="sm" onClick={sendComment}>Отправить</Button>
+        </div>
+      ) : (
+        <button onClick={() => setShowComment(true)} style={{ border: "none", background: "transparent", color: "var(--text-link)", fontSize: "0.82rem", cursor: "pointer", fontFamily: "var(--font-sans)", padding: 0 }}>Спасибо! Хотите что-то добавить? →</button>
+      )}
+    </div>
+  );
+}
+
+function DreamChat({ open, balance, onClose, onStart, onComplete, onGoTopUp, onBalanceUpdate, initialDream, email, dreamsCompletedCount = 0 }) {
   const greeting = { from: "bot", node: <span>Привет! Расскажите свой сон в нескольких предложениях — а дальше мы разберём его в диалоге: я буду задавать вопросы, вы можете отвечать или спрашивать в ответ, пока не придём к инсайту.</span> };
   const [msgs, setMsgs] = useState([greeting]);
   const [apiMsgs, setApiMsgs] = useState([]);
@@ -1189,6 +1248,7 @@ function DreamChat({ open, balance, onClose, onStart, onComplete, onGoTopUp, onB
 
   if (!open) return null;
   const noBalance = balance <= 0 && stage === 0;
+  const showSurvey = dreamsCompletedCount === 0 || (dreamsCompletedCount + 1) % 5 === 0;
 
   async function runTurn(newApiMsgs, isEnded) {
     setTyping(true);
@@ -1237,8 +1297,10 @@ function DreamChat({ open, balance, onClose, onStart, onComplete, onGoTopUp, onB
     runTurn(newApiMsgs, false);
   }
 
-  function summarizeNow() {
+  async function summarizeNow() {
     if (typing || done || stage === 0) return;
+    const { data: { session } } = await window._supabase.auth.getSession();
+    adTrack('summary_requested', {}, session?.access_token);
     runTurn(apiMsgs, true);
   }
 
@@ -1280,6 +1342,7 @@ function DreamChat({ open, balance, onClose, onStart, onComplete, onGoTopUp, onB
         ) : done ? (
           <div style={{ padding: 18, borderTop: "1px solid var(--border-subtle)", background: "var(--paper-050)", display: "flex", flexDirection: "column", gap: 8, alignItems: "center", textAlign: "center" }}>
             <p style={{ margin: 0, color: "var(--text-muted)", fontSize: "0.92rem" }}>Разбор завершён и сохранён в Историю.</p>
+            {showSurvey && <SurveyWidget dreamsCompleted={dreamsCompletedCount + 1} />}
             <Button fullWidth onClick={onClose}>Готово</Button>
           </div>
         ) : (
@@ -1340,6 +1403,7 @@ Object.assign(window, { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCa
 
       async function sendLink() {
         if (!email.trim()) return;
+        adTrack('registration_started');
         setLoading(true);
         setError("");
         const { error: err } = await window._supabase.auth.signInWithOtp({
@@ -1415,7 +1479,7 @@ Object.assign(window, { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCa
       useEffect(() => {
         fetch('https://api.analysedreams.ru/tariffs/')
           .then(r => r.ok ? r.json() : null)
-          .then(data => { if (Array.isArray(data)) setTariffs(data); })
+          .then(data => { if (Array.isArray(data)) setTariffs(data); adTrack('pricing_viewed'); })
           .catch(() => {});
       }, []);
 
@@ -1432,7 +1496,7 @@ Object.assign(window, { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCa
             (async () => {
               try {
                 const [regRes, balRes] = await Promise.all([
-                  authHeaders(token).then(headers => fetch('https://api.analysedreams.ru/user/register', { method: 'POST', headers })),
+                  authHeaders(token).then(headers => fetch('https://api.analysedreams.ru/user/register', { method: 'POST', headers: Object.assign({}, headers, { 'X-Anon-Id': window.adGetAnonId() }) })),
                   authHeaders(token).then(headers => fetch('https://api.analysedreams.ru/payment/balance', { headers })),
                 ]);
                 const data = regRes.ok ? await regRes.json() : null;
@@ -1486,6 +1550,7 @@ Object.assign(window, { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCa
       async function buyTariff(t) {
         try {
           const { data: { session } } = await window._supabase.auth.getSession();
+          adTrack('tariff_selected', { tariff_id: t.id, price: t.price, currency: 'RUB' }, session?.access_token);
           const isSubscription = t.type === "subscription";
           const url = isSubscription
             ? 'https://api.analysedreams.ru/payment/subscribe'
@@ -1508,7 +1573,9 @@ Object.assign(window, { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCa
           flash('Ошибка при оплате, попробуй ещё раз');
         }
       }
-      function getNotebook() {
+      async function getNotebook() {
+        const { data: { session } } = await window._supabase.auth.getSession();
+        adTrack('notebook_opened', {}, session?.access_token);
         const a = document.createElement("a"); a.href = "/workbook_analyse_dreams.pdf"; a.download = "workbook_analyse_dreams.pdf"; a.click();
       }
       async function signOut() {
@@ -1578,7 +1645,7 @@ Object.assign(window, { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCa
               <HistoryList items={history} focusId={focusDreamId} />
             )}
           </div>
-          <DreamChat open={chatOpen} balance={balance} onClose={() => { setChatOpen(false); setPendingDream(""); }} onStart={startAnalysis} onComplete={completeAnalysis} onGoTopUp={goTopUp} onBalanceUpdate={updateBalance} initialDream={pendingDream} email={user.email} />
+          <DreamChat open={chatOpen} balance={balance} onClose={() => { setChatOpen(false); setPendingDream(""); }} onStart={startAnalysis} onComplete={completeAnalysis} onGoTopUp={goTopUp} onBalanceUpdate={updateBalance} initialDream={pendingDream} email={user.email} dreamsCompletedCount={history.length} />
           <ArchetypeDetail symbol={archetypes.symbols.find(s => s.id === selectedArchetypeId)} onClose={() => setSelectedArchetypeId(null)} onOpenDream={openDreamFromArchetype} />
           <Toast msg={toast} />
         </React.Fragment>

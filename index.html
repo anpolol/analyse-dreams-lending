@@ -5,6 +5,20 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+  <!-- Yandex.Metrika counter -->
+  <script type="text/javascript">
+      (function(m,e,t,r,i,k,a){
+          m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+          m[i].l=1*new Date();
+          for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+          k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
+      })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=110038520', 'ym');
+
+      ym(110038520, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", referrer: document.referrer, url: location.href, accurateTrackBounce:true, trackLinks:true});
+  </script>
+  <noscript><div><img src="https://mc.yandex.ru/watch/110038520" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+  <!-- /Yandex.Metrika counter -->
+
   <title>Анализ снов онлайн — бот для разбора сна (юнгианский подход)</title>
   <meta name="description" content="Бесплатный бот для анализа снов в юнгианском подходе: символы, эмоции, направления интерпретации и вопросы для саморефлексии." />
   <meta property="og:title" content="Анализ снов онлайн — юнгианский подход">
@@ -85,7 +99,7 @@
           <span class="brand-name">Анализ снов</span>
         </a>
 
-        <a class="top-link" href="/lk" target="_blank" rel="noopener">Войти</a>
+        <a class="top-link" href="/lk" target="_blank" rel="noopener" onclick="adTrack('login_clicked')">Войти</a>
       </nav>
 
       <div class="hero-grid">
@@ -103,7 +117,7 @@
 
             <div class="hero-actions" id="cta">
               <button class="button button-primary" type="button" onclick="dmOpen()">Попробовать бесплатно</button>
-              <a class="button button-secondary" href="/lk" target="_blank" rel="noopener">Получить гайд</a>
+              <a class="button button-secondary" href="/lk" target="_blank" rel="noopener" onclick="adTrack('guide_clicked')">Получить гайд</a>
             </div>
           </div>
         </section>
@@ -216,7 +230,7 @@
             </div>
 
             <div class="workbook-note">
-              <a class="button button-primary" href="/lk" target="_blank" rel="noopener">Получить гайд</a>
+              <a class="button button-primary" href="/lk" target="_blank" rel="noopener" onclick="adTrack('guide_clicked')">Получить гайд</a>
             </div>
           </div>
         </div>
@@ -307,8 +321,10 @@
     </div>
   </div>
 
+  <script src="./analytics.js"></script>
   <script>
   (function () {
+    adTrack('landing_viewed');
     var dmDreamText = '';
 
     function esc(s) {
@@ -340,6 +356,7 @@
     }
 
     window.dmOpen = function () {
+      adTrack('try_free_clicked');
       var overlay = document.getElementById('dm-overlay');
       overlay.removeAttribute('hidden');
       document.body.style.overflow = 'hidden';
@@ -376,6 +393,7 @@
       dmDreamText = input.value.trim();
       if (dmDreamText.length < 5) return;
 
+      adTrack('dream_submitted', { channel: 'landing_demo', length: dmDreamText.length });
       document.getElementById('dm-input-area').setAttribute('hidden', '');
       addBubble('me', esc(dmDreamText));
       showTyping();
@@ -389,6 +407,7 @@
 
 
     window.dmGoToLK = function () {
+      adTrack('continue_to_lk_clicked');
       try {
         localStorage.setItem('ad_landing_context', JSON.stringify({ dream: dmDreamText, ts: Date.now() }));
       } catch (e) {}
