@@ -503,7 +503,7 @@ function ArchetypeCard({ symbol, onSelect, cardRef }) {
             <span style={{ color: "var(--cyan-300)", fontSize: "1.7rem" }}>✦</span>
           </React.Fragment>
         ) : symbol.image_url ? (
-          <img src={symbol.image_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          <img src={symbol.image_url} alt="" draggable={false} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
         ) : (
           <span style={{ color: "var(--navy-800)", fontSize: "1.7rem" }}>✦</span>
         )}
@@ -558,29 +558,28 @@ function MysteryArchetypeCard() {
   );
 }
 
-// Deterministic pseudo-random in [0, 1) — same seed always gives the same value,
-// so the scatter doesn't jump around on every re-render.
-function pseudoRandom(seed) {
-  const x = Math.sin(seed * 12.9898) * 43758.5453;
-  return x - Math.floor(x);
-}
-
-// Places cards on a loose grid, then nudges each one within its cell by an amount
-// small enough that neighbouring cards never collide — looks scattered, stays readable.
-function scatterPositions(count) {
-  const CELL_W = 300, CELL_H = 380, PADDING = 50, JITTER = 22;
-  const columns = Math.max(2, Math.ceil(Math.sqrt(count * 1.4)));
-  const rows = Math.ceil(count / columns);
-  const positions = Array.from({ length: count }).map((_, i) => {
-    const col = i % columns;
-    const row = Math.floor(i / columns);
-    const baseX = PADDING + col * CELL_W + CELL_W / 2;
-    const baseY = PADDING + row * CELL_H + CELL_H / 2;
-    const jitterX = (pseudoRandom(i * 2 + 1) - 0.5) * 2 * JITTER;
-    const jitterY = (pseudoRandom(i * 2 + 2) - 0.5) * 2 * JITTER;
-    return { x: baseX + jitterX, y: baseY + jitterY };
-  });
-  return { positions, width: columns * CELL_W + PADDING * 2, height: rows * CELL_H + PADDING * 2 };
+// Places cards in concentric rings around the origin (the Self card's slot), evenly
+// spaced so nothing overlaps the center or its neighbours on first load. Once a ring
+// is full, the next one starts further out. Returns offsets relative to the center,
+// plus the bounding size needed so the outermost ring stays fully on-canvas.
+function ringPositions(count) {
+  const CARD_SPACING = 240, FIRST_RADIUS = 260, RING_GROWTH = 240;
+  const positions = [];
+  let placed = 0, ring = 0, maxRadius = FIRST_RADIUS;
+  while (placed < count) {
+    const radius = FIRST_RADIUS + ring * RING_GROWTH;
+    const capacity = Math.max(1, Math.floor((2 * Math.PI * radius) / CARD_SPACING));
+    const inRing = Math.min(capacity, count - placed);
+    for (let i = 0; i < inRing; i++) {
+      const angle = (2 * Math.PI * i) / inRing - Math.PI / 2;
+      positions.push({ x: radius * Math.cos(angle), y: radius * Math.sin(angle) });
+    }
+    maxRadius = radius;
+    placed += inRing;
+    ring++;
+  }
+  const size = (maxRadius + CARD_W + 60) * 2;
+  return { positions, size };
 }
 
 // localStorage key for user-arranged card positions — keeps the constellation
@@ -605,9 +604,11 @@ function ConstellationGraph({ symbols, connections, onSelect }) {
   const selfSymbol = symbols.find((s) => s.name === "Самость");
   const otherSymbols = symbols.filter((s) => s !== selfSymbol);
 
-  const { positions, width, height } = scatterPositions(otherSymbols.length + 1);
-  const mysteryPos = positions[otherSymbols.length];
+  const { positions: ringOffsets, size } = ringPositions(otherSymbols.length + 1);
+  const width = size, height = size;
   const selfPos = { x: width / 2, y: height / 2 };
+  const positions = ringOffsets.map((o) => ({ x: selfPos.x + o.x, y: selfPos.y + o.y }));
+  const mysteryPos = positions[otherSymbols.length];
 
   useLayoutEffect(() => {
     function measure() {
@@ -849,7 +850,7 @@ function ArchetypeDetail({ symbol, onClose, onOpenDream }) {
               <span style={{ color: "var(--cyan-300)", fontSize: "2rem" }}>✦</span>
             </React.Fragment>
           ) : symbol.image_url ? (
-            <img src={symbol.image_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            <img src={symbol.image_url} alt="" draggable={false} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
           ) : (
             <span style={{ color: "var(--navy-800)", fontSize: "2rem" }}>✦</span>
           )}
