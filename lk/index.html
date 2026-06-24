@@ -1366,7 +1366,7 @@ function DreamChat({ open, balance, onClose, onStart, onComplete, onGoTopUp, onB
           <div style={{ borderTop: "1px solid var(--border-subtle)", background: "var(--paper-050)" }}>
             {stage >= 1 && (
               <div style={{ padding: "10px 14px 0", display: "flex", justifyContent: "flex-end" }}>
-                <button onClick={summarizeNow} style={{ border: "none", background: "transparent", color: "var(--text-link)", fontWeight: 700, fontSize: "0.84rem", cursor: "pointer", fontFamily: "var(--font-sans)", padding: "4px 6px" }}>Достаточно, подведи итог →</button>
+                <GhostButton size="sm" onClick={summarizeNow}>Достаточно, подведи итог →</GhostButton>
               </div>
             )}
             <div style={{ padding: 14, display: "flex", flexDirection: "column", gap: 6 }}>
