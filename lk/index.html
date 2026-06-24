@@ -1452,10 +1452,11 @@ function SupportWidget() {
     <React.Fragment>
       <button
         onClick={() => setOpen(true)}
-        aria-label="Поддержка"
-        style={{ position: "fixed", right: 24, bottom: 24, zIndex: 70, width: 52, height: 52, borderRadius: "50%", border: "none", cursor: "pointer", background: "var(--navy-800)", color: "var(--paper-050)", fontSize: "1.3rem", boxShadow: "var(--shadow-lg)" }}
+        aria-label="Написать в поддержку"
+        style={{ position: "fixed", right: 24, bottom: 24, zIndex: 70, display: "flex", alignItems: "center", gap: 8, height: 52, padding: "0 18px 0 16px", borderRadius: 26, border: "none", cursor: "pointer", background: "var(--navy-800)", color: "var(--paper-050)", fontSize: "0.95rem", fontWeight: 700, boxShadow: "var(--shadow-lg)" }}
       >
-        ✦
+        <span style={{ fontSize: "1.2rem" }}>✦</span>
+        Написать нам
       </button>
       {open && (
         <div onClick={close} style={{ position: "fixed", inset: 0, zIndex: 95, background: "rgba(11,20,38,0.7)", backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
