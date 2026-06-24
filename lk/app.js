@@ -194,6 +194,7 @@ function App() {
   const [toast, setToast] = useState("");
   const [pendingDream, setPendingDream] = useState("");
   const [paymentToken, setPaymentToken] = useState(null);
+  const [pendingTariff, setPendingTariff] = useState(null);
   useEffect(() => {
     fetch('https://api.analysedreams.ru/tariffs/').then(r => r.ok ? r.json() : null).then(data => {
       if (Array.isArray(data)) setTariffs(data);
@@ -229,6 +230,7 @@ function App() {
               headers
             }))]);
             const data = regRes.ok ? await regRes.json() : null;
+            if (data?.is_new_user) adTrack('registration_completed', {}, token);
             const balData = balRes.ok ? await balRes.json() : null;
             if (balData) setSubscription({
               isSubscribed: !!balData.is_subscribed,
@@ -296,6 +298,7 @@ function App() {
         price: t.price,
         currency: 'RUB'
       }, session?.access_token);
+      setPendingTariff(t);
       const isSubscription = t.type === "subscription";
       const url = isSubscription ? 'https://api.analysedreams.ru/payment/subscribe' : 'https://api.analysedreams.ru/payment/checkout';
       let widgetAvailable = true;
@@ -358,9 +361,20 @@ function App() {
   function onPaymentWidgetClose() {
     setPaymentToken(null);
   }
-  function onPaymentWidgetSuccess() {
+  async function onPaymentWidgetSuccess() {
     setPaymentToken(null);
     flash('Оплата прошла успешно!');
+    const {
+      data: {
+        session
+      }
+    } = await window._supabase.auth.getSession();
+    adTrack('payment_succeeded', {
+      tariff_id: pendingTariff?.id,
+      price: pendingTariff?.price,
+      currency: 'RUB'
+    }, session?.access_token);
+    setPendingTariff(null);
     refreshBalanceAfterPayment(balance);
   }
   async function getNotebook() {

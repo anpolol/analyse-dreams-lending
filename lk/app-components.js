@@ -1958,9 +1958,23 @@ function DreamChat({
     }
   }, "\u0412 \u0431\u0430\u043B\u0430\u043D\u0441\u0435: ", balance, " ", plural(balance, "разбор", "разбора", "разборов")) : /*#__PURE__*/React.createElement(DepthMeter, {
     stage: stage
-  })), !hasSent && /*#__PURE__*/React.createElement("button", {
+  })), !hasSent ? /*#__PURE__*/React.createElement("button", {
     onClick: onClose,
     "aria-label": "\u0417\u0430\u043A\u0440\u044B\u0442\u044C",
+    style: {
+      background: "rgba(255,255,255,0.1)",
+      border: "none",
+      color: "#f9ffff",
+      width: 32,
+      height: 32,
+      borderRadius: 999,
+      cursor: "pointer",
+      fontSize: 18,
+      lineHeight: 1
+    }
+  }, "\xD7") : !done && /*#__PURE__*/React.createElement("button", {
+    onClick: summarizeNow,
+    "aria-label": "\u0414\u043E\u0441\u0442\u0430\u0442\u043E\u0447\u043D\u043E, \u043F\u043E\u0434\u0432\u0435\u0434\u0438 \u0438\u0442\u043E\u0433",
     style: {
       background: "rgba(255,255,255,0.1)",
       border: "none",
