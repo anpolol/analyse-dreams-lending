@@ -1415,6 +1415,70 @@ function Toast({ msg }) {
   );
 }
 
+function SupportWidget() {
+  const [open, setOpen] = useState(false);
+  const [text, setText] = useState("");
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
+  const [error, setError] = useState("");
+
+  function close() {
+    setOpen(false);
+    setText("");
+    setSent(false);
+    setError("");
+  }
+
+  async function send() {
+    if (!text.trim() || sending) return;
+    setSending(true);
+    setError("");
+    try {
+      const res = await fetch(`${API_BASE}/feedback/`, {
+        method: 'POST',
+        headers: await authHeaders(),
+        body: JSON.stringify({ message: text.trim() }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      setSent(true);
+    } catch (e) {
+      setError('Не удалось отправить, попробуйте ещё раз');
+    } finally {
+      setSending(false);
+    }
+  }
+
+  return (
+    <React.Fragment>
+      <button
+        onClick={() => setOpen(true)}
+        aria-label="Поддержка"
+        style={{ position: "fixed", right: 24, bottom: 24, zIndex: 70, width: 52, height: 52, borderRadius: "50%", border: "none", cursor: "pointer", background: "var(--navy-800)", color: "var(--paper-050)", fontSize: "1.3rem", boxShadow: "var(--shadow-lg)" }}
+      >
+        ✦
+      </button>
+      {open && (
+        <div onClick={close} style={{ position: "fixed", inset: 0, zIndex: 95, background: "rgba(11,20,38,0.7)", backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+          <div onClick={e => e.stopPropagation()} style={{ position: "relative", width: "min(420px, 100%)", background: "var(--surface-raised)", borderRadius: 24, boxShadow: "var(--shadow-xl)", padding: 24 }}>
+            <button onClick={close} aria-label="Закрыть" style={{ position: "absolute", top: 10, right: 12, border: "none", background: "transparent", fontSize: "1.4rem", lineHeight: 1, cursor: "pointer", color: "var(--text-muted)" }}>×</button>
+            <h3 style={{ margin: "0 0 8px", fontSize: "1.1rem", fontWeight: 800, color: "var(--text-strong)" }}>Поддержка</h3>
+            {sent ? (
+              <p style={{ margin: 0, color: "var(--text-body)", lineHeight: 1.6 }}>Спасибо! Мы получили сообщение и ответим вам на почту.</p>
+            ) : (
+              <React.Fragment>
+                <p style={{ margin: "0 0 14px", color: "var(--text-muted)", fontSize: "0.92rem" }}>Опишите вопрос — ответим на вашу почту.</p>
+                <Input multiline rows={4} maxLength={2000} value={text} placeholder="Что случилось?" onChange={(e) => setText(e.target.value)} style={{ width: "100%", marginBottom: 12 }} />
+                {error && <p style={{ margin: "0 0 12px", color: "#c0392b", fontSize: "0.88rem" }}>{error}</p>}
+                <Button onClick={send} disabled={sending || !text.trim()} fullWidth>{sending ? 'Отправка…' : 'Отправить'}</Button>
+              </React.Fragment>
+            )}
+          </div>
+        </div>
+      )}
+    </React.Fragment>
+  );
+}
+
 let _ykWidgetScriptPromise = null;
 function loadYooKassaWidgetScript() {
   if (window.YooMoneyCheckoutWidget) return Promise.resolve();
@@ -1457,11 +1521,11 @@ function PaymentWidgetModal({ token, onClose, onSuccess }) {
   );
 }
 
-Object.assign(window, { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCard, TariffGrid, NotebookCard, CancelSubscriptionLink, HistoryList, ArchetypesTab, ArchetypeDetail, Toast, DreamChat, loadYooKassaWidgetScript, PaymentWidgetModal });
+Object.assign(window, { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCard, TariffGrid, NotebookCard, CancelSubscriptionLink, HistoryList, ArchetypesTab, ArchetypeDetail, Toast, DreamChat, loadYooKassaWidgetScript, PaymentWidgetModal, SupportWidget });
 </script>
   <script type="text/babel">
     const { useState, useEffect, useRef } = React;
-    const { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCard, TariffGrid, NotebookCard, CancelSubscriptionLink, HistoryList, ArchetypesTab, ArchetypeDetail, Toast, DreamChat, loadYooKassaWidgetScript, PaymentWidgetModal } = window;
+    const { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCard, TariffGrid, NotebookCard, CancelSubscriptionLink, HistoryList, ArchetypesTab, ArchetypeDetail, Toast, DreamChat, loadYooKassaWidgetScript, PaymentWidgetModal, SupportWidget } = window;
 
     function LoginScreen() {
       const [email, setEmail] = useState(() => { try { return localStorage.getItem('ad_last_email') || ""; } catch(e) { return ""; } });
@@ -1758,6 +1822,7 @@ Object.assign(window, { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCa
           <DreamChat open={chatOpen} balance={balance} onClose={() => { setChatOpen(false); setPendingDream(""); }} onStart={startAnalysis} onComplete={completeAnalysis} onGoTopUp={goTopUp} onBalanceUpdate={updateBalance} onViewArchetypes={viewArchetypesFromChat} initialDream={pendingDream} email={user.email} dreamsCompletedCount={history.length} />
           <ArchetypeDetail symbol={archetypes.symbols.find(s => s.id === selectedArchetypeId)} onClose={() => setSelectedArchetypeId(null)} onOpenDream={openDreamFromArchetype} />
           <PaymentWidgetModal token={paymentToken} onClose={onPaymentWidgetClose} onSuccess={onPaymentWidgetSuccess} />
+          <SupportWidget />
           <Toast msg={toast} />
         </React.Fragment>
       );
