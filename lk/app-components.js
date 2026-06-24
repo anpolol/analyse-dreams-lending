@@ -1902,7 +1902,7 @@ function DreamChat({
     style: {
       position: "fixed",
       inset: 0,
-      zIndex: 70,
+      zIndex: 95,
       background: "rgba(11,20,38,0.62)",
       backdropFilter: "blur(6px)",
       WebkitBackdropFilter: "blur(6px)",
