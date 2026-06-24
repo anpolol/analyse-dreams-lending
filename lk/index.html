@@ -1364,17 +1364,26 @@ function DreamChat({ open, balance, onClose, onStart, onComplete, onGoTopUp, onB
           </div>
         ) : (
           <div style={{ borderTop: "1px solid var(--border-subtle)", background: "var(--paper-050)" }}>
-            {stage >= 1 && (
-              <div style={{ padding: "10px 14px 0", display: "flex", justifyContent: "flex-end" }}>
-                <GhostButton size="sm" onClick={summarizeNow}>Достаточно, подведи итог →</GhostButton>
-              </div>
-            )}
             <div style={{ padding: 14, display: "flex", flexDirection: "column", gap: 6 }}>
               <div style={{ display: "flex", gap: 10, alignItems: "flex-end" }}>
                 <Input multiline rows={1} maxLength={1000} value={text} placeholder={stage === 0 ? "Опишите свой сон…" : "Ответьте или задайте свой вопрос…"} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }} style={{ flex: 1, minHeight: 48 }} />
                 <Button size="sm" onClick={send} style={{ minHeight: 48 }}>Отправить</Button>
               </div>
               <span style={{ alignSelf: "flex-end", fontSize: "0.72rem", color: text.length >= 1000 ? "var(--danger-500)" : "var(--text-muted)" }}>{text.length}/1000</span>
+              {stage >= 1 && (
+                <button
+                  onClick={summarizeNow}
+                  style={{
+                    width: "100%", boxSizing: "border-box", marginTop: 2,
+                    padding: "10px 14px", borderRadius: 12, border: "none",
+                    background: "var(--navy-800)", color: "var(--paper-050)",
+                    fontFamily: "var(--font-sans)", fontWeight: 600, fontSize: "0.86rem",
+                    cursor: "pointer",
+                  }}
+                >
+                  Достаточно, подведи итог →
+                </button>
+              )}
             </div>
           </div>
         )}
@@ -1406,11 +1415,53 @@ function Toast({ msg }) {
   );
 }
 
-Object.assign(window, { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCard, TariffGrid, NotebookCard, CancelSubscriptionLink, HistoryList, ArchetypesTab, ArchetypeDetail, Toast, DreamChat });
+let _ykWidgetScriptPromise = null;
+function loadYooKassaWidgetScript() {
+  if (window.YooMoneyCheckoutWidget) return Promise.resolve();
+  if (_ykWidgetScriptPromise) return _ykWidgetScriptPromise;
+  _ykWidgetScriptPromise = new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = 'https://yookassa.ru/checkout-widget/v1/checkout-widget.js';
+    script.onload = resolve;
+    script.onerror = () => { _ykWidgetScriptPromise = null; reject(new Error('YooKassa widget script failed to load')); };
+    document.head.appendChild(script);
+  });
+  return _ykWidgetScriptPromise;
+}
+
+function PaymentWidgetModal({ token, onClose, onSuccess }) {
+  const widgetRef = useRef(null);
+
+  useEffect(() => {
+    if (!token || !window.YooMoneyCheckoutWidget) return;
+    const widget = new window.YooMoneyCheckoutWidget({
+      confirmation_token: token,
+      return_url: window.location.origin + '/lk',
+      error_callback: () => onClose(),
+    });
+    widgetRef.current = widget;
+    widget.render('yk-payment-widget');
+    widget.on('success', () => { onSuccess(); widget.destroy(); });
+    widget.on('fail', () => { onClose(); widget.destroy(); });
+    return () => widget.destroy();
+  }, [token]);
+
+  if (!token) return null;
+  return (
+    <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 95, background: "rgba(11,20,38,0.7)", backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+      <div onClick={e => e.stopPropagation()} style={{ position: "relative", width: "min(480px, 100%)", maxHeight: "90vh", overflowY: "auto", background: "var(--surface-raised)", borderRadius: 24, boxShadow: "var(--shadow-xl)", padding: 20 }}>
+        <button onClick={onClose} aria-label="Закрыть" style={{ position: "absolute", top: 10, right: 12, border: "none", background: "transparent", fontSize: "1.4rem", lineHeight: 1, cursor: "pointer", color: "var(--text-muted)" }}>×</button>
+        <div id="yk-payment-widget"></div>
+      </div>
+    </div>
+  );
+}
+
+Object.assign(window, { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCard, TariffGrid, NotebookCard, CancelSubscriptionLink, HistoryList, ArchetypesTab, ArchetypeDetail, Toast, DreamChat, loadYooKassaWidgetScript, PaymentWidgetModal });
 </script>
   <script type="text/babel">
     const { useState, useEffect, useRef } = React;
-    const { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCard, TariffGrid, NotebookCard, CancelSubscriptionLink, HistoryList, ArchetypesTab, ArchetypeDetail, Toast, DreamChat } = window;
+    const { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCard, TariffGrid, NotebookCard, CancelSubscriptionLink, HistoryList, ArchetypesTab, ArchetypeDetail, Toast, DreamChat, loadYooKassaWidgetScript, PaymentWidgetModal } = window;
 
     function LoginScreen() {
       const [email, setEmail] = useState(() => { try { return localStorage.getItem('ad_last_email') || ""; } catch(e) { return ""; } });
@@ -1492,6 +1543,7 @@ Object.assign(window, { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCa
       const [chatOpen, setChatOpen] = useState(false);
       const [toast, setToast] = useState("");
       const [pendingDream, setPendingDream] = useState("");
+      const [paymentToken, setPaymentToken] = useState(null);
 
       useEffect(() => {
         fetch('https://api.analysedreams.ru/tariffs/')
@@ -1572,7 +1624,14 @@ Object.assign(window, { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCa
           const url = isSubscription
             ? 'https://api.analysedreams.ru/payment/subscribe'
             : 'https://api.analysedreams.ru/payment/checkout';
-          const body = isSubscription ? undefined : JSON.stringify({ tariff_id: t.id });
+
+          let widgetAvailable = true;
+          try { await loadYooKassaWidgetScript(); } catch (e) { widgetAvailable = false; }
+          const confirmationType = widgetAvailable ? 'embedded' : 'redirect';
+
+          const body = isSubscription
+            ? JSON.stringify({ confirmation_type: confirmationType })
+            : JSON.stringify({ tariff_id: t.id, confirmation_type: confirmationType });
           const res = await fetch(url, {
             method: 'POST',
             headers: {
@@ -1583,12 +1642,41 @@ Object.assign(window, { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCa
           });
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
           const data = await res.json();
-          if (data.payment_url) {
+          if (data.confirmation_token) {
+            setPaymentToken(data.confirmation_token);
+          } else if (data.payment_url) {
             window.location.href = data.payment_url;
           }
         } catch (err) {
           flash('Ошибка при оплате, попробуй ещё раз');
         }
+      }
+
+      async function refreshBalanceAfterPayment(prevBalance, attempts = 6, delayMs = 1200) {
+        const { data: { session } } = await window._supabase.auth.getSession();
+        const headers = await authHeaders(session.access_token);
+        for (let i = 0; i < attempts; i++) {
+          await new Promise(r => setTimeout(r, delayMs));
+          try {
+            const res = await fetch('https://api.analysedreams.ru/payment/balance', { headers });
+            if (res.ok) {
+              const data = await res.json();
+              setSubscription({ isSubscribed: !!data.is_subscribed, autoRenew: !!data.subscription_auto_renew });
+              setBalance(data.dreams_balance);
+              if (data.dreams_balance !== prevBalance) return;
+            }
+          } catch (e) {}
+        }
+      }
+
+      function onPaymentWidgetClose() {
+        setPaymentToken(null);
+      }
+
+      function onPaymentWidgetSuccess() {
+        setPaymentToken(null);
+        flash('Оплата прошла успешно!');
+        refreshBalanceAfterPayment(balance);
       }
       async function getNotebook() {
         const { data: { session } } = await window._supabase.auth.getSession();
@@ -1669,6 +1757,7 @@ Object.assign(window, { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCa
           </div>
           <DreamChat open={chatOpen} balance={balance} onClose={() => { setChatOpen(false); setPendingDream(""); }} onStart={startAnalysis} onComplete={completeAnalysis} onGoTopUp={goTopUp} onBalanceUpdate={updateBalance} onViewArchetypes={viewArchetypesFromChat} initialDream={pendingDream} email={user.email} dreamsCompletedCount={history.length} />
           <ArchetypeDetail symbol={archetypes.symbols.find(s => s.id === selectedArchetypeId)} onClose={() => setSelectedArchetypeId(null)} onOpenDream={openDreamFromArchetype} />
+          <PaymentWidgetModal token={paymentToken} onClose={onPaymentWidgetClose} onSuccess={onPaymentWidgetSuccess} />
           <Toast msg={toast} />
         </React.Fragment>
       );
