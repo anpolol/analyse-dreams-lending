@@ -1229,7 +1229,7 @@ function SurveyWidget({ dreamsCompleted }) {
   );
 }
 
-function DreamChat({ open, balance, onClose, onStart, onComplete, onGoTopUp, onBalanceUpdate, initialDream, email, dreamsCompletedCount = 0 }) {
+function DreamChat({ open, balance, onClose, onStart, onComplete, onGoTopUp, onBalanceUpdate, onViewArchetypes, initialDream, email, dreamsCompletedCount = 0 }) {
   const greeting = { from: "bot", node: <span>Привет! Расскажите свой сон в нескольких предложениях — а дальше мы разберём его в диалоге: я буду задавать вопросы, вы можете отвечать или спрашивать в ответ, пока не придём к инсайту.</span> };
   const [msgs, setMsgs] = useState([greeting]);
   const [apiMsgs, setApiMsgs] = useState([]);
@@ -1343,6 +1343,22 @@ function DreamChat({ open, balance, onClose, onStart, onComplete, onGoTopUp, onB
         ) : done ? (
           <div style={{ padding: 18, borderTop: "1px solid var(--border-subtle)", background: "var(--paper-050)", display: "flex", flexDirection: "column", gap: 8, alignItems: "center", textAlign: "center" }}>
             <p style={{ margin: 0, color: "var(--text-muted)", fontSize: "0.92rem" }}>Разбор завершён и сохранён в Историю.</p>
+            <button
+              onClick={onViewArchetypes}
+              style={{
+                width: "100%", boxSizing: "border-box", display: "flex", alignItems: "center", gap: 12,
+                padding: "14px 16px", borderRadius: 16, border: "1px solid var(--cyan-400)",
+                background: "var(--navy-800)", boxShadow: "var(--shadow-glow)",
+                cursor: "pointer", fontFamily: "var(--font-sans)", textAlign: "left",
+              }}
+            >
+              <span aria-hidden="true" style={{ flexShrink: 0, width: 32, height: 32, borderRadius: 999, background: "var(--cyan-300)", color: "var(--navy-800)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1rem" }}>✦</span>
+              <span style={{ flex: 1 }}>
+                <span style={{ display: "block", fontWeight: 700, color: "var(--paper-050)", fontSize: "0.92rem" }}>Заглянуть в «Созвездие архетипов»</span>
+                <span style={{ display: "block", color: "rgba(249,255,255,0.66)", fontSize: "0.82rem", marginTop: 2 }}>Возможно, после этого сна там раскрылся новый архетип</span>
+              </span>
+              <span aria-hidden="true" style={{ color: "var(--cyan-300)", fontSize: "1.1rem" }}>→</span>
+            </button>
             {showSurvey && <SurveyWidget dreamsCompleted={dreamsCompletedCount + 1} />}
             <Button fullWidth onClick={onClose}>Готово</Button>
           </div>
@@ -1627,6 +1643,11 @@ Object.assign(window, { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCa
         setTab("cabinet");
         flash("Выберите пакет разборов");
       }
+      function viewArchetypesFromChat() {
+        setChatOpen(false);
+        setPendingDream("");
+        setTab("archetypes");
+      }
 
       return (
         <React.Fragment>
@@ -1646,7 +1667,7 @@ Object.assign(window, { loadState, LS_KEY, SEED_HISTORY, Header, Tabs, BalanceCa
               <HistoryList items={history} focusId={focusDreamId} />
             )}
           </div>
-          <DreamChat open={chatOpen} balance={balance} onClose={() => { setChatOpen(false); setPendingDream(""); }} onStart={startAnalysis} onComplete={completeAnalysis} onGoTopUp={goTopUp} onBalanceUpdate={updateBalance} initialDream={pendingDream} email={user.email} dreamsCompletedCount={history.length} />
+          <DreamChat open={chatOpen} balance={balance} onClose={() => { setChatOpen(false); setPendingDream(""); }} onStart={startAnalysis} onComplete={completeAnalysis} onGoTopUp={goTopUp} onBalanceUpdate={updateBalance} onViewArchetypes={viewArchetypesFromChat} initialDream={pendingDream} email={user.email} dreamsCompletedCount={history.length} />
           <ArchetypeDetail symbol={archetypes.symbols.find(s => s.id === selectedArchetypeId)} onClose={() => setSelectedArchetypeId(null)} onOpenDream={openDreamFromArchetype} />
           <Toast msg={toast} />
         </React.Fragment>
