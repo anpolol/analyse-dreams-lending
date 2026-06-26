@@ -24,7 +24,8 @@ const {
   DreamChat,
   loadYooKassaWidgetScript,
   PaymentWidgetModal,
-  SupportWidget
+  SupportWidget,
+  LegalFooter
 } = window;
 function LoginScreen() {
   const [email, setEmail] = useState(() => {
@@ -37,8 +38,9 @@ function LoginScreen() {
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [consent, setConsent] = useState(false);
   async function sendLink() {
-    if (!email.trim()) return;
+    if (!email.trim() || !consent) return;
     adTrack('registration_started');
     setLoading(true);
     setError("");
@@ -146,7 +148,43 @@ function LoginScreen() {
       marginBottom: 12,
       display: 'block'
     }
-  }), error && /*#__PURE__*/React.createElement("p", {
+  }), /*#__PURE__*/React.createElement("label", {
+    style: {
+      display: 'flex',
+      alignItems: 'flex-start',
+      gap: 8,
+      margin: '2px 0 16px',
+      cursor: 'pointer'
+    }
+  }, /*#__PURE__*/React.createElement("input", {
+    type: "checkbox",
+    checked: consent,
+    onChange: e => setConsent(e.target.checked),
+    style: {
+      marginTop: 3,
+      flexShrink: 0
+    }
+  }), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: '0.85rem',
+      color: 'var(--text-muted)',
+      lineHeight: 1.45
+    }
+  }, "Я согласен(а) с ", /*#__PURE__*/React.createElement("a", {
+    href: "/legal/consent.html",
+    target: "_blank",
+    rel: "noopener",
+    style: {
+      color: 'var(--text-link)'
+    }
+  }, "согласием на обработку персональных данных"), " и ", /*#__PURE__*/React.createElement("a", {
+    href: "/legal/privacy.html",
+    target: "_blank",
+    rel: "noopener",
+    style: {
+      color: 'var(--text-link)'
+    }
+  }, "политикой обработки персональных данных"))), error && /*#__PURE__*/React.createElement("p", {
     style: {
       margin: '0 0 12px',
       color: '#c0392b',
@@ -154,7 +192,7 @@ function LoginScreen() {
     }
   }, error), /*#__PURE__*/React.createElement("button", {
     onClick: sendLink,
-    disabled: loading || !email.trim(),
+    disabled: loading || !email.trim() || !consent,
     style: {
       width: '100%',
       background: 'var(--navy-800)',
@@ -164,12 +202,12 @@ function LoginScreen() {
       padding: '14px 20px',
       fontSize: '1rem',
       fontWeight: 700,
-      cursor: loading || !email.trim() ? 'not-allowed' : 'pointer',
-      opacity: loading || !email.trim() ? 0.5 : 1,
+      cursor: loading || !email.trim() || !consent ? 'not-allowed' : 'pointer',
+      opacity: loading || !email.trim() || !consent ? 0.5 : 1,
       fontFamily: 'var(--font-sans)',
       transition: 'opacity 0.15s'
     }
-  }, loading ? 'Отправляем…' : 'Отправить ссылку →'))));
+  }, loading ? 'Отправляем…' : 'Отправить ссылку →')), /*#__PURE__*/React.createElement(LegalFooter, null)));
 }
 function App() {
   const [user, setUser] = useState(null);
@@ -196,7 +234,7 @@ function App() {
   const [paymentToken, setPaymentToken] = useState(null);
   const [pendingTariff, setPendingTariff] = useState(null);
   useEffect(() => {
-    fetch('https://api.analysedreams.ru/tariffs/').then(r => r.ok ? r.json() : null).then(data => {
+    fetch('https://api.analysedreams.com/tariffs/').then(r => r.ok ? r.json() : null).then(data => {
       if (Array.isArray(data)) setTariffs(data);
       adTrack('pricing_viewed');
     }).catch(() => {});
@@ -221,12 +259,12 @@ function App() {
         const token = session.access_token;
         (async () => {
           try {
-            const [regRes, balRes] = await Promise.all([authHeaders(token).then(headers => fetch('https://api.analysedreams.ru/user/register', {
+            const [regRes, balRes] = await Promise.all([authHeaders(token).then(headers => fetch('https://api.analysedreams.com/user/register', {
               method: 'POST',
               headers: Object.assign({}, headers, {
                 'X-Anon-Id': window.adGetAnonId()
               })
-            })), authHeaders(token).then(headers => fetch('https://api.analysedreams.ru/payment/balance', {
+            })), authHeaders(token).then(headers => fetch('https://api.analysedreams.com/payment/balance', {
               headers
             }))]);
             const data = regRes.ok ? await regRes.json() : null;
@@ -238,7 +276,7 @@ function App() {
             });
             if (data?.dreams_balance != null) setBalance(data.dreams_balance);
             setAnalyzeReady(true);
-            const histRes = await fetch('https://api.analysedreams.ru/history/', {
+            const histRes = await fetch('https://api.analysedreams.com/history/', {
               headers: await authHeaders(token)
             });
             const hist = histRes.ok ? await histRes.json() : [];
@@ -300,7 +338,7 @@ function App() {
       }, session?.access_token);
       setPendingTariff(t);
       const isSubscription = t.type === "subscription";
-      const url = isSubscription ? 'https://api.analysedreams.ru/payment/subscribe' : 'https://api.analysedreams.ru/payment/checkout';
+      const url = isSubscription ? 'https://api.analysedreams.com/payment/subscribe' : 'https://api.analysedreams.com/payment/checkout';
       let widgetAvailable = true;
       try {
         await loadYooKassaWidgetScript();
@@ -343,7 +381,7 @@ function App() {
     for (let i = 0; i < attempts; i++) {
       await new Promise(r => setTimeout(r, delayMs));
       try {
-        const res = await fetch('https://api.analysedreams.ru/payment/balance', {
+        const res = await fetch('https://api.analysedreams.com/payment/balance', {
           headers
         });
         if (res.ok) {
@@ -393,14 +431,14 @@ function App() {
     await window._supabase.auth.signOut();
   }
   function loadArchetypes() {
-    authHeaders().then(headers => fetch('https://api.analysedreams.ru/symbols/archetypes', {
+    authHeaders().then(headers => fetch('https://api.analysedreams.com/symbols/archetypes', {
       headers
     })).then(r => r.ok ? r.json() : null).then(data => {
       if (data && Array.isArray(data.symbols)) setArchetypes(data);
     }).catch(() => {});
   }
   function completeAnalysis() {
-    authHeaders().then(headers => fetch('https://api.analysedreams.ru/history/', {
+    authHeaders().then(headers => fetch('https://api.analysedreams.com/history/', {
       headers
     })).then(r => r.ok ? r.json() : []).then(data => {
       if (Array.isArray(data)) setHistory(data);
@@ -419,7 +457,7 @@ function App() {
           session
         }
       } = await window._supabase.auth.getSession();
-      const res = await fetch('https://api.analysedreams.ru/payment/subscription/cancel', {
+      const res = await fetch('https://api.analysedreams.com/payment/subscription/cancel', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${session.access_token}`
@@ -511,7 +549,7 @@ function App() {
     onSuccess: onPaymentWidgetSuccess
   }), /*#__PURE__*/React.createElement(SupportWidget, null), /*#__PURE__*/React.createElement(Toast, {
     msg: toast
-  }));
+  }), /*#__PURE__*/React.createElement(LegalFooter, null));
 }
 ReactDOM.createRoot(document.getElementById("root")).render(/*#__PURE__*/React.createElement(App, null));
 })();

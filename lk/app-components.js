@@ -70,6 +70,38 @@ function plural(n, one, few, many) {
   return many;
 }
 
+/* ---------- Legal footer ---------- */
+function LegalFooter() {
+  return /*#__PURE__*/React.createElement("p", {
+    style: {
+      marginTop: 24,
+      textAlign: "center",
+      fontSize: "0.82rem",
+      color: "var(--text-faint)",
+      lineHeight: 1.6
+    }
+  }, /*#__PURE__*/React.createElement("a", {
+    href: "/legal/privacy.html",
+    target: "_blank",
+    rel: "noopener",
+    style: {
+      color: "inherit"
+    }
+  }, "Политика обработки персональных данных"), " · ", /*#__PURE__*/React.createElement("a", {
+    href: "/legal/consent.html",
+    target: "_blank",
+    rel: "noopener",
+    style: {
+      color: "inherit"
+    }
+  }, "Согласие на обработку персональных данных"), " · По всем вопросам: ", /*#__PURE__*/React.createElement("a", {
+    href: "mailto:info@analysedreams.com",
+    style: {
+      color: "inherit"
+    }
+  }, "info@analysedreams.com"));
+}
+
 /* ---------- Header ---------- */
 function Header({
   email,
@@ -1539,7 +1571,7 @@ function Field({
 }
 
 /* ---------- Dream dialogue engine ---------- */
-const API_BASE = 'https://api.analysedreams.ru';
+const API_BASE = 'https://api.analysedreams.com';
 async function authHeaders(token) {
   if (!token) {
     const {
@@ -2463,6 +2495,7 @@ Object.assign(window, {
   DreamChat,
   loadYooKassaWidgetScript,
   PaymentWidgetModal,
-  SupportWidget
+  SupportWidget,
+  LegalFooter
 });
 })();

@@ -1,5 +1,5 @@
 (function () {
-  var TRACK_URL = 'https://api.analysedreams.ru/events/track';
+  var TRACK_URL = 'https://api.analysedreams.com/events/track';
   var METRIKA_ID = 110038520;
 
   function uuid() {

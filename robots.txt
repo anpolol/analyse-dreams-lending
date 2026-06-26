@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://analysedreams.ru/sitemap.xml
+Sitemap: https://analysedreams.com/sitemap.xml
