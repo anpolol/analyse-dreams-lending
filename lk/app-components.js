@@ -1137,7 +1137,9 @@ function BalanceCard({
 /* ---------- Tariffs ---------- */
 function TariffGrid({
   onBuy,
-  tariffs
+  tariffs,
+  subscription,
+  onCancelSubscription
 }) {
   return /*#__PURE__*/React.createElement("section", null, /*#__PURE__*/React.createElement(SectionHead, {
     eyebrow: "\u041F\u043E\u043F\u043E\u043B\u043D\u0438\u0442\u044C \u0431\u0430\u043B\u0430\u043D\u0441",
@@ -1151,39 +1153,20 @@ function TariffGrid({
   }, tariffs.map(t => /*#__PURE__*/React.createElement(TariffCard, {
     key: t.id,
     t: t,
-    onBuy: onBuy
+    onBuy: onBuy,
+    subscription: subscription,
+    onCancelSubscription: onCancelSubscription
   }))));
-}
-function CancelSubscriptionLink({
-  onCancel
-}) {
-  return /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      justifyContent: "center"
-    }
-  }, /*#__PURE__*/React.createElement("button", {
-    onClick: onCancel,
-    style: {
-      border: "1px solid var(--danger-500)",
-      background: "rgba(194,86,107,0.06)",
-      color: "var(--danger-500)",
-      opacity: 0.7,
-      fontWeight: 600,
-      fontSize: "0.82rem",
-      padding: "7px 14px",
-      borderRadius: "var(--radius-md)",
-      cursor: "pointer",
-      fontFamily: "var(--font-sans)"
-    }
-  }, "\u041E\u0442\u043C\u0435\u043D\u0438\u0442\u044C \u043F\u043E\u0434\u043F\u0438\u0441\u043A\u0443"));
 }
 function TariffCard({
   t,
-  onBuy
+  onBuy,
+  subscription,
+  onCancelSubscription
 }) {
   const [hover, setHover] = useState(false);
   const isSubscription = t.type === "subscription";
+  const showCancel = isSubscription && subscription?.isSubscribed && subscription?.autoRenew;
   return /*#__PURE__*/React.createElement("article", {
     onMouseEnter: () => setHover(true),
     onMouseLeave: () => setHover(false),
@@ -1254,7 +1237,19 @@ function TariffCard({
       color: "var(--text-faint)",
       fontWeight: 600
     }
-  }, t.note)), /*#__PURE__*/React.createElement(Button, {
+  }, t.note)), showCancel ? /*#__PURE__*/React.createElement(Button, {
+    fullWidth: true,
+    size: "sm",
+    onClick: onCancelSubscription,
+    style: {
+      border: "1px solid var(--danger-500)",
+      background: "rgba(194,86,107,0.06)",
+      color: "var(--danger-500)",
+      opacity: 0.7,
+      fontWeight: 600,
+      fontSize: "0.82rem"
+    }
+  }, "Отменить подписку") : /*#__PURE__*/React.createElement(Button, {
     fullWidth: true,
     size: "sm",
     onClick: () => onBuy(t)
@@ -2502,7 +2497,6 @@ Object.assign(window, {
   BalanceCard,
   TariffGrid,
   NotebookCard,
-  CancelSubscriptionLink,
   HistoryList,
   ArchetypesTab,
   ArchetypeDetail,

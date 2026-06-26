@@ -16,7 +16,6 @@ const {
   BalanceCard,
   TariffGrid,
   NotebookCard,
-  CancelSubscriptionLink,
   HistoryList,
   ArchetypesTab,
   ArchetypeDetail,
@@ -824,9 +823,9 @@ function App() {
     analyzeReady: analyzeReady
   }), /*#__PURE__*/React.createElement(TariffGrid, {
     onBuy: buyTariff,
-    tariffs: tariffs
-  }), subscription.isSubscribed && subscription.autoRenew && /*#__PURE__*/React.createElement(CancelSubscriptionLink, {
-    onCancel: cancelSubscription
+    tariffs: tariffs,
+    subscription: subscription,
+    onCancelSubscription: cancelSubscription
   }), /*#__PURE__*/React.createElement(NotebookCard, {
     onGet: getNotebook
   })) : tab === "archetypes" ? /*#__PURE__*/React.createElement(ArchetypesTab, {
