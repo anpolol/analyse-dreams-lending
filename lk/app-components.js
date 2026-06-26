@@ -1165,12 +1165,13 @@ function CancelSubscriptionLink({
   }, /*#__PURE__*/React.createElement("button", {
     onClick: onCancel,
     style: {
-      border: "1.5px solid var(--danger-500)",
-      background: "rgba(194,86,107,0.08)",
+      border: "1px solid var(--danger-500)",
+      background: "rgba(194,86,107,0.06)",
       color: "var(--danger-500)",
-      fontWeight: 700,
-      fontSize: "0.95rem",
-      padding: "12px 22px",
+      opacity: 0.7,
+      fontWeight: 600,
+      fontSize: "0.82rem",
+      padding: "7px 14px",
       borderRadius: "var(--radius-md)",
       cursor: "pointer",
       fontFamily: "var(--font-sans)"

@@ -582,6 +582,10 @@ function App() {
             });
             if (data?.dreams_balance != null) setBalance(data.dreams_balance);
             setAnalyzeReady(true);
+            if (localStorage.getItem('ad_payment_redirect')) {
+              localStorage.removeItem('ad_payment_redirect');
+              refreshBalanceAfterPayment(balData?.dreams_balance ?? 0);
+            }
             const histRes = await fetch('https://api.analysedreams.com/history/', {
               headers: await authHeaders(token)
             });
@@ -674,6 +678,7 @@ function App() {
       if (data.confirmation_token) {
         setPaymentToken(data.confirmation_token);
       } else if (data.payment_url) {
+        localStorage.setItem('ad_payment_redirect', '1');
         window.location.href = data.payment_url;
       }
     } catch (err) {
@@ -820,10 +825,10 @@ function App() {
   }), /*#__PURE__*/React.createElement(TariffGrid, {
     onBuy: buyTariff,
     tariffs: tariffs
-  }), /*#__PURE__*/React.createElement(NotebookCard, {
-    onGet: getNotebook
   }), subscription.isSubscribed && subscription.autoRenew && /*#__PURE__*/React.createElement(CancelSubscriptionLink, {
     onCancel: cancelSubscription
+  }), /*#__PURE__*/React.createElement(NotebookCard, {
+    onGet: getNotebook
   })) : tab === "archetypes" ? /*#__PURE__*/React.createElement(ArchetypesTab, {
     archetypes: archetypes.symbols,
     connections: archetypes.connections,
