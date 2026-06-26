@@ -27,39 +27,55 @@ const {
   SupportWidget,
   LegalFooter
 } = window;
-function LoginScreen() {
-  const [email, setEmail] = useState(() => {
-    try {
-      return localStorage.getItem('ad_last_email') || "";
-    } catch (e) {
-      return "";
-    }
-  });
-  const [sent, setSent] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [consent, setConsent] = useState(false);
-  async function sendLink() {
-    if (!email.trim() || !consent) return;
-    adTrack('registration_started');
-    setLoading(true);
-    setError("");
-    const {
-      error: err
-    } = await window._supabase.auth.signInWithOtp({
-      email: email.trim(),
-      options: {
-        emailRedirectTo: window.location.origin + '/lk'
-      }
-    });
-    setLoading(false);
-    if (err) setError(err.message);else {
-      try {
-        localStorage.setItem('ad_last_email', email.trim());
-      } catch (e) {}
-      setSent(true);
-    }
-  }
+const AUTH_INPUT_STYLE = {
+  width: '100%',
+  border: '1.5px solid var(--border-subtle)',
+  borderRadius: 12,
+  padding: '12px 14px',
+  fontSize: '1rem',
+  fontFamily: 'var(--font-sans)',
+  color: 'var(--text-strong)',
+  background: 'var(--paper-000)',
+  outline: 'none',
+  boxSizing: 'border-box',
+  marginBottom: 12,
+  display: 'block'
+};
+function authButtonStyle(disabled) {
+  return {
+    width: '100%',
+    background: 'var(--navy-800)',
+    color: 'var(--paper-050)',
+    border: 'none',
+    borderRadius: 14,
+    padding: '14px 20px',
+    fontSize: '1rem',
+    fontWeight: 700,
+    cursor: disabled ? 'not-allowed' : 'pointer',
+    opacity: disabled ? 0.5 : 1,
+    fontFamily: 'var(--font-sans)',
+    transition: 'opacity 0.15s'
+  };
+}
+function authLinkButtonStyle() {
+  return {
+    background: 'none',
+    border: 'none',
+    color: 'var(--text-link)',
+    cursor: 'pointer',
+    padding: 0,
+    fontFamily: 'var(--font-sans)',
+    fontSize: 'inherit'
+  };
+}
+function mapAuthError(message) {
+  if (!message) return 'Что-то пошло не так. Попробуйте ещё раз.';
+  if (/Invalid login credentials/i.test(message)) return 'Неверный email или пароль.';
+  if (/already registered|already exists/i.test(message)) return 'Этот email уже зарегистрирован — попробуйте войти.';
+  if (/Password should be at least/i.test(message)) return 'Пароль должен быть не короче 6 символов.';
+  return message;
+}
+function AuthShell(props) {
   return /*#__PURE__*/React.createElement("div", {
     style: {
       minHeight: '100vh',
@@ -99,56 +115,105 @@ function LoginScreen() {
       fontSize: '1rem',
       color: 'var(--text-strong)'
     }
-  }, "\u0410\u043D\u0430\u043B\u0438\u0437 \u0441\u043D\u043E\u0432")), sent ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("h2", {
-    style: {
-      margin: '0 0 12px',
-      fontSize: '1.25rem',
-      fontWeight: 700,
-      color: 'var(--text-strong)'
+  }, "Анализ снов")), props.children, /*#__PURE__*/React.createElement(LegalFooter, null)));
+}
+function LoginScreen() {
+  const [mode, setMode] = useState('password'); // 'password' | 'magiclink'
+  const [authAction, setAuthAction] = useState('signin'); // 'signin' | 'signup'
+  const [email, setEmail] = useState(() => {
+    try {
+      return localStorage.getItem('ad_last_email') || "";
+    } catch (e) {
+      return "";
     }
-  }, "\u0421\u0441\u044B\u043B\u043A\u0430 \u043E\u0442\u043F\u0440\u0430\u0432\u043B\u0435\u043D\u0430"), /*#__PURE__*/React.createElement("p", {
-    style: {
-      margin: 0,
-      color: 'var(--text-body)',
-      lineHeight: 1.6
+  });
+  const [password, setPassword] = useState("");
+  const [sent, setSent] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [consent, setConsent] = useState(false);
+  function switchMode(next) {
+    setMode(next);
+    setError("");
+    setSent(false);
+    setResetSent(false);
+  }
+  async function sendLink() {
+    if (!email.trim() || !consent) return;
+    adTrack('registration_started');
+    setLoading(true);
+    setError("");
+    const {
+      error: err
+    } = await window._supabase.auth.signInWithOtp({
+      email: email.trim(),
+      options: {
+        emailRedirectTo: window.location.origin + '/lk'
+      }
+    });
+    setLoading(false);
+    if (err) setError(mapAuthError(err.message));else {
+      try {
+        localStorage.setItem('ad_last_email', email.trim());
+      } catch (e) {}
+      setSent(true);
     }
-  }, "\u041F\u0440\u043E\u0432\u0435\u0440\u044C\u0442\u0435 \u043F\u043E\u0447\u0442\u0443 ", /*#__PURE__*/React.createElement("strong", null, email), " \u2014 \u0442\u0430\u043C \u0441\u0441\u044B\u043B\u043A\u0430 \u0434\u043B\u044F \u0432\u0445\u043E\u0434\u0430. \u041E\u0442\u043A\u0440\u043E\u0439\u0442\u0435 \u0435\u0451 \u0441 \u044D\u0442\u043E\u0433\u043E \u0443\u0441\u0442\u0440\u043E\u0439\u0441\u0442\u0432\u0430.")) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("h2", {
-    style: {
-      margin: '0 0 8px',
-      fontSize: '1.25rem',
-      fontWeight: 700,
-      color: 'var(--text-strong)'
+  }
+  async function submitPassword() {
+    if (!email.trim() || !password || authAction === 'signup' && !consent) return;
+    setLoading(true);
+    setError("");
+    if (authAction === 'signin') {
+      const {
+        error: err
+      } = await window._supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password
+      });
+      setLoading(false);
+      if (err) setError(mapAuthError(err.message));else {
+        try {
+          localStorage.setItem('ad_last_email', email.trim());
+        } catch (e) {}
+      }
+    } else {
+      adTrack('registration_started');
+      const {
+        data,
+        error: err
+      } = await window._supabase.auth.signUp({
+        email: email.trim(),
+        password,
+        options: {
+          emailRedirectTo: window.location.origin + '/lk'
+        }
+      });
+      setLoading(false);
+      if (err) setError(mapAuthError(err.message));else {
+        try {
+          localStorage.setItem('ad_last_email', email.trim());
+        } catch (e) {}
+        if (!data.session) setSent(true);
+      }
     }
-  }, "\u0412\u043E\u0439\u0442\u0438 \u0432 \u043A\u0430\u0431\u0438\u043D\u0435\u0442"), /*#__PURE__*/React.createElement("p", {
-    style: {
-      margin: '0 0 24px',
-      color: 'var(--text-muted)',
-      lineHeight: 1.5,
-      fontSize: '0.95rem'
+  }
+  async function sendReset() {
+    if (!email.trim()) {
+      setError('Введите email, чтобы восстановить пароль');
+      return;
     }
-  }, "\u0412\u0432\u0435\u0434\u0438\u0442\u0435 email \u2014 \u043C\u044B \u043F\u0440\u0438\u0448\u043B\u0451\u043C \u0441\u0441\u044B\u043B\u043A\u0443. \u0411\u0435\u0437 \u043F\u0430\u0440\u043E\u043B\u044F."), /*#__PURE__*/React.createElement("input", {
-    type: "email",
-    placeholder: "\u0432\u0430\u0448@email.com",
-    value: email,
-    onChange: e => setEmail(e.target.value),
-    onKeyDown: e => {
-      if (e.key === 'Enter') sendLink();
-    },
-    style: {
-      width: '100%',
-      border: '1.5px solid var(--border-subtle)',
-      borderRadius: 12,
-      padding: '12px 14px',
-      fontSize: '1rem',
-      fontFamily: 'var(--font-sans)',
-      color: 'var(--text-strong)',
-      background: 'var(--paper-000)',
-      outline: 'none',
-      boxSizing: 'border-box',
-      marginBottom: 12,
-      display: 'block'
-    }
-  }), /*#__PURE__*/React.createElement("label", {
+    setLoading(true);
+    setError("");
+    const {
+      error: err
+    } = await window._supabase.auth.resetPasswordForEmail(email.trim(), {
+      redirectTo: window.location.origin + '/lk'
+    });
+    setLoading(false);
+    if (err) setError(mapAuthError(err.message));else setResetSent(true);
+  }
+  const consentBlock = /*#__PURE__*/React.createElement("label", {
     style: {
       display: 'flex',
       alignItems: 'flex-start',
@@ -184,34 +249,267 @@ function LoginScreen() {
     style: {
       color: 'var(--text-link)'
     }
-  }, "политикой обработки персональных данных"))), error && /*#__PURE__*/React.createElement("p", {
+  }, "политикой обработки персональных данных")));
+  const errorBlock = error && /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: '0 0 12px',
+      color: '#c0392b',
+      fontSize: '0.88rem'
+    }
+  }, error);
+  let content;
+  if (resetSent) {
+    content = /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("h2", {
+      style: {
+        margin: '0 0 12px',
+        fontSize: '1.25rem',
+        fontWeight: 700,
+        color: 'var(--text-strong)'
+      }
+    }, "Письмо отправлено"), /*#__PURE__*/React.createElement("p", {
+      style: {
+        margin: '0 0 20px',
+        color: 'var(--text-body)',
+        lineHeight: 1.6
+      }
+    }, "Проверьте почту ", /*#__PURE__*/React.createElement("strong", null, email), " — там ссылка для восстановления пароля."), /*#__PURE__*/React.createElement("button", {
+      onClick: () => switchMode('password'),
+      style: authLinkButtonStyle()
+    }, "← Назад ко входу"));
+  } else if (sent) {
+    const isSignup = mode === 'password' && authAction === 'signup';
+    content = /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("h2", {
+      style: {
+        margin: '0 0 12px',
+        fontSize: '1.25rem',
+        fontWeight: 700,
+        color: 'var(--text-strong)'
+      }
+    }, isSignup ? "Подтвердите почту" : "Ссылка отправлена"), /*#__PURE__*/React.createElement("p", {
+      style: {
+        margin: 0,
+        color: 'var(--text-body)',
+        lineHeight: 1.6
+      }
+    }, "Проверьте почту ", /*#__PURE__*/React.createElement("strong", null, email), isSignup ? " — перейдите по ссылке в письме, чтобы подтвердить регистрацию." : " — там ссылка для входа. Откройте её с этого устройства."));
+  } else {
+    const toggle = /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'flex',
+        background: 'var(--bg-wash)',
+        borderRadius: 12,
+        padding: 4,
+        marginBottom: 24,
+        gap: 4
+      }
+    }, /*#__PURE__*/React.createElement("button", {
+      onClick: () => switchMode('password'),
+      style: {
+        flex: 1,
+        border: 'none',
+        borderRadius: 9,
+        padding: '8px 0',
+        fontSize: '0.88rem',
+        fontWeight: 700,
+        fontFamily: 'var(--font-sans)',
+        cursor: 'pointer',
+        background: mode === 'password' ? 'var(--navy-800)' : 'transparent',
+        color: mode === 'password' ? 'var(--paper-050)' : 'var(--text-muted)',
+        transition: 'background 0.15s, color 0.15s'
+      }
+    }, "Пароль"), /*#__PURE__*/React.createElement("button", {
+      onClick: () => switchMode('magiclink'),
+      style: {
+        flex: 1,
+        border: 'none',
+        borderRadius: 9,
+        padding: '8px 0',
+        fontSize: '0.88rem',
+        fontWeight: 700,
+        fontFamily: 'var(--font-sans)',
+        cursor: 'pointer',
+        background: mode === 'magiclink' ? 'var(--navy-800)' : 'transparent',
+        color: mode === 'magiclink' ? 'var(--paper-050)' : 'var(--text-muted)',
+        transition: 'background 0.15s, color 0.15s'
+      }
+    }, "Ссылка на почту"));
+    if (mode === 'password') {
+      const disabled = loading || !email.trim() || !password || authAction === 'signup' && !consent;
+      content = /*#__PURE__*/React.createElement(React.Fragment, null, toggle, /*#__PURE__*/React.createElement("h2", {
+        style: {
+          margin: '0 0 8px',
+          fontSize: '1.25rem',
+          fontWeight: 700,
+          color: 'var(--text-strong)'
+        }
+      }, authAction === 'signin' ? "Войти в кабинет" : "Создать аккаунт"), /*#__PURE__*/React.createElement("p", {
+        style: {
+          margin: '0 0 24px',
+          color: 'var(--text-muted)',
+          lineHeight: 1.5,
+          fontSize: '0.95rem'
+        }
+      }, "Введите email и пароль."), /*#__PURE__*/React.createElement("input", {
+        type: "email",
+        placeholder: "ваш@email.com",
+        value: email,
+        onChange: e => setEmail(e.target.value),
+        onKeyDown: e => {
+          if (e.key === 'Enter') submitPassword();
+        },
+        style: AUTH_INPUT_STYLE
+      }), /*#__PURE__*/React.createElement("input", {
+        type: "password",
+        placeholder: "пароль",
+        value: password,
+        onChange: e => setPassword(e.target.value),
+        onKeyDown: e => {
+          if (e.key === 'Enter') submitPassword();
+        },
+        style: AUTH_INPUT_STYLE
+      }), authAction === 'signup' ? consentBlock : null, errorBlock, /*#__PURE__*/React.createElement("button", {
+        onClick: submitPassword,
+        disabled,
+        style: authButtonStyle(disabled)
+      }, loading ? 'Секунду…' : authAction === 'signin' ? 'Войти' : 'Зарегистрироваться'), /*#__PURE__*/React.createElement("div", {
+        style: {
+          display: 'flex',
+          justifyContent: 'space-between',
+          marginTop: 14,
+          fontSize: '0.85rem'
+        }
+      }, /*#__PURE__*/React.createElement("button", {
+        onClick: () => {
+          setAuthAction(authAction === 'signin' ? 'signup' : 'signin');
+          setError("");
+        },
+        style: authLinkButtonStyle()
+      }, authAction === 'signin' ? 'Нет аккаунта? Зарегистрироваться' : 'Уже есть аккаунт? Войти'), authAction === 'signin' ? /*#__PURE__*/React.createElement("button", {
+        onClick: sendReset,
+        style: authLinkButtonStyle()
+      }, "Забыли пароль?") : null));
+    } else {
+      const disabled = loading || !email.trim() || !consent;
+      content = /*#__PURE__*/React.createElement(React.Fragment, null, toggle, /*#__PURE__*/React.createElement("h2", {
+        style: {
+          margin: '0 0 8px',
+          fontSize: '1.25rem',
+          fontWeight: 700,
+          color: 'var(--text-strong)'
+        }
+      }, "Вход по ссылке"), /*#__PURE__*/React.createElement("p", {
+        style: {
+          margin: '0 0 24px',
+          color: 'var(--text-muted)',
+          lineHeight: 1.5,
+          fontSize: '0.95rem'
+        }
+      }, "Введите email — мы пришлём ссылку. Без пароля."), /*#__PURE__*/React.createElement("input", {
+        type: "email",
+        placeholder: "ваш@email.com",
+        value: email,
+        onChange: e => setEmail(e.target.value),
+        onKeyDown: e => {
+          if (e.key === 'Enter') sendLink();
+        },
+        style: AUTH_INPUT_STYLE
+      }), consentBlock, errorBlock, /*#__PURE__*/React.createElement("button", {
+        onClick: sendLink,
+        disabled,
+        style: authButtonStyle(disabled)
+      }, loading ? 'Отправляем…' : 'Отправить ссылку →'));
+    }
+  }
+  return /*#__PURE__*/React.createElement(AuthShell, null, content);
+}
+function SetNewPasswordScreen(props) {
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [done, setDone] = useState(false);
+  async function submit() {
+    if (password.length < 6) {
+      setError('Пароль должен быть не короче 6 символов');
+      return;
+    }
+    if (password !== confirm) {
+      setError('Пароли не совпадают');
+      return;
+    }
+    setLoading(true);
+    setError("");
+    const {
+      error: err
+    } = await window._supabase.auth.updateUser({
+      password
+    });
+    setLoading(false);
+    if (err) setError(mapAuthError(err.message));else setDone(true);
+  }
+  const disabled = loading || !password || !confirm;
+  const content = done ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("h2", {
+    style: {
+      margin: '0 0 12px',
+      fontSize: '1.25rem',
+      fontWeight: 700,
+      color: 'var(--text-strong)'
+    }
+  }, "Пароль обновлён"), /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: '0 0 20px',
+      color: 'var(--text-body)',
+      lineHeight: 1.6
+    }
+  }, "Теперь можно входить с новым паролем."), /*#__PURE__*/React.createElement("button", {
+    onClick: props.onDone,
+    style: authButtonStyle(false)
+  }, "Перейти в кабинет")) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("h2", {
+    style: {
+      margin: '0 0 8px',
+      fontSize: '1.25rem',
+      fontWeight: 700,
+      color: 'var(--text-strong)'
+    }
+  }, "Новый пароль"), /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: '0 0 24px',
+      color: 'var(--text-muted)',
+      lineHeight: 1.5,
+      fontSize: '0.95rem'
+    }
+  }, "Придумайте новый пароль для входа."), /*#__PURE__*/React.createElement("input", {
+    type: "password",
+    placeholder: "новый пароль",
+    value: password,
+    onChange: e => setPassword(e.target.value),
+    style: AUTH_INPUT_STYLE
+  }), /*#__PURE__*/React.createElement("input", {
+    type: "password",
+    placeholder: "повторите пароль",
+    value: confirm,
+    onChange: e => setConfirm(e.target.value),
+    onKeyDown: e => {
+      if (e.key === 'Enter') submit();
+    },
+    style: AUTH_INPUT_STYLE
+  }), error && /*#__PURE__*/React.createElement("p", {
     style: {
       margin: '0 0 12px',
       color: '#c0392b',
       fontSize: '0.88rem'
     }
   }, error), /*#__PURE__*/React.createElement("button", {
-    onClick: sendLink,
-    disabled: loading || !email.trim() || !consent,
-    style: {
-      width: '100%',
-      background: 'var(--navy-800)',
-      color: 'var(--paper-050)',
-      border: 'none',
-      borderRadius: 14,
-      padding: '14px 20px',
-      fontSize: '1rem',
-      fontWeight: 700,
-      cursor: loading || !email.trim() || !consent ? 'not-allowed' : 'pointer',
-      opacity: loading || !email.trim() || !consent ? 0.5 : 1,
-      fontFamily: 'var(--font-sans)',
-      transition: 'opacity 0.15s'
-    }
-  }, loading ? 'Отправляем…' : 'Отправить ссылку →')), /*#__PURE__*/React.createElement(LegalFooter, null)));
+    onClick: submit,
+    disabled,
+    style: authButtonStyle(disabled)
+  }, loading ? 'Сохраняем…' : 'Сохранить пароль'));
+  return /*#__PURE__*/React.createElement(AuthShell, null, content);
 }
 function App() {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const [passwordRecovery, setPasswordRecovery] = useState(false);
   const initial = loadState();
   const [tab, setTab] = useState("cabinet");
   const [balance, setBalance] = useState(0);
@@ -255,6 +553,7 @@ function App() {
     } = window._supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
       setAuthLoading(false);
+      if (_event === 'PASSWORD_RECOVERY') setPasswordRecovery(true);
       if (session?.access_token) {
         const token = session.access_token;
         (async () => {
@@ -318,6 +617,9 @@ function App() {
       fontFamily: 'var(--font-sans)'
     }
   }, "\u0437\u0430\u0433\u0440\u0443\u0437\u043A\u0430\u2026");
+  if (passwordRecovery) return /*#__PURE__*/React.createElement(SetNewPasswordScreen, {
+    onDone: () => setPasswordRecovery(false)
+  });
   if (!user) return /*#__PURE__*/React.createElement(LoginScreen, null);
   function flash(msg) {
     setToast(msg);
