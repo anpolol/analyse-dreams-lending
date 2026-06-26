@@ -1,6 +1,6 @@
 (function () {
   var TRACK_URL = 'https://api.analysedreams.com/events/track';
-  var METRIKA_ID = 110038520;
+  var METRIKA_ID = 110182660;
 
   function uuid() {
     if (window.crypto && window.crypto.randomUUID) return window.crypto.randomUUID();
