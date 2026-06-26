@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Тарифы — Анализ снов</title>
+<link rel="icon" href="/favicon.png" sizes="32x32">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/legal/legal.css">
+</head>
+<body>
+<div class="legal-shell">
+  <a class="legal-back" href="/lk/">← Личный кабинет</a>
+  <h1>Тарифы</h1>
+  <p class="legal-updated">Дата последнего обновления: 26.06.2026</p>
+
+  <p>Сервис «Анализ снов» предоставляет платный доступ к разборам описаний снов в личном кабинете — разовыми пакетами или по подписке с автоматическим продлением. Один разбор — это одна беседа о сне с сервисом до получения инсайта.</p>
+  <p>Оплата принимается в рублях РФ через платёжный сервис, подключённый к личному кабинету. Действующие тарифы ниже загружаются автоматически и всегда соответствуют тарифам, доступным в личном кабинете на момент покупки.</p>
+
+  <div id="tariff-list" class="tariff-list">
+    <p class="tariff-status">Загружаем тарифы…</p>
+  </div>
+
+  <p>Условия оплаты, подписки и возврата денежных средств описаны в <a href="/legal/terms.html">Пользовательском соглашении</a>.</p>
+  <p>Вопросы по тарифам и оплате — на адрес электронной почты <a href="mailto:info@analysedreams.com">info@analysedreams.com</a>.</p>
+</div>
+
+<script>
+(function () {
+  function pluralWord(n, one, few, many) {
+    n = Math.abs(n);
+    var m10 = n % 10, m100 = n % 100;
+    if (m10 === 1 && m100 !== 11) return one;
+    if (m10 >= 2 && m10 <= 4 && (m100 < 10 || m100 >= 20)) return few;
+    return many;
+  }
+
+  var listEl = document.getElementById('tariff-list');
+
+  fetch('https://api.analysedreams.com/tariffs/')
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (data) {
+      if (!Array.isArray(data) || data.length === 0) {
+        listEl.innerHTML = '';
+        var p = document.createElement('p');
+        p.className = 'tariff-status';
+        p.textContent = 'Не удалось загрузить тарифы. Актуальные цены доступны в личном кабинете.';
+        listEl.appendChild(p);
+        return;
+      }
+
+      listEl.innerHTML = '';
+      data.forEach(function (t) {
+        var isSubscription = t.type === 'subscription';
+        var count = Number(t.count) || 0;
+
+        var row = document.createElement('div');
+        row.className = 'tariff-row';
+
+        var left = document.createElement('div');
+        var name = document.createElement('span');
+        name.className = 'tariff-row-name';
+        name.textContent = count + ' ' + pluralWord(count, 'разбор', 'разбора', 'разборов') + (isSubscription ? ' в месяц (подписка)' : '');
+        left.appendChild(name);
+
+        if (t.note) {
+          var note = document.createElement('span');
+          note.className = 'tariff-row-note';
+          note.textContent = t.note;
+          left.appendChild(note);
+        }
+
+        var price = document.createElement('span');
+        price.className = 'tariff-row-price';
+        price.textContent = t.price + ' ₽';
+
+        row.appendChild(left);
+        row.appendChild(price);
+        listEl.appendChild(row);
+      });
+    })
+    .catch(function () {
+      listEl.innerHTML = '';
+      var p = document.createElement('p');
+      p.className = 'tariff-status';
+      p.textContent = 'Не удалось загрузить тарифы. Актуальные цены доступны в личном кабинете.';
+      listEl.appendChild(p);
+    });
+})();
+</script>
+</body>
+</html>

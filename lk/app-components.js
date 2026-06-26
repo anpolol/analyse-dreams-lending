@@ -94,7 +94,21 @@ function LegalFooter() {
     style: {
       color: "inherit"
     }
-  }, "Согласие на обработку персональных данных"), " · По всем вопросам: ", /*#__PURE__*/React.createElement("a", {
+  }, "Согласие на обработку персональных данных"), " · ", /*#__PURE__*/React.createElement("a", {
+    href: "/legal/terms.html",
+    target: "_blank",
+    rel: "noopener",
+    style: {
+      color: "inherit"
+    }
+  }, "Пользовательское соглашение"), " · ", /*#__PURE__*/React.createElement("a", {
+    href: "/legal/tariffs.html",
+    target: "_blank",
+    rel: "noopener",
+    style: {
+      color: "inherit"
+    }
+  }, "Тарифы"), " · По всем вопросам: ", /*#__PURE__*/React.createElement("a", {
     href: "mailto:info@analysedreams.com",
     style: {
       color: "inherit"

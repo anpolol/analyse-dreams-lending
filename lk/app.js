@@ -242,14 +242,21 @@ function LoginScreen() {
     style: {
       color: 'var(--text-link)'
     }
-  }, "согласием на обработку персональных данных"), " и ", /*#__PURE__*/React.createElement("a", {
+  }, "согласием на обработку персональных данных"), ", ", /*#__PURE__*/React.createElement("a", {
     href: "/legal/privacy.html",
     target: "_blank",
     rel: "noopener",
     style: {
       color: 'var(--text-link)'
     }
-  }, "политикой обработки персональных данных")));
+  }, "политикой обработки персональных данных"), " и ", /*#__PURE__*/React.createElement("a", {
+    href: "/legal/terms.html",
+    target: "_blank",
+    rel: "noopener",
+    style: {
+      color: 'var(--text-link)'
+    }
+  }, "пользовательским соглашением")));
   const errorBlock = error && /*#__PURE__*/React.createElement("p", {
     style: {
       margin: '0 0 12px',

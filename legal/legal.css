@@ -69,3 +69,44 @@ body {
 }
 
 .legal-shell a { color: var(--text-link); }
+
+.tariff-list {
+  display: grid;
+  gap: 10px;
+  margin: 16px 0 24px;
+}
+
+.tariff-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 18px;
+  background: var(--paper-000);
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+}
+
+.tariff-row-name {
+  font-weight: 700;
+  color: var(--text-strong);
+}
+
+.tariff-row-note {
+  display: block;
+  font-size: 0.84rem;
+  color: var(--text-muted);
+  font-weight: 400;
+  margin-top: 2px;
+}
+
+.tariff-row-price {
+  font-weight: 800;
+  color: var(--text-strong);
+  white-space: nowrap;
+}
+
+.tariff-status {
+  color: var(--text-muted);
+  font-size: 0.92rem;
+}
