@@ -72,9 +72,17 @@ function plural(n, one, few, many) {
 
 /* ---------- Legal footer ---------- */
 function LegalFooter() {
-  return /*#__PURE__*/React.createElement("p", {
+  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("p", {
     style: {
       marginTop: 24,
+      textAlign: "center",
+      fontSize: "0.82rem",
+      color: "var(--text-faint)",
+      lineHeight: 1.6
+    }
+  }, "Самозанятый Андреева Полина Олеговна, ИНН 784807391014"), /*#__PURE__*/React.createElement("p", {
+    style: {
+      marginTop: 4,
       textAlign: "center",
       fontSize: "0.82rem",
       color: "var(--text-faint)",
@@ -113,7 +121,7 @@ function LegalFooter() {
     style: {
       color: "inherit"
     }
-  }, "info@analysedreams.com"));
+  }, "info@analysedreams.com")));
 }
 
 /* ---------- Header ---------- */
