@@ -548,49 +548,63 @@ h1{
 
 /* Archetype map */
 .archetype-map{
-  width:100vw;
-  margin-left:calc(50% - 50vw);
-  margin-right:calc(50% - 50vw);
-  margin-top:0;
-  position:relative;
-  min-height:100vh;
-  display:flex;
-  align-items:flex-end;
-  background:
-    linear-gradient(180deg, rgba(11,20,38,0.05) 0%, rgba(11,20,38,0.22) 55%, rgba(8,14,28,0.62) 100%),
-    url("./image_13.png") center/cover no-repeat;
-  background-color:#0b1426;
+  width:min(var(--container), calc(100% - 32px));
+  margin-left:auto;
+  margin-right:auto;
 }
 
-.archetype-map-overlay{
-  width:min(var(--container), calc(100% - 64px));
-  margin:0 auto;
-  padding-bottom:64px;
-  color:#f9ffff;
+.archetype-map-inner{
+  display:grid;
+  grid-template-columns: minmax(280px, 420px) 1fr;
+  gap:48px;
+  align-items:center;
 }
 
-.archetype-map-overlay .eyebrow{
-  color: rgba(249,255,255,0.9);
-}
-
-.archetype-map-overlay h2{
-  color:#f9ffff;
-  max-width: 720px;
-  font-size: clamp(1.8rem, 3.4vw, 3rem);
-  line-height:1.05;
-  letter-spacing:-0.02em;
+.archetype-map-copy h2{
+  max-width: none;
+  font-size: clamp(1.6rem, 2.2vw, 2.4rem);
+  line-height:1.1;
+  letter-spacing:-0.03em;
 }
 
 .archetype-map-lead{
   margin-top:16px;
-  max-width: 34rem;
-  color: rgba(249,255,255,0.88);
+  max-width: none;
+  color: var(--muted);
   font-size:1.05rem;
   line-height:1.4;
 }
 
 .archetype-map-note{
   margin-top:28px;
+}
+
+.archetype-map-note .button{
+  width:auto;
+  padding:14px 32px;
+}
+
+.archetype-map-note .button-primary{
+  background: var(--ink);
+  color:#f9ffff;
+  box-shadow: 0 12px 26px rgba(23,34,54,0.24);
+}
+
+.archetype-map-note .button-primary:hover{
+  background: var(--ink-2);
+  box-shadow: 0 16px 34px rgba(23,34,54,0.3);
+}
+
+.archetype-map-visual{
+  border-radius:24px;
+  overflow:hidden;
+  box-shadow: var(--shadow);
+}
+
+.archetype-map-img{
+  display:block;
+  width:100%;
+  height:auto;
 }
 
 /* Workbook */
@@ -952,17 +966,10 @@ h1{
   .feature-showcase-overlay{
     top:14%;
   }
-  .archetype-map{
-    min-height:100vh;
-    background-position:center center;
-    align-items:center;
-  }
-  .archetype-map-overlay{
-    padding-bottom:0;
+  .archetype-map-inner{
+    grid-template-columns: 1fr;
+    gap:28px;
     text-align:center;
-  }
-  .archetype-map-overlay h2{
-    max-width:none;
   }
   .archetype-map-lead{
     margin-left:auto;
