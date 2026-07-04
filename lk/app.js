@@ -117,7 +117,7 @@ function AuthShell(props) {
   }, "Анализ снов")), props.children, /*#__PURE__*/React.createElement(LegalFooter, null)));
 }
 function LoginScreen() {
-  const [mode, setMode] = useState('password'); // 'password' | 'magiclink'
+  const [mode, setMode] = useState('magiclink'); // 'password' | 'magiclink'
   const [authAction, setAuthAction] = useState('signin'); // 'signin' | 'signup'
   const [email, setEmail] = useState(() => {
     try {
@@ -309,21 +309,6 @@ function LoginScreen() {
         gap: 4
       }
     }, /*#__PURE__*/React.createElement("button", {
-      onClick: () => switchMode('password'),
-      style: {
-        flex: 1,
-        border: 'none',
-        borderRadius: 9,
-        padding: '8px 0',
-        fontSize: '0.88rem',
-        fontWeight: 700,
-        fontFamily: 'var(--font-sans)',
-        cursor: 'pointer',
-        background: mode === 'password' ? 'var(--navy-800)' : 'transparent',
-        color: mode === 'password' ? 'var(--paper-050)' : 'var(--text-muted)',
-        transition: 'background 0.15s, color 0.15s'
-      }
-    }, "Пароль"), /*#__PURE__*/React.createElement("button", {
       onClick: () => switchMode('magiclink'),
       style: {
         flex: 1,
@@ -338,7 +323,22 @@ function LoginScreen() {
         color: mode === 'magiclink' ? 'var(--paper-050)' : 'var(--text-muted)',
         transition: 'background 0.15s, color 0.15s'
       }
-    }, "Ссылка на почту"));
+    }, "Ссылка на почту"), /*#__PURE__*/React.createElement("button", {
+      onClick: () => switchMode('password'),
+      style: {
+        flex: 1,
+        border: 'none',
+        borderRadius: 9,
+        padding: '8px 0',
+        fontSize: '0.88rem',
+        fontWeight: 700,
+        fontFamily: 'var(--font-sans)',
+        cursor: 'pointer',
+        background: mode === 'password' ? 'var(--navy-800)' : 'transparent',
+        color: mode === 'password' ? 'var(--paper-050)' : 'var(--text-muted)',
+        transition: 'background 0.15s, color 0.15s'
+      }
+    }, "Пароль"));
     if (mode === 'password') {
       const disabled = loading || !email.trim() || !password || authAction === 'signup' && !consent;
       content = /*#__PURE__*/React.createElement(React.Fragment, null, toggle, /*#__PURE__*/React.createElement("h2", {
