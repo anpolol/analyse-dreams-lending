@@ -994,8 +994,7 @@ h1{
     text-align:center;
   }
   .archetype-map-lead{
-    margin-left:auto;
-    margin-right:auto;
+    display:none;
   }
   .archetype-map-note{
     display:flex;
@@ -1151,9 +1150,6 @@ h1{
     max-width:22ch;
   }
   .hero-text{
-    display:none;
-  }
-  .archetype-map-lead{
     display:none;
   }
   .hero-bottom{
