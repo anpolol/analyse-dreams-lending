@@ -108,7 +108,7 @@ body{
   background:
     linear-gradient(180deg, rgba(15,26,46,0.10) 0%, rgba(15,26,46,0.18) 34%, rgba(11,20,38,0.34) 100%),
     radial-gradient(420px 240px at 50% 58%, rgba(195,242,255,0.34), transparent 60%),
-    url("./image_1.PNG") center/cover no-repeat;
+    url("./image_1.jpg") center/cover no-repeat;
   overflow:hidden;
   display:flex;
   flex-direction:column;
@@ -336,17 +336,17 @@ h1{
 
 .feature-showcase-top{
   position:relative;
-  min-height: clamp(400px, 68vh, 700px);
+  min-height: clamp(280px, 42vh, 480px);
   background:
     linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02)),
-    url("./image_2.PNG") center top / cover no-repeat;
+    url("./image_2.jpg") center top / cover no-repeat;
   overflow:hidden;
 }
 
 .feature-showcase-overlay{
   position:absolute;
   left:50%;
-  top:16%;
+  top:30%;
   transform:translateX(-50%);
   width:min(900px, calc(100% - 40px));
   display:flex;
@@ -358,7 +358,7 @@ h1{
 
 .feature-showcase-overlay p{
   margin:0;
-  font-size: clamp(1.8rem, 3.2vw, 3rem);
+  font-size: clamp(1.8rem, 3vw, 3rem);
   font-weight:800;
   line-height:1;
 }
@@ -496,6 +496,10 @@ h1{
   line-height:1.1;
   letter-spacing:-0.03em;
   max-width: 46ch;
+}
+
+.promise-cta{
+  margin-top:32px;
 }
 
 .promise-grid{
@@ -978,7 +982,7 @@ h1{
     margin-top:32px;
   }
   .feature-showcase-top{
-    min-height: 480px;
+    min-height: 340px;
     background-position:center center;
   }
   .feature-showcase-overlay{
@@ -1196,7 +1200,7 @@ h1{
     object-fit:cover;
   }
   .feature-showcase-top{
-    min-height: 380px;
+    min-height: 280px;
   }
   .feature-showcase-overlay{
     width:calc(100% - 24px);
