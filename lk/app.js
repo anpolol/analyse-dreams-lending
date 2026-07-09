@@ -758,7 +758,16 @@ function App() {
     }).catch(() => {});
     loadArchetypes();
   }
-  function startAnalysis() {}
+  async function startAnalysis() {
+    const {
+      data: {
+        session
+      }
+    } = await window._supabase.auth.getSession();
+    adTrack('dream_submitted', {
+      channel: 'lk'
+    }, session?.access_token);
+  }
   function updateBalance(b) {
     setBalance(b);
   }

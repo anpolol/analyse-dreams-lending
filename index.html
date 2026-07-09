@@ -385,7 +385,7 @@
       dmDreamText = input.value.trim();
       if (dmDreamText.length < 5) return;
 
-      adTrack('dream_submitted', { channel: 'landing_demo', length: dmDreamText.length });
+      adTrack('demo_dream_submitted', { channel: 'landing_demo', length: dmDreamText.length });
       document.getElementById('dm-input-area').setAttribute('hidden', '');
       addBubble('me', esc(dmDreamText));
       showTyping();
