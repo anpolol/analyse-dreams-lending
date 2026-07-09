@@ -47,6 +47,26 @@
     return /Mobi|Android/i.test(navigator.userAgent) ? 'mobile_web' : 'desktop_web';
   }
 
+  var ymClientId = null;
+
+  function getYmUidFromCookie() {
+    try {
+      var match = document.cookie.match(/(?:^|; )_ym_uid=([^;]+)/);
+      return match ? decodeURIComponent(match[1]) : null;
+    } catch (e) { return null; }
+  }
+
+  function initYmClientId() {
+    try {
+      if (typeof window.ym === 'function') {
+        window.ym(METRIKA_ID, 'getClientID', function (clientID) {
+          if (clientID) ymClientId = clientID;
+        });
+      }
+    } catch (e) {}
+  }
+  initYmClientId();
+
   function adTrack(eventName, properties, authToken) {
     if (typeof window.ym === 'function') {
       try { window.ym(METRIKA_ID, 'reachGoal', eventName, properties || {}); } catch (e) {}
@@ -57,6 +77,7 @@
       event_name: eventName,
       anon_id: getAnonId(),
       session_id: getSessionId(),
+      client_id: ymClientId || getYmUidFromCookie(),
       utm_source: utm.utm_source,
       utm_medium: utm.utm_medium,
       utm_campaign: utm.utm_campaign,
