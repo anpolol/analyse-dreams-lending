@@ -293,11 +293,18 @@ function LoginScreen() {
       }
     }, isSignup ? "Подтвердите почту" : "Ссылка отправлена"), /*#__PURE__*/React.createElement("p", {
       style: {
-        margin: 0,
+        margin: '0 0 12px',
         color: 'var(--text-body)',
         lineHeight: 1.6
       }
-    }, "Проверьте почту ", /*#__PURE__*/React.createElement("strong", null, email), isSignup ? " — перейдите по ссылке в письме, чтобы подтвердить регистрацию." : " — там ссылка для входа. Откройте её с этого устройства."));
+    }, "Проверьте почту ", /*#__PURE__*/React.createElement("strong", null, email), isSignup ? " — перейдите по ссылке в письме, чтобы подтвердить регистрацию." : " — там ссылка для входа. Откройте её с этого устройства."), /*#__PURE__*/React.createElement("p", {
+      style: {
+        margin: 0,
+        color: 'var(--text-muted)',
+        lineHeight: 1.45,
+        fontSize: '0.85rem'
+      }
+    }, "Не видите письма? Проверьте папку «Спам» — иногда оно попадает туда."));
   } else {
     const toggle = /*#__PURE__*/React.createElement("div", {
       style: {
@@ -819,7 +826,8 @@ function App() {
     "data-screen-label": "\u041B\u0438\u0447\u043D\u044B\u0439 \u043A\u0430\u0431\u0438\u043D\u0435\u0442"
   }, /*#__PURE__*/React.createElement(Header, {
     email: user.email,
-    onSignOut: signOut
+    onSignOut: signOut,
+    onLogoClick: () => changeTab("cabinet")
   }), /*#__PURE__*/React.createElement(Tabs, {
     value: tab,
     onChange: changeTab

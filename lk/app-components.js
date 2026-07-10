@@ -127,7 +127,8 @@ function LegalFooter() {
 /* ---------- Header ---------- */
 function Header({
   email,
-  onSignOut
+  onSignOut,
+  onLogoClick
 }) {
   return /*#__PURE__*/React.createElement("header", {
     style: {
@@ -137,14 +138,20 @@ function Header({
       gap: 14,
       marginBottom: 30
     }
-  }, /*#__PURE__*/React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: onLogoClick,
     style: {
       display: "inline-flex",
       alignItems: "center",
       gap: 11,
       fontWeight: 700,
       fontSize: "1.1rem",
-      color: "var(--text-strong)"
+      color: "var(--text-strong)",
+      background: "none",
+      border: "none",
+      padding: 0,
+      cursor: "pointer",
+      fontFamily: "inherit"
     }
   }, /*#__PURE__*/React.createElement("img", {
     src: LOGO,
@@ -163,12 +170,6 @@ function Header({
     }
   }, /*#__PURE__*/React.createElement("span", {
     style: {
-      display: "inline-flex",
-      alignItems: "center",
-      padding: "8px 14px",
-      borderRadius: 999,
-      background: "var(--surface-card)",
-      border: "1px solid var(--border-subtle)",
       fontSize: "0.9rem",
       color: "var(--text-body)",
       fontWeight: 600
