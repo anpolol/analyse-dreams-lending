@@ -524,6 +524,20 @@ function ConstellationGraph({
     y: selfPos.y + o.y
   }));
   const mysteryPos = positions[otherSymbols.length];
+
+  // Keeps dragged (or stale, localStorage-persisted) card positions inside the
+  // current canvas — without this, a card dragged near an edge, or one whose
+  // saved position predates a layout resize (e.g. a new archetype changing
+  // the ring size), can end up past the container's left/top edge. Browsers
+  // don't allow negative scrollLeft/scrollTop, so that region is permanently
+  // unreachable by scrolling.
+  const CARD_MARGIN = CARD_W / 2 + 20;
+  function clampPos(pos) {
+    return {
+      x: Math.min(Math.max(pos.x, CARD_MARGIN), width - CARD_MARGIN),
+      y: Math.min(Math.max(pos.y, CARD_MARGIN), height - CARD_MARGIN)
+    };
+  }
   useLayoutEffect(() => {
     function measure() {
       const containerEl = containerRef.current;
@@ -584,10 +598,10 @@ function ConstellationGraph({
     if (d.moved) {
       setCustomPos(prev => ({
         ...prev,
-        [d.id]: {
+        [d.id]: clampPos({
           x: d.baseX + dx,
           y: d.baseY + dy
-        }
+        })
       }));
     }
   }
@@ -713,7 +727,7 @@ function ConstellationGraph({
     stroke: "rgba(143,214,232,0.5)",
     strokeWidth: Math.min(1 + l.strength * 0.6, 4)
   }))), otherSymbols.map((s, i) => {
-    const pos = customPos[s.id] || positions[i];
+    const pos = clampPos(customPos[s.id] || positions[i]);
     return /*#__PURE__*/React.createElement("div", {
       key: s.id,
       onPointerDown: e => onCardPointerDown(e, s.id, positions[i]),
@@ -750,7 +764,7 @@ function ConstellationGraph({
       cardRefs.current[selfSymbol.id] = el;
     }
   })), (() => {
-    const pos = customPos.mystery || mysteryPos;
+    const pos = clampPos(customPos.mystery || mysteryPos);
     return /*#__PURE__*/React.createElement("div", {
       onPointerDown: e => onCardPointerDown(e, "mystery", mysteryPos),
       onPointerMove: onCardPointerMove,
