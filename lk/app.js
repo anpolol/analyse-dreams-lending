@@ -544,6 +544,7 @@ function App() {
   const [pendingDream, setPendingDream] = useState("");
   const [paymentToken, setPaymentToken] = useState(null);
   const [pendingTariff, setPendingTariff] = useState(null);
+  const registeredUserRef = useRef(null);
   useEffect(() => {
     fetch('https://api.analysedreams.com/tariffs/').then(r => r.ok ? r.json() : null).then(data => {
       if (Array.isArray(data)) setTariffs(data);
@@ -568,40 +569,45 @@ function App() {
       setAuthLoading(false);
       if (_event === 'PASSWORD_RECOVERY') setPasswordRecovery(true);
       if (session?.access_token) {
-        const token = session.access_token;
-        (async () => {
-          try {
-            const [regRes, balRes] = await Promise.all([authHeaders(token).then(headers => fetch('https://api.analysedreams.com/user/register', {
-              method: 'POST',
-              headers: Object.assign({}, headers, {
-                'X-Anon-Id': window.adGetAnonId()
-              })
-            })), authHeaders(token).then(headers => fetch('https://api.analysedreams.com/payment/balance', {
-              headers
-            }))]);
-            const data = regRes.ok ? await regRes.json() : null;
-            if (data?.is_new_user) adTrack('registration_completed', {}, token);
-            const balData = balRes.ok ? await balRes.json() : null;
-            if (balData) setSubscription({
-              isSubscribed: !!balData.is_subscribed,
-              autoRenew: !!balData.subscription_auto_renew
-            });
-            if (data?.dreams_balance != null) setBalance(data.dreams_balance);
-            setAnalyzeReady(true);
-            if (localStorage.getItem('ad_payment_redirect')) {
-              localStorage.removeItem('ad_payment_redirect');
-              refreshBalanceAfterPayment(balData?.dreams_balance ?? 0);
+        if (_event !== 'TOKEN_REFRESHED' && registeredUserRef.current !== session.user.id) {
+          registeredUserRef.current = session.user.id;
+          const token = session.access_token;
+          (async () => {
+            try {
+              const [regRes, balRes] = await Promise.all([authHeaders(token).then(headers => fetch('https://api.analysedreams.com/user/register', {
+                method: 'POST',
+                headers: Object.assign({}, headers, {
+                  'X-Anon-Id': window.adGetAnonId()
+                })
+              })), authHeaders(token).then(headers => fetch('https://api.analysedreams.com/payment/balance', {
+                headers
+              }))]);
+              const data = regRes.ok ? await regRes.json() : null;
+              if (data?.is_new_user) adTrack('registration_completed', {}, token);
+              const balData = balRes.ok ? await balRes.json() : null;
+              if (balData) setSubscription({
+                isSubscribed: !!balData.is_subscribed,
+                autoRenew: !!balData.subscription_auto_renew
+              });
+              if (data?.dreams_balance != null) setBalance(data.dreams_balance);
+              setAnalyzeReady(true);
+              if (localStorage.getItem('ad_payment_redirect')) {
+                localStorage.removeItem('ad_payment_redirect');
+                refreshBalanceAfterPayment(balData?.dreams_balance ?? 0);
+              }
+              const histRes = await fetch('https://api.analysedreams.com/history/', {
+                headers: await authHeaders(token)
+              });
+              const hist = histRes.ok ? await histRes.json() : [];
+              if (Array.isArray(hist)) setHistory(hist);
+            } catch (e) {
+              setAnalyzeReady(true);
             }
-            const histRes = await fetch('https://api.analysedreams.com/history/', {
-              headers: await authHeaders(token)
-            });
-            const hist = histRes.ok ? await histRes.json() : [];
-            if (Array.isArray(hist)) setHistory(hist);
-          } catch (e) {
-            setAnalyzeReady(true);
-          }
-        })();
-        loadArchetypes();
+          })();
+          loadArchetypes();
+        }
+      } else {
+        registeredUserRef.current = null;
       }
     });
     return () => subscription.unsubscribe();
