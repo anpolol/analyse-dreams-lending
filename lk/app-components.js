@@ -616,6 +616,14 @@ function ConstellationGraph({
       });
     }
     d.active = false;
+    // Deferred so the click that normally follows pointerup still gets
+    // suppressed by onClickCapture — but if that click never arrives (e.g.
+    // pointercancel, which fires this same handler and never produces a
+    // click), "moved" doesn't stay stuck and silently swallow every future
+    // click on the constellation.
+    setTimeout(() => {
+      d.moved = false;
+    }, 0);
   }
 
   // Drag-to-pan the sky for mouse users — grab anywhere (including on a card)
@@ -651,8 +659,15 @@ function ConstellationGraph({
     }
   }
   function onPointerUp() {
-    drag.current.active = false;
+    const d = drag.current;
+    d.active = false;
     setGrabbing(false);
+    // Same deferred reset as onCardPointerUp — pointerleave/pointercancel
+    // reuse this handler and never produce a click, so "moved" must not
+    // depend solely on onClickCapture to clear it.
+    setTimeout(() => {
+      d.moved = false;
+    }, 0);
   }
   function onClickCapture(e) {
     if (drag.current.moved || cardDrag.current.moved) {
