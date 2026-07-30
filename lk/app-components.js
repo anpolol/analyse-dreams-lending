@@ -605,7 +605,7 @@ function ConstellationGraph({
       }));
     }
   }
-  function onCardPointerUp() {
+  function onCardPointerUp(e) {
     const d = cardDrag.current;
     if (d.active && d.moved) {
       setCustomPos(prev => {
@@ -614,6 +614,14 @@ function ConstellationGraph({
         } catch {}
         return prev;
       });
+    } else if (d.active && e.type === "pointerup") {
+      // Select directly from the pointer gesture instead of relying on the
+      // native click that normally follows pointerup. Once a card has had
+      // setPointerCapture() called on it (above), some browsers (observed in
+      // Firefox) retarget that click to the captured wrapper div instead of
+      // the card's inner <button>, which has no onClick — so the click is
+      // silently swallowed and the card never opens.
+      onSelect(d.id);
     }
     d.active = false;
     // Deferred so the click that normally follows pointerup still gets
