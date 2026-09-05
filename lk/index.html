@@ -75,14 +75,14 @@
    ============================================================ */
 
 :root {
-  /* ---- Brand navy (ink) scale -------------------------------- */
+  /* ---- Brand ink (deep plum, dreamcore) ---------------------- */
   --navy-900: #0f1a2e;   /* deepest — overlays, night sky      */
   --navy-800: #172236;   /* PRIMARY brand ink / emblem circle   */
   --navy-700: #1e2d44;
   --navy-600: #28425f;   /* secondary ink, links on light       */
   --navy-500: #3a546f;
 
-  /* ---- Paper / surface scale (cyan-tinted whites) ------------ */
+  /* ---- Paper / surface scale (warm milk whites) -------------- */
   --paper-000: #ffffff;
   --paper-050: #f9ffff;  /* app background                      */
   --paper-100: #eef8fb;  /* soft section fill                   */
@@ -94,14 +94,14 @@
   --cream-200: #ece4d4;  /* emblem background                   */
   --cream-300: #e0d4bd;
 
-  /* ---- Starlight cyan (decorative accent) -------------------- */
+  /* ---- Starlight lavender (decorative accent) ---------------- */
   --cyan-100: #e6f8fd;
   --cyan-200: #d8f4fb;   /* sparkle glow                        */
-  --cyan-300: #bfe9f4;   /* primary cyan accent                 */
-  --cyan-400: #8fd6e8;   /* deeper cyan                         */
+  --cyan-300: #bfe9f4;   /* primary lavender accent             */
+  --cyan-400: #8fd6e8;   /* deeper lavender                     */
   --cyan-500: #5cbcd4;
 
-  /* ---- Dusk lavender (from imagery, supporting) ------------- */
+  /* ---- Dusk peach (from imagery, supporting) ----------------- */
   --dusk-200: #d7dfef;
   --dusk-300: #b9c6e2;
   --dusk-400: #8093bd;
@@ -126,7 +126,7 @@
   /* Surfaces */
   --surface-app:     var(--paper-050);
   --surface-soft:    var(--paper-100);
-  --surface-card:    rgba(255, 255, 255, 0.82);
+  --surface-card:    rgba(255, 255, 255, 0.72);
   --surface-raised:  var(--paper-000);
   --surface-accent:  var(--paper-300);
   --surface-night:   var(--navy-800);
@@ -147,6 +147,11 @@
 
   /* Signature page background wash */
   --bg-wash: var(--paper-050); /* @kind color */
+  --bg-wash-layers:
+    radial-gradient(900px 620px at 85% -5%, rgba(204, 235, 240, 0.5), transparent 62%),
+    radial-gradient(820px 560px at -10% 12%, rgba(186, 234, 245, 0.5), transparent 60%),
+    radial-gradient(700px 520px at 50% 110%, rgba(217, 226, 245, 0.45), transparent 60%),
+    linear-gradient(180deg, #edf8fb 0%, #f9ffff 45%, #f9fffe 100%); /* @kind other */
 }
 
 /* ============================================================
@@ -280,7 +285,7 @@
 
 </style>
 <style>
-  body { margin: 0; background: var(--bg-wash); min-height: 100vh; font-family: var(--font-sans); overflow-x: hidden; }
+  body { margin: 0; background: var(--bg-wash-layers), var(--bg-wash); background-attachment: fixed; min-height: 100vh; font-family: var(--font-sans); overflow-x: hidden; }
   #root { width: min(980px, calc(100% - 32px)); margin: 0 auto; padding: 32px 0 80px; }
   .lk-stack { display: flex; flex-direction: column; gap: 40px; }
   @media (max-width: 760px) {
@@ -322,7 +327,8 @@
 
     function Button(p) {
       var dark = p.tone === "onDark";
-      var s = Object.assign({ display:"inline-flex", alignItems:"center", justifyContent:"center", fontFamily:"Manrope,system-ui,sans-serif", fontWeight:700, cursor: p.disabled ? "not-allowed" : "pointer", border:"none", borderRadius:14, transition:"opacity .15s", opacity: p.disabled ? 0.5 : 1, padding: p.size==="sm" ? "10px 18px" : "14px 24px", fontSize: p.size==="sm" ? "0.9rem" : "1rem", width: p.fullWidth ? "100%" : "auto", background: dark ? "rgba(255,255,255,0.15)" : css.navy, color: css.paper }, p.style || {});
+      var grad = false;
+      var s = Object.assign({ display:"inline-flex", alignItems:"center", justifyContent:"center", fontFamily:"Manrope,system-ui,sans-serif", fontWeight:700, cursor: p.disabled ? "not-allowed" : "pointer", border:"none", borderRadius:999, transition:"filter .15s, box-shadow .15s, opacity .15s", opacity: p.disabled ? 0.5 : 1, padding: p.size==="sm" ? "10px 18px" : "14px 24px", fontSize: p.size==="sm" ? "0.9rem" : "1rem", width: p.fullWidth ? "100%" : "auto", background: dark ? "rgba(255,255,255,0.15)" : css.navy, color: css.paper }, p.style || {});
       return e("button", { onClick: p.onClick, style: s, disabled: p.disabled }, p.children);
     }
 
@@ -334,7 +340,7 @@
     function Card(p) {
       var night = p.variant === "night", raised = p.variant === "raised";
       var pad = p.padding === 0 ? 0 : (p.padding || 24);
-      var s = Object.assign({ borderRadius:20, padding:pad, background: night ? css.navy : raised ? "#fff" : "rgba(255,255,255,0.82)", boxShadow: raised ? "0 4px 16px rgba(11,20,38,.1)" : "0 1px 4px rgba(0,0,0,.06)" }, p.style || {});
+      var s = Object.assign({ borderRadius:24, padding:pad, background: night ? css.navy : raised ? "#fff" : "rgba(255,255,255,0.82)", boxShadow: raised ? "0 4px 16px rgba(11,20,38,.1)" : "0 1px 4px rgba(0,0,0,.06)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)" }, p.style || {});
       return e("section", { style: s }, p.children);
     }
 
@@ -352,7 +358,7 @@
 
     function Badge(p) {
       var bg = p.variant==="cyan" ? css.cyan : "#e8f0f5";
-      var color = p.variant==="cyan" ? css.navy : css.navy;
+      var color = css.navy;
       var s = Object.assign({ display:"inline-flex", alignItems:"center", padding:"3px 10px", borderRadius:999, fontSize:"0.75rem", fontWeight:700, fontFamily:"Manrope,system-ui,sans-serif", background:bg, color:color }, p.style || {});
       return e("span", { style: s }, p.children);
     }

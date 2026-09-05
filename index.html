@@ -47,43 +47,43 @@
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
   <!-- меняй v при каждом релизе, чтобы сбрасывался кэш -->
-  <link rel="stylesheet" href="./styles.css?v=20260905-28" />
+  <link rel="stylesheet" href="./styles.css?v=20260905-36" />
   <style>
     /* === Dream Modal === */
     .dm-overlay[hidden],.dm-upsell[hidden]{display:none!important}
-    .dm-overlay{position:fixed;inset:0;z-index:200;background:rgba(11,20,38,.72);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:20px;animation:dm-fade .2s ease}
+    .dm-overlay{position:fixed;inset:0;z-index:200;background:rgba(11,20,38,.72);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;padding:20px;animation:dm-fade .2s ease}
     @keyframes dm-fade{from{opacity:0}to{opacity:1}}
-    .dm-panel{width:min(540px,100%);max-height:min(760px,94vh);background:#f4f8f9;border-radius:28px;overflow:hidden;box-shadow:0 32px 80px rgba(11,20,38,.4);display:flex;flex-direction:column;position:relative;animation:dm-up .22s cubic-bezier(.22,1,.36,1)}
+    .dm-panel{width:min(540px,100%);max-height:min(760px,94vh);background:#f9ffff;border-radius:32px;overflow:hidden;box-shadow:0 32px 80px rgba(11,20,38,.4);display:flex;flex-direction:column;position:relative;animation:dm-up .22s cubic-bezier(.22,1,.36,1)}
     @keyframes dm-up{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
-    .dm-header{display:flex;align-items:center;gap:12px;padding:14px 18px;background:#172236;color:#f4f8f9;flex-shrink:0}
-    .dm-logo{width:40px;height:40px;border-radius:50%;object-fit:cover}
+    .dm-header{display:flex;align-items:center;gap:12px;padding:14px 18px;background:#172236;color:#f9ffff;flex-shrink:0}
+    .dm-logo{width:40px;height:40px;border-radius:50%;object-fit:cover;border:1px solid rgba(244,248,249,f4f8f9,.4)}
     .dm-header-text{flex:1}
-    .dm-hdr-title{margin:0;font-weight:700;font-size:1rem;color:#f4f8f9}
-    .dm-hdr-sub{margin:0;font-size:.8rem;color:rgba(244,248,249,.65)}
-    .dm-close-btn{background:rgba(255,255,255,.1);border:none;color:#f4f8f9;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:18px;line-height:1;flex-shrink:0;transition:background .15s}
-    .dm-close-btn:hover{background:rgba(255,255,255,.2)}
+    .dm-hdr-title{margin:0;font-weight:700;font-size:1rem;color:#f9ffff}
+    .dm-hdr-sub{margin:0;font-size:.8rem;color:rgba(244,248,249,f4f8f9,.65)}
+    .dm-close-btn{background:rgba(255,255,255,.12);border:none;color:#f9ffff;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:18px;line-height:1;flex-shrink:0;transition:background .15s}
+    .dm-close-btn:hover{background:rgba(255,255,255,.24)}
     .dm-body{flex:1;min-height:0;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:12px}
-    .dm-bubble{max-width:85%;padding:12px 16px;border-radius:18px;font-size:.92rem;line-height:1.6;font-family:inherit}
-    .dm-bubble-bot{background:#fff;color:#1e2d44;border-bottom-left-radius:4px;align-self:flex-start;box-shadow:0 1px 4px rgba(0,0,0,.08)}
-    .dm-bubble-me{background:#172236;color:#f4f8f9;border-bottom-right-radius:4px;align-self:flex-end}
-    .dm-typing-ind{color:#8099b0;font-size:.88rem}
+    .dm-bubble{max-width:85%;padding:12px 16px;border-radius:20px;font-size:.92rem;line-height:1.6;font-family:inherit}
+    .dm-bubble-bot{background:#fff;color:#1e2d44;border-bottom-left-radius:6px;align-self:flex-start;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+    .dm-bubble-me{background:#172236;color:#f9ffff;border-bottom-right-radius:6px;align-self:flex-end}
+    .dm-typing-ind{color:var(--muted,#5cbcd4);font-size:.88rem}
     .dm-bubble-blurred{filter:blur(4.5px);user-select:none;pointer-events:none}
     .dm-composer{margin-top:auto;display:flex;flex-direction:column;gap:10px}
-    .dm-textarea{width:100%;border:1.5px solid #d0dce8;border-radius:14px;padding:12px 14px;font-size:.92rem;font-family:inherit;color:#1e2d44;background:#fff;resize:none;box-sizing:border-box;outline:none;transition:border-color .15s;min-height:80px}
-    .dm-textarea:focus{border-color:#172236}
+    .dm-textarea{width:100%;border:1.5px solid #d0dce8;border-radius:16px;padding:12px 14px;font-size:.92rem;font-family:inherit;color:#1e2d44;background:#fff;resize:none;box-sizing:border-box;outline:none;transition:border-color .15s, box-shadow .15s;min-height:80px}
+    .dm-textarea:focus{border-color:#5cbcd4;box-shadow:0 0 0 4px rgba(191,233,244,.3)}
     .dm-char-count{align-self:flex-end;font-size:.72rem;color:#8099b0}
     .dm-char-count.dm-char-count-max{color:#c0392b}
-    .dm-btn-primary{background:#172236;color:#f4f8f9;border:none;border-radius:14px;padding:13px 20px;font-size:.95rem;font-weight:600;cursor:pointer;font-family:inherit;transition:opacity .15s}
+    .dm-btn-primary{background:#172236;color:#f9ffff;border:none;border-radius:999px;padding:13px 20px;font-size:.95rem;font-weight:700;cursor:pointer;font-family:inherit;transition:filter .15s, box-shadow .15s}
     .dm-btn-primary:disabled{opacity:.35;cursor:not-allowed}
-    .dm-btn-primary:not(:disabled):hover{opacity:.85}
+    .dm-btn-primary:not(:disabled):hover{filter:brightness(1.05);box-shadow:0 10px 26px rgba(92,188,212,.35)}
     .dm-messages{flex:1;display:flex;flex-direction:column;gap:12px}
     .dm-reply-row{display:flex;gap:8px;margin-top:auto;align-items:center;padding-top:8px;flex-shrink:0}
-    .dm-reply-input{flex:1;border:1.5px solid #d0dce8;border-radius:14px;padding:11px 14px;font-size:.92rem;font-family:inherit;color:#1e2d44;background:#fff;outline:none;transition:border-color .15s}
-    .dm-reply-input:focus{border-color:#172236}
-    .dm-btn-send{background:#172236;color:#f4f8f9;border:none;border-radius:12px;width:44px;height:44px;font-size:1.1rem;cursor:pointer;flex-shrink:0;transition:opacity .15s}
+    .dm-reply-input{flex:1;border:1.5px solid #d0dce8;border-radius:16px;padding:11px 14px;font-size:.92rem;font-family:inherit;color:#1e2d44;background:#fff;outline:none;transition:border-color .15s}
+    .dm-reply-input:focus{border-color:#5cbcd4}
+    .dm-btn-send{background:#172236;color:#f9ffff;border:none;border-radius:12px;width:44px;height:44px;font-size:1.1rem;cursor:pointer;flex-shrink:0;transition:opacity .15s}
     .dm-btn-send:disabled{opacity:.35;cursor:not-allowed}
-    .dm-upsell{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(to bottom,rgba(244,248,249,0) 0%,rgba(244,248,249,.97) 30%,#f4f8f9 100%);padding:80px 24px 24px;display:flex;align-items:flex-end;justify-content:center;animation:dm-fade .3s ease}
-    .dm-upsell-card{background:#fff;border-radius:20px;padding:24px;box-shadow:0 8px 32px rgba(11,20,38,.12);text-align:center;max-width:360px;width:100%}
+    .dm-upsell{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(to bottom,rgba(244,248,249,f4f8f9,0) 0%,rgba(244,248,249,f4f8f9,.97) 30%,#f9ffff 100%);padding:80px 24px 24px;display:flex;align-items:flex-end;justify-content:center;animation:dm-fade .3s ease}
+    .dm-upsell-card{background:#fff;border-radius:24px;padding:24px;box-shadow:0 8px 32px rgba(11,20,38,.12);text-align:center;max-width:360px;width:100%}
     .dm-upsell-text{margin:0 0 16px;font-size:.95rem;color:#1e2d44;line-height:1.5}
     .dm-upsell-hint{margin:8px 0 0;font-size:.78rem;color:#8099b0}
     .dm-btn-cta{width:100%}
@@ -93,6 +93,19 @@
 <body>
   <div class="page-shell">
     <header class="hero" id="top">
+      <div class="hero-bg" aria-hidden="true"></div>
+      <div class="hero-moon" aria-hidden="true"></div>
+      <div class="hero-stars" aria-hidden="true">
+        <i class="hero-star" style="--s:3px;--t:5.5s;--d:.2s;left:12%;top:18%"></i>
+        <i class="hero-star" style="--s:2px;--t:7s;--d:1.1s;left:28%;top:9%"></i>
+        <i class="hero-star" style="--s:4px;--t:6.2s;--d:.6s;left:45%;top:24%"></i>
+        <i class="hero-star" style="--s:2px;--t:8s;--d:1.8s;left:63%;top:12%"></i>
+        <i class="hero-star" style="--s:3px;--t:5.8s;--d:.9s;left:82%;top:30%"></i>
+        <i class="hero-star" style="--s:2px;--t:7.4s;--d:2.3s;left:91%;top:47%"></i>
+        <i class="hero-star" style="--s:3px;--t:6.6s;--d:1.4s;left:8%;top:42%"></i>
+        <i class="hero-star" style="--s:2px;--t:9s;--d:.4s;left:35%;top:38%"></i>
+      </div>
+
       <nav class="topbar">
         <a class="brand" href="#top" aria-label="Анализ снов — на главную">
           <img class="brand-logo" src="./logo.jpeg" alt="Логотип" />
@@ -176,12 +189,6 @@
       </section>
 
       <section class="section promise" id="about">
-        <div class="promise-stars" aria-hidden="true">
-          <img class="promise-star promise-star-2" src="./Str Union_L.PNG" alt="" />
-          <img class="promise-star promise-star-3" src="./Str Union_m.PNG" alt="" />
-          <img class="promise-star promise-star-5" src="./Str Union_m.PNG" alt="" />
-        </div>
- 
         <div class="promise-intro reveal">
           <h2><span>Бессознательное говорит образами</span><br /> Юнгианский подход помогает их расслышать</h2>
           <button class="button button-contrast promise-cta" type="button" onclick="dmOpen()">Попробовать анализ сна бесплатно</button>
@@ -233,11 +240,6 @@
       </section>
 
       <section class="section audience">
-        <div class="audience-stars" aria-hidden="true">
-          <img class="audience-star audience-star-2" src="./Str Union_L.PNG" alt="" />
-          <img class="audience-star audience-star-3" src="./Str Union_m.PNG" alt="" />
-        </div>
-
         <div class="audience-intro">
           <h2>
             <span class="audience-title-sub">Треть жизни вы проводите во сне — и забываете всё утром. Запишите сон, пока он не исчез.</span>
