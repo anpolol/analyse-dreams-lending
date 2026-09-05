@@ -47,7 +47,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
   <!-- меняй v при каждом релизе, чтобы сбрасывался кэш -->
-  <link rel="stylesheet" href="./styles.css?v=20260611-27" />
+  <link rel="stylesheet" href="./styles.css?v=20260905-28" />
   <style>
     /* === Dream Modal === */
     .dm-overlay[hidden],.dm-upsell[hidden]{display:none!important}
@@ -131,7 +131,7 @@
         </div>
 
         <div class="mini-features">
-          <article class="mini-card">
+          <article class="mini-card reveal">
             <img class="mini-visual" src="./image_3.jpg" alt="" />
             <div class="mini-body">
               <h2>Психологическое здоровье</h2>
@@ -139,7 +139,7 @@
             </div>
           </article>
 
-          <article class="mini-card">
+          <article class="mini-card reveal" style="--reveal-delay:.12s">
             <img class="mini-visual" src="./image_4.jpg" alt="" />
             <div class="mini-body">
               <h2>Самопознание</h2>
@@ -147,7 +147,7 @@
             </div>                  
           </article>
 
-          <article class="mini-card mini-card-wide">
+          <article class="mini-card mini-card-wide reveal" style="--reveal-delay:.24s">
             <img class="mini-visual" src="./image_5.jpg" alt="" />
             <div class="mini-body">
               <h2>Борьба с кошмарами</h2>
@@ -158,7 +158,7 @@
       </section>
 
       <section class="section archetype-map" aria-label="Карта архетипов">
-        <div class="archetype-map-inner">
+        <div class="archetype-map-inner reveal">
           <div class="archetype-map-copy">
             <p class="eyebrow">Внутри личного кабинета</p>
             <h2>Карта твоего бессознательного</h2>
@@ -177,32 +177,30 @@
 
       <section class="section promise" id="about">
         <div class="promise-stars" aria-hidden="true">
-          <img class="promise-star promise-star-1" src="./Str Union_s.PNG" alt="" />
           <img class="promise-star promise-star-2" src="./Str Union_L.PNG" alt="" />
           <img class="promise-star promise-star-3" src="./Str Union_m.PNG" alt="" />
-          <img class="promise-star promise-star-4" src="./Str Union_s.PNG" alt="" />
           <img class="promise-star promise-star-5" src="./Str Union_m.PNG" alt="" />
         </div>
  
-        <div class="promise-intro">
+        <div class="promise-intro reveal">
           <h2><span>Бессознательное говорит образами</span><br /> Юнгианский подход помогает их расслышать</h2>
           <button class="button button-contrast promise-cta" type="button" onclick="dmOpen()">Попробовать анализ сна бесплатно</button>
         </div>
 
         <div class="promise-grid">
-          <article class="info-card">
+          <article class="info-card reveal">
             <img class="info-thumb" src="./image_8.png" alt="" />
             <h3>Твоё важнее общего</h3>
             <p>По Юнгу, один образ у разных людей — про разное. Сервис не ищет «правильный» смысл — он помогает найти твой.</p>
           </article>
 
-          <article class="info-card">
+          <article class="info-card reveal" style="--reveal-delay:.12s">
             <img class="info-thumb" src="./image_7.png" alt="" />
             <h3>Вопросы важнее ответов</h3>
             <p>Задача не объяснить образ, а помочь тебе его почувствовать. Сервис задаёт вопросы — ты двигаешься к своему пониманию.</p>
           </article>
 
-          <article class="info-card">
+          <article class="info-card reveal" style="--reveal-delay:.24s">
             <img class="info-thumb" src="./image_6.png" alt="" />
             <h3>Инсайты важнее толкований</h3>
             <p>Ощущение «это неспроста» — уже точка входа. Сервис помогает найти слова для того, что уже чувствуется.</p>
@@ -211,7 +209,7 @@
       </section>
 
       <section class="section workbook" id="workbook">
-        <div class="workbook-panel">
+        <div class="workbook-panel reveal">
           <img class="workbook-image" src="./image_9.jpg" alt="" />
 
           <div class="workbook-overlay">
@@ -236,10 +234,8 @@
 
       <section class="section audience">
         <div class="audience-stars" aria-hidden="true">
-          <img class="audience-star audience-star-1" src="./Str Union_s.PNG" alt="" />
           <img class="audience-star audience-star-2" src="./Str Union_L.PNG" alt="" />
           <img class="audience-star audience-star-3" src="./Str Union_m.PNG" alt="" />
-          <img class="audience-star audience-star-4" src="./Str Union_s.PNG" alt="" />
         </div>
 
         <div class="audience-intro">
@@ -250,7 +246,7 @@
         </div>
 
         <div class="cards-grid audience-grid">
-          <article class="audience-card audience-card-repeat">
+          <article class="audience-card audience-card-repeat reveal">
             <div class="audience-card-visual">
               <img class="audience-card-img" src="./image_10.jpg" alt="" />
             </div>
@@ -258,7 +254,7 @@
             <p>Один и тот же сценарий снится снова и снова? В моменте это незаметно, а в записях — сразу бросается в глаза.</p>
           </article>
 
-          <article class="audience-card audience-card-symbol">
+          <article class="audience-card audience-card-symbol reveal" style="--reveal-delay:.12s">
             <div class="audience-card-visual">
               <img class="audience-card-img" src="./image_11.jpg" alt="" />
             </div>
@@ -266,7 +262,7 @@
             <p>Перед важным выбором сны становятся другими — более яркими, тревожными, странными? Это видно только если сравнивать записи.</p>
           </article>
 
-          <article class="audience-card audience-card-reflect">
+          <article class="audience-card audience-card-reflect reveal" style="--reveal-delay:.24s">
             <div class="audience-card-visual">
               <img class="audience-card-img" src="./image_12.jpg" alt="" />
             </div>
@@ -413,6 +409,24 @@
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape' && !document.getElementById('dm-overlay').hasAttribute('hidden')) dmClose();
     });
+  })();
+  // Scroll reveal
+  (function () {
+    var els = document.querySelectorAll('.reveal');
+    if (!els.length) return;
+    if (!('IntersectionObserver' in window) || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      els.forEach(function (el) { el.classList.add('is-visible'); });
+      return;
+    }
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible');
+          io.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+    els.forEach(function (el) { io.observe(el); });
   })();
   </script>
 </body>
