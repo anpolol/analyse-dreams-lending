@@ -81,7 +81,7 @@ function AuthShell(props) {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      background: 'var(--bg-wash)',
+      background: 'transparent',
       padding: 16
     }
   }, /*#__PURE__*/React.createElement("div", {
@@ -309,7 +309,7 @@ function LoginScreen() {
     const toggle = /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'flex',
-        background: 'var(--bg-wash)',
+        background: 'transparent',
         borderRadius: 12,
         padding: 4,
         marginBottom: 24,
@@ -635,7 +635,7 @@ function App() {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      background: 'var(--bg-wash)',
+      background: 'transparent',
       color: 'var(--text-muted)',
       fontFamily: 'var(--font-sans)'
     }
