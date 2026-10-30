@@ -75,19 +75,25 @@
    ============================================================ */
 
 :root {
-  /* ---- Brand ink (deep plum, dreamcore) ---------------------- */
-  --navy-900: #0f1a2e;   /* deepest — overlays, night sky      */
-  --navy-800: #172236;   /* PRIMARY brand ink / emblem circle   */
+  /* ---- Dark dream palette (инверсия светлой темы, как в лендинге) ---- */
+  --bg:         #10172e;   /* app background, deep night            */
+  --bg-soft:    #161d36;   /* raised cards / inputs / bot bubble    */
+  --bg-accent:  #212c4e;   /* soft fill, chips, recessed panels     */
+  --bg-deep:    #0a0f1f;
+
+  /* ---- Brand ink (deep plum, dreamcore) — тёмные поверхности ---- */
+  --navy-900: #050810;   /* deepest — night sky / overlays         */
+  --navy-800: #172236;   /* night panels, locked cards, badges     */
   --navy-700: #1e2d44;
-  --navy-600: #28425f;   /* secondary ink, links on light       */
+  --navy-600: #28425f;
   --navy-500: #3a546f;
 
-  /* ---- Paper / surface scale (warm milk whites) -------------- */
-  --paper-000: #ffffff;
-  --paper-050: #f9ffff;  /* app background                      */
-  --paper-100: #eef8fb;  /* soft section fill                   */
-  --paper-200: #ddf0f5;
-  --paper-300: #ccebf0;  /* accent fill / chips                 */
+  /* ---- Paper scale: в тёмной теме это светлые поверхности-текст ---- */
+  --paper-000: #161d36;  /* raised card / input background (тёмная)*/
+  --paper-050: #f9ffff;  /* LIGHT — inverse text на тёмных поверхн. */
+  --paper-100: #212c4e;  /* soft section fill (тёмная)             */
+  --paper-200: #212c4e;
+  --paper-300: #2a375e;  /* accent fill / chips (тёмная)           */
 
   /* ---- Cream / ivory (logo + warm imagery) ------------------- */
   --cream-100: #f4eede;
@@ -95,11 +101,21 @@
   --cream-300: #e0d4bd;
 
   /* ---- Starlight lavender (decorative accent) ---------------- */
-  --cyan-100: #e6f8fd;
+  --cyan-100: rgba(143,214,232,0.22); /* hover glass on dark         */
   --cyan-200: #d8f4fb;   /* sparkle glow                        */
-  --cyan-300: #bfe9f4;   /* primary lavender accent             */
-  --cyan-400: #8fd6e8;   /* deeper lavender                     */
-  --cyan-500: #5cbcd4;
+  --cyan-300: #a3e0ef;   /* primary lavender accent (ярче)      */
+  --cyan-400: #6cc6dc;
+  --cyan-500: #3fa8c4;
+
+  /* ---- Purple lavender (сирень + свечения, как на лендинге) ---- */
+  --lavender:       #a88cdc;   /* rgba(168,140,220) — сиреневый     */
+  --lavender-soft:  #c4b0e8;
+  --lavender-deep:  #8a6ec8;
+  --lavender-100:   rgba(168,140,220,0.22);
+  --lavender-200:   rgba(168,140,220,0.32);
+  --lavender-glow:  0 0 60px rgba(168,140,220,0.35), 0 0 24px rgba(143,214,232,0.18), 0 18px 44px rgba(0,0,0,0.4);
+  --lavender-grad:  linear-gradient(135deg, rgba(168,140,220,0.28) 0%, rgba(143,214,232,0.18) 100%);
+  --lavender-orb:   radial-gradient(circle at 34% 34%, #fbf8ff 0%, #ece0fa 58%, #b8a4e0 100%);
 
   /* ---- Dusk peach (from imagery, supporting) ----------------- */
   --dusk-200: #d7dfef;
@@ -107,51 +123,51 @@
   --dusk-400: #8093bd;
 
   /* ---- Functional ------------------------------------------- */
-  --success-500: #3f9d7a;
-  --warning-500: #d8a23c;
-  --danger-500:  #c2566b;
+  --success-500: #4ec39b;
+  --warning-500: #e0b24c;
+  --danger-500:  #e06a7e;
 
   /* ============================================================
      Semantic aliases — prefer these in components
      ============================================================ */
 
   /* Text */
-  --text-strong:  var(--navy-800);
-  --text-body:    var(--navy-700);
-  --text-muted:   rgba(23, 34, 54, 0.64);
-  --text-faint:   rgba(23, 34, 54, 0.42);
-  --text-inverse: var(--paper-050);
-  --text-link:    var(--navy-600);
+  --text-strong:  #f9ffff;
+  --text-body:    #c8d6ec;
+  --text-muted:   rgba(249, 255, 255, 0.66);
+  --text-faint:   rgba(249, 255, 255, 0.42);
+  --text-inverse: var(--navy-800);   /* текст на светлой кнопке    */
+  --text-link:    var(--lavender-soft);
 
   /* Surfaces */
-  --surface-app:     var(--paper-050);
-  --surface-soft:    var(--paper-100);
-  --surface-card:    rgba(255, 255, 255, 0.72);
-  --surface-raised:  var(--paper-000);
+  --surface-app:     var(--bg);
+  --surface-soft:    var(--bg-accent);
+  --surface-card:    rgba(255, 255, 255, 0.05);
+  --surface-raised:  var(--bg-soft);
   --surface-accent:  var(--paper-300);
   --surface-night:   var(--navy-800);
 
   /* Borders */
-  --border-subtle:  rgba(23, 34, 54, 0.12);
-  --border-strong:  rgba(23, 34, 54, 0.22);
+  --border-subtle:  rgba(249, 255, 255, 0.16);
+  --border-strong:  rgba(249, 255, 255, 0.28);
   --border-onnight: rgba(249, 255, 255, 0.56);
 
-  /* Accent / interactive */
-  --accent:          var(--navy-800);
-  --accent-contrast: var(--paper-050);
-  --accent-glow:     var(--cyan-300);
+  /* Accent / interactive (белая основная кнопка) */
+  --accent:          #f9ffff;
+  --accent-contrast: var(--navy-800);
+  --accent-glow:     var(--lavender);
 
   /* Overlay scrims used on full-bleed imagery */
-  --scrim-soft: linear-gradient(180deg, rgba(15,26,46,0.10) 0%, rgba(11,20,38,0.34) 100%); /* @kind color */
-  --scrim-deep: linear-gradient(180deg, rgba(17,24,45,0.04) 0%, rgba(17,24,45,0.52) 100%); /* @kind color */
+  --scrim-soft: linear-gradient(180deg, rgba(0,0,0,0.20) 0%, rgba(0,0,0,0.42) 100%); /* @kind color */
+  --scrim-deep: linear-gradient(180deg, rgba(0,0,0,0.10) 0%, rgba(0,0,0,0.60) 100%); /* @kind color */
 
   /* Signature page background wash */
-  --bg-wash: var(--paper-050); /* @kind color */
+  --bg-wash: var(--bg); /* @kind color */
   --bg-wash-layers:
-    radial-gradient(900px 620px at 85% -5%, rgba(204, 235, 240, 0.5), transparent 62%),
-    radial-gradient(820px 560px at -10% 12%, rgba(186, 234, 245, 0.5), transparent 60%),
-    radial-gradient(700px 520px at 50% 110%, rgba(217, 226, 245, 0.45), transparent 60%),
-    linear-gradient(180deg, #edf8fb 0%, #f9ffff 45%, #f9fffe 100%); /* @kind other */
+    radial-gradient(900px 620px at 85% -5%, rgba(92,188,212,0.22), transparent 62%),
+    radial-gradient(820px 560px at -10% 12%, rgba(143,214,232,0.18), transparent 60%),
+    radial-gradient(700px 520px at 50% 110%, rgba(174,191,227,0.20), transparent 60%),
+    linear-gradient(180deg, #0c1228 0%, #10172e 45%, #0c1226 100%); /* @kind other */
 }
 
 /* ============================================================
@@ -257,13 +273,13 @@
   --radius-2xl: 30px;
   --radius-pill: 999px;
 
-  /* Shadows — diffuse, navy-tinted, no spread */
-  --shadow-xs: 0 2px 8px rgba(23, 34, 54, 0.06);
-  --shadow-sm: 0 10px 24px rgba(23, 34, 54, 0.08);
-  --shadow-md: 0 18px 40px rgba(23, 34, 54, 0.12);
-  --shadow-lg: 0 22px 60px rgba(23, 34, 54, 0.12);
-  --shadow-xl: 0 32px 70px rgba(0, 0, 0, 0.28);   /* on imagery */
-  --shadow-glow: 0 0 32px rgba(191, 233, 244, 0.55); /* cyan    */
+  /* Shadows — diffuse, deep on dark, no spread */
+  --shadow-xs: 0 2px 8px rgba(0, 0, 0, 0.30);
+  --shadow-sm: 0 10px 24px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 18px 40px rgba(0, 0, 0, 0.42);
+  --shadow-lg: 0 22px 60px rgba(0, 0, 0, 0.45);
+  --shadow-xl: 0 32px 70px rgba(0, 0, 0, 0.55);   /* on imagery */
+  --shadow-glow: 0 0 32px rgba(143, 214, 232, 0.55); /* cyan    */
 
   /* Buttons */
   --button-height: 56px;
@@ -285,7 +301,30 @@
 
 </style>
 <style>
-  body { margin: 0; background: var(--bg-wash-layers), var(--bg-wash); background-attachment: fixed; min-height: 100vh; font-family: var(--font-sans); overflow-x: hidden; }
+  body { margin: 0; background: var(--bg-wash-layers), var(--bg-wash); background-attachment: fixed; min-height: 100vh; font-family: var(--font-sans); color: var(--text-strong); overflow-x: hidden; }
+  /* Drifting dream-mist layers (как в лендинге) */
+  body::before, body::after {
+    content: ""; position: fixed; z-index: -1; border-radius: 50%;
+    filter: blur(90px); pointer-events: none;
+  }
+  body::before {
+    width: 44vw; height: 44vw; left: -12vw; top: 16vh;
+    background: radial-gradient(circle, rgba(186,234,245,0.24), transparent 70%);
+    animation: lk-mist-drift 26s ease-in-out infinite alternate;
+  }
+  body::after {
+    width: 38vw; height: 38vw; right: -10vw; top: 55vh;
+    background: radial-gradient(circle, rgba(204,235,240,0.20), transparent 70%);
+    animation: lk-mist-drift 32s ease-in-out infinite alternate-reverse;
+  }
+  @keyframes lk-mist-drift {
+    0%   { transform: translate3d(0,0,0) scale(1); }
+    100% { transform: translate3d(6vw,-4vh,0) scale(1.08); }
+  }
+  @keyframes lk-twinkle {
+    0%   { opacity: 0.25; transform: scale(0.7); }
+    100% { opacity: 1; transform: scale(1.15); }
+  }
   #root { width: min(980px, calc(100% - 32px)); margin: 0 auto; padding: 32px 0 80px; }
   .lk-stack { display: flex; flex-direction: column; gap: 40px; }
   @media (max-width: 760px) {
@@ -303,7 +342,11 @@
   .md-content li { margin: 0 0 6px; }
   .md-content li:last-child { margin-bottom: 0; }
   .md-content strong { font-weight: 700; }
-  .md-content code { background: rgba(0,0,0,0.06); border-radius: 4px; padding: 1px 5px; font-size: 0.92em; }
+  .md-content code { background: rgba(255,255,255,0.08); border-radius: 4px; padding: 1px 5px; font-size: 0.92em; color: var(--text-strong); }
+  /* Тёмный скроллбар под палитру */
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-thumb { background: rgba(249,255,255,0.14); border-radius: 999px; }
+  ::-webkit-scrollbar-track { background: transparent; }
 </style>
 <script src="../analytics.js?v=20260709"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.108.2" integrity="sha384-JWEyvHh+lRf0sN/WWY+QTQwX+CyWqmNg4tkc8GQzAMEtR2wGNrCJlvnu1lHD1kDm" crossorigin="anonymous"></script>
@@ -323,53 +366,52 @@
   <script>
   window.DesignSystem_041ca9 = (function() {
     var e = React.createElement;
-    var css = { navy: "#172236", paper: "#f4f8f9", cyan: "#7ae3e3", muted: "rgba(30,45,68,0.5)", border: "#d0dce8" };
+    var css = { navy: "#172236", paper: "#f9ffff", cyan: "#c4b0e8", muted: "rgba(249,255,255,0.66)", border: "rgba(249,255,255,0.16)" };
 
     function Button(p) {
       var dark = p.tone === "onDark";
-      var grad = false;
-      var s = Object.assign({ display:"inline-flex", alignItems:"center", justifyContent:"center", fontFamily:"Manrope,system-ui,sans-serif", fontWeight:700, cursor: p.disabled ? "not-allowed" : "pointer", border:"none", borderRadius:999, transition:"filter .15s, box-shadow .15s, opacity .15s", opacity: p.disabled ? 0.5 : 1, padding: p.size==="sm" ? "10px 18px" : "14px 24px", fontSize: p.size==="sm" ? "0.9rem" : "1rem", width: p.fullWidth ? "100%" : "auto", background: dark ? "rgba(255,255,255,0.15)" : css.navy, color: css.paper }, p.style || {});
+      var s = Object.assign({ display:"inline-flex", alignItems:"center", justifyContent:"center", fontFamily:"Manrope,system-ui,sans-serif", fontWeight:700, cursor: p.disabled ? "not-allowed" : "pointer", border:"none", borderRadius:999, transition:"filter .15s, box-shadow .15s, opacity .15s, transform .15s", opacity: p.disabled ? 0.5 : 1, padding: p.size==="sm" ? "10px 18px" : "14px 24px", fontSize: p.size==="sm" ? "0.9rem" : "1rem", width: p.fullWidth ? "100%" : "auto", background: dark ? "rgba(168,140,220,0.18)" : "#f9ffff", color: dark ? css.paper : css.navy, boxShadow: dark ? "none" : "0 6px 18px rgba(0,0,0,0.3)" }, p.style || {});
       return e("button", { onClick: p.onClick, style: s, disabled: p.disabled }, p.children);
     }
 
     function GhostButton(p) {
-      var s = Object.assign({ display:"inline-flex", alignItems:"center", justifyContent:"center", fontFamily:"Manrope,system-ui,sans-serif", fontWeight:600, cursor:"pointer", background:"transparent", border:"1.5px solid " + css.border, borderRadius:12, color:"#1e2d44", padding: p.size==="sm" ? "8px 14px" : "12px 20px", fontSize: p.size==="sm" ? "0.88rem" : "0.95rem" }, p.style || {});
+      var s = Object.assign({ display:"inline-flex", alignItems:"center", justifyContent:"center", fontFamily:"Manrope,system-ui,sans-serif", fontWeight:600, cursor:"pointer", background:"transparent", border:"1.5px solid " + css.border, borderRadius:12, color: css.paper, padding: p.size==="sm" ? "8px 14px" : "12px 20px", fontSize: p.size==="sm" ? "0.88rem" : "0.95rem", transition:"background .15s, border-color .15s" }, p.style || {});
       return e("button", { onClick: p.onClick, style: s }, p.children);
     }
 
     function Card(p) {
       var night = p.variant === "night", raised = p.variant === "raised";
       var pad = p.padding === 0 ? 0 : (p.padding || 24);
-      var s = Object.assign({ borderRadius:24, padding:pad, background: night ? css.navy : raised ? "#fff" : "rgba(255,255,255,0.82)", boxShadow: raised ? "0 4px 16px rgba(11,20,38,.1)" : "0 1px 4px rgba(0,0,0,.06)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)" }, p.style || {});
+      var s = Object.assign({ borderRadius:24, padding:pad, background: night ? css.navy : raised ? "var(--bg-soft)" : "rgba(255,255,255,0.05)", boxShadow: raised ? "0 18px 44px rgba(0,0,0,0.35), 0 0 0 1px rgba(143,214,232,0.16), 0 0 32px rgba(143,214,232,0.14)" : "0 1px 4px rgba(0,0,0,0.30), 0 0 0 1px rgba(143,214,232,0.10)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)" }, p.style || {});
       return e("section", { style: s }, p.children);
     }
 
     function Input(p) {
-      var s = Object.assign({ fontFamily:"Manrope,system-ui,sans-serif", fontSize:"1rem", color:"#1e2d44", background:"#fff", border:"1.5px solid " + css.border, borderRadius:14, padding:"12px 14px", outline:"none", resize:"none", boxSizing:"border-box", width:"100%" }, p.style || {});
+      var s = Object.assign({ fontFamily:"Manrope,system-ui,sans-serif", fontSize:"1rem", color:"var(--text-strong)", background:"var(--bg-soft)", border:"1.5px solid " + css.border, borderRadius:14, padding:"12px 14px", outline:"none", resize:"none", boxSizing:"border-box", width:"100%" }, p.style || {});
       if (p.multiline) return e("textarea", { rows: p.rows||3, value: p.value, placeholder: p.placeholder, onChange: p.onChange, onKeyDown: p.onKeyDown, maxLength: p.maxLength, style: s });
       return e("input", { type:"text", value: p.value, placeholder: p.placeholder, onChange: p.onChange, onKeyDown: p.onKeyDown, maxLength: p.maxLength, style: s });
     }
 
     function Eyebrow(p) {
       var dark = p.tone === "onDark";
-      var s = Object.assign({ margin:0, fontSize:"0.72rem", fontWeight:800, letterSpacing:"0.1em", textTransform:"uppercase", fontFamily:"Manrope,system-ui,sans-serif", color: dark ? css.cyan : css.muted }, p.style || {});
+      var s = Object.assign({ margin:0, fontSize:"0.72rem", fontWeight:800, letterSpacing:"0.1em", textTransform:"uppercase", fontFamily:"Manrope,system-ui,sans-serif", color: dark ? css.paper : css.muted }, p.style || {});
       return e("p", { style: s }, p.children);
     }
 
     function Badge(p) {
-      var bg = p.variant==="cyan" ? css.cyan : "#e8f0f5";
-      var color = css.navy;
+      var bg = p.variant==="cyan" ? css.cyan : "rgba(255,255,255,0.08)";
+      var color = p.variant==="cyan" ? css.navy : css.paper;
       var s = Object.assign({ display:"inline-flex", alignItems:"center", padding:"3px 10px", borderRadius:999, fontSize:"0.75rem", fontWeight:700, fontFamily:"Manrope,system-ui,sans-serif", background:bg, color:color }, p.style || {});
       return e("span", { style: s }, p.children);
     }
 
-    function Sparkle(p) { return e("span", { "aria-hidden":"true", style: Object.assign({ color: css.cyan }, p.style||{}) }, "✦"); }
+    function Sparkle(p) { return e("span", { "aria-hidden":"true", style: Object.assign({ color: css.paper }, p.style||{}) }, "✦"); }
 
     return { Button:Button, GhostButton:GhostButton, Card:Card, Input:Input, Eyebrow:Eyebrow, Badge:Badge, Sparkle:Sparkle };
   })();
   </script>
-  <script src="app-components.js?v=20260730b"></script>
-  <script src="app.js?v=20260709"></script>
+  <script src="app-components.js?v=20261030t"></script>
+  <script src="app.js?v=20261030t"></script>
 
 
 </body></html>

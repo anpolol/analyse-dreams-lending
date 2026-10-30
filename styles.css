@@ -138,6 +138,8 @@ h3{ font-size: clamp(1.4rem, 1.9vw, 1.85rem); }
   justify-content:space-between;
   gap:14px;
   padding:0;
+  position:relative;
+  z-index:3;
 }
 
 .brand{
@@ -162,22 +164,25 @@ h3{ font-size: clamp(1.4rem, 1.9vw, 1.85rem); }
 .brand-name{ font-size:1.05rem; }
 
 .top-link{
-  color:#f9ffff;
+  color:#172236;
   text-decoration:none;
-  font-weight:600;
-  padding:12px 26px;
-  border:1px solid rgba(249,255,255,0.5);
+  font-weight:700;
+  padding:14px 32px;
+  font-size:1.05rem;
+  border:1px solid rgba(249,255,255,0.9);
   border-radius:999px;
-  background:rgba(249,255,255,0.08);
-  backdrop-filter:blur(8px);
-  -webkit-backdrop-filter:blur(8px);
-  transition:background .2s, border-color .2s, box-shadow .2s;
+  background:rgba(249,255,255,0.88);
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+  box-shadow:0 0 18px rgba(249,255,255,0.35), 0 4px 14px rgba(0,0,0,0.2);
+  transition:background .2s, border-color .2s, box-shadow .2s, transform .2s;
 }
 
 .top-link:hover{
-  border-color:rgba(249,255,255,0.85);
-  background:rgba(249,255,255,0.16);
-  box-shadow:0 0 24px rgba(249,255,255,0.22);
+  background:#f9ffff;
+  border-color:#f9ffff;
+  box-shadow:0 0 28px rgba(249,255,255,0.5), 0 0 56px rgba(186,234,245,0.3);
+  transform:translateY(-1px);
 }
 
 /* — Hero — */
@@ -197,6 +202,7 @@ h3{ font-size: clamp(1.4rem, 1.9vw, 1.85rem); }
 .hero-bg{
   position:absolute;
   inset:0;
+  z-index:0;
   background:
     linear-gradient(180deg, rgba(15,26,46,0.10) 0%, rgba(15,26,46,0.18) 40%, rgba(11,20,38,0.34) 100%),
     url("./image_1.jpg") center/cover no-repeat;
@@ -214,12 +220,13 @@ h3{ font-size: clamp(1.4rem, 1.9vw, 1.85rem); }
 /* Crescent moon — pure CSS */
 .hero-moon{
   position:absolute;
-  top:8%;
-  right:12%;
+  top:22%;
+  right:8%;
   width:88px;
   height:88px;
   border-radius:50%;
   background:#f9ffff;
+  z-index:1;
   box-shadow:
     inset -18px -10px 0 rgba(191,233,244,0.6),
     0 0 46px rgba(249,255,255,0.5),
@@ -235,6 +242,7 @@ h3{ font-size: clamp(1.4rem, 1.9vw, 1.85rem); }
 .hero-stars{
   position:absolute;
   inset:0;
+  z-index:1;
   pointer-events:none;
 }
 .hero-star{
@@ -250,6 +258,7 @@ h3{ font-size: clamp(1.4rem, 1.9vw, 1.85rem); }
 
 .hero-grid{
   position:relative;
+  z-index:2;
   flex:1;
   min-height:0;
   display:flex;
@@ -702,7 +711,6 @@ h3{ font-size: clamp(1.4rem, 1.9vw, 1.85rem); }
 .archetype-map-visual{
   border-radius:var(--radius-lg);
   overflow:hidden;
-  box-shadow:var(--shadow);
 }
 
 .archetype-map-img{
@@ -840,8 +848,9 @@ h3{ font-size: clamp(1.4rem, 1.9vw, 1.85rem); }
 .audience-card{
   display:flex;
   flex-direction:column;
-  gap:18px;
-  padding:22px;
+  gap:0;
+  padding:0;
+  overflow:hidden;
   border-radius:var(--radius-xl);
   background:linear-gradient(135deg, rgba(168,140,220,0.28) 0%, rgba(143,214,232,0.18) 100%);
   border:1px solid rgba(196,181,232,0.45);
@@ -852,30 +861,26 @@ h3{ font-size: clamp(1.4rem, 1.9vw, 1.85rem); }
   transition:transform .45s cubic-bezier(.22,1,.36,1), box-shadow .45s cubic-bezier(.22,1,.36,1);
 }
 .audience-card-visual{
-  border-radius:var(--radius-lg);
+  border-radius:0;
   overflow:hidden;
-  border:1px solid rgba(226,215,245,0.4);
-  box-shadow:0 14px 32px rgba(0,0,0,0.35);
 }
-
 .audience-card-img{
   width:100%;
   height:auto;
   display:block;
 }
 
-.audience-card-repeat .audience-card-visual{ background: linear-gradient(180deg, #f5ede6 0%, #efe3d7 100%); }
-.audience-card-symbol .audience-card-visual{ background: linear-gradient(180deg, #dfeef0 0%, #cfe4e7 100%); }
-.audience-card-reflect .audience-card-visual{ background: linear-gradient(180deg, #e7ecf6 0%, #d7dfef 100%); }
-
 .audience-card h3{
+  margin:20px 0 0;
+  padding:0 22px;
   font-size: clamp(1.6rem, 2.2vw, 2.4rem);
   line-height:1.05;
   letter-spacing:-0.01em;
 }
 
 .audience-card p{
-  margin:10px 0 0;
+  margin:10px 0 22px;
+  padding:0 22px;
   color:var(--muted);
   font-size:1rem;
   line-height:1.5;
@@ -1026,30 +1031,14 @@ h3{ font-size: clamp(1.4rem, 1.9vw, 1.85rem); }
   transform:translateY(0);
 }
 
-/* Card hover */
+/* Card hover — только для кликабельных карточек-ссылок */
 @media (hover:hover){
-  .mini-visual,
-  .info-card,
-  .audience-card,
-  .archetype-map-inner,
-  .archetype-map-visual{
+  a.audience-card{
     transition:transform .45s cubic-bezier(.22,1,.36,1), box-shadow .45s cubic-bezier(.22,1,.36,1);
   }
-  .mini-card:hover .mini-visual{
-    transform:translateY(-6px) scale(1.015);
-    box-shadow:0 26px 56px rgba(23,34,54,0.13);
-  }
-  .info-card:hover{
+  a.audience-card:hover{
     transform:translateY(-8px);
     box-shadow:0 0 100px rgba(168,140,220,0.45), 0 0 40px rgba(143,214,232,0.22), 0 30px 64px rgba(0,0,0,0.45);
-  }
-  .audience-card:hover{
-    transform:translateY(-8px);
-    box-shadow:0 0 100px rgba(168,140,220,0.45), 0 0 40px rgba(143,214,232,0.22), 0 30px 64px rgba(0,0,0,0.45);
-  }
-  .archetype-map-inner:hover .archetype-map-visual{
-    transform:translateY(-4px);
-    box-shadow:0 0 80px rgba(168,140,220,0.4), 0 28px 64px rgba(0,0,0,0.4);
   }
 }
 
@@ -1084,8 +1073,8 @@ h3{ font-size: clamp(1.4rem, 1.9vw, 1.85rem); }
   .hero-moon{
     width:64px;
     height:64px;
-    right:10%;
-    top:8%;
+    right:8%;
+    top:20%;
   }
   .hero-bottom{
     grid-template-columns:1fr;
@@ -1261,7 +1250,7 @@ h3{ font-size: clamp(1.4rem, 1.9vw, 1.85rem); }
     font-size:1.05rem;
   }
 
-  .audience-card{ padding:16px; }
+  .audience-card{ padding:0; }
   .audience-card h3{ font-size:1.6rem; }
   .audience-card p{
     font-size:0.95rem;

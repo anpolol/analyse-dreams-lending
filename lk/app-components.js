@@ -202,7 +202,8 @@ function Tabs({
       padding: 4,
       borderRadius: "var(--radius-md)",
       background: "var(--surface-card)",
-      border: "1px solid var(--border-subtle)",
+      border: "1px solid rgba(168,140,220,0.20)",
+      boxShadow: "inset 0 0 24px rgba(168,140,220,0.06)",
       marginBottom: 28
     }
   }, items.map(it => {
@@ -219,9 +220,9 @@ function Tabs({
         fontWeight: 700,
         fontSize: "0.95rem",
         transition: "all 160ms var(--ease-out)",
-        background: active ? "var(--navy-800)" : "transparent",
-        color: active ? "var(--paper-050)" : "var(--text-muted)",
-        boxShadow: active ? "var(--shadow-sm)" : "none"
+        background: active ? "var(--accent)" : "transparent",
+        color: active ? "var(--accent-contrast)" : "var(--text-muted)",
+        boxShadow: active ? "0 0 18px rgba(168,140,220,0.45)" : "none"
       }
     }, it.label);
   }));
@@ -242,6 +243,34 @@ const VEIL_DOTS = [{
   left: "22%",
   bottom: "14%"
 }];
+
+// Bright star field for the constellation sky — deterministic so it stays
+// stable across renders. Mix of tiny pinpoint stars and a few larger glowing
+// jewels in lavender/cyan/white.
+const STAR_FIELD = (() => {
+  const stars = [];
+  // simple LCG for stable pseudo-random placement
+  let s = 2654435761 >>> 0;
+  const rnd = () => {
+    s = (s * 1664525 + 1013904223) >>> 0;
+    return s / 4294967296;
+  };
+  for (let i = 0; i < 120; i++) {
+    const big = rnd() < 0.12;
+    const tint = rnd();
+    stars.push({
+      left: rnd() * 100,
+      top: rnd() * 100,
+      size: big ? 2.4 + rnd() * 2.2 : 1 + rnd() * 1.4,
+      glow: big ? 10 + rnd() * 8 : 3 + rnd() * 4,
+      color: tint < 0.4 ? "rgba(168,140,220,0.95)" : tint < 0.75 ? "rgba(143,214,232,0.95)" : "rgba(255,255,255,0.95)",
+      twinkle: rnd() < 0.5,
+      delay: rnd() * 4,
+      dur: 2.4 + rnd() * 3
+    });
+  }
+  return stars;
+})();
 
 // The card itself — image area + name + (locked) description — all sitting on one
 // solid backing panel, so it reads as a distinct tile even when the constellation
@@ -266,9 +295,9 @@ function ArchetypeCard({
       gap: 10,
       padding: 14,
       borderRadius: "var(--radius-xl)",
-      background: locked ? "var(--navy-800)" : "var(--paper-000)",
-      border: locked ? "1.5px dashed rgba(249,255,255,0.32)" : "1px solid var(--border-subtle)",
-      boxShadow: hover ? "var(--shadow-xl)" : "var(--shadow-lg)",
+      background: locked ? "var(--navy-800)" : "var(--bg-soft)",
+      border: locked ? "1.5px dashed rgba(168,140,220,0.55)" : "1px solid rgba(168,140,220,0.32)",
+      boxShadow: locked ? "0 0 24px rgba(168,140,220,0.18), 0 8px 24px rgba(0,0,0,0.35)" : "0 0 0 1px rgba(168,140,220,0.10), 0 0 32px rgba(168,140,220,0.22), 0 14px 34px rgba(0,0,0,0.45)",
       transform: hover ? "translateY(-5px) scale(1.03)" : "none",
       transition: "transform 200ms var(--ease-out), box-shadow 200ms var(--ease-out)",
       cursor: "pointer"
@@ -285,10 +314,11 @@ function ArchetypeCard({
       borderRadius: "var(--radius-md)",
       cursor: "pointer",
       border: "none",
-      background: locked ? "rgba(249,255,255,0.06)" : "var(--paper-050)",
+      background: locked ? "rgba(168,140,220,0.10)" : "var(--lavender-orb)",
       display: "flex",
       alignItems: "center",
-      justifyContent: "center"
+      justifyContent: "center",
+      boxShadow: locked ? "none" : "inset 0 0 30px rgba(168,140,220,0.45), 0 0 24px rgba(168,140,220,0.25)"
     }
   }, locked ? /*#__PURE__*/React.createElement(React.Fragment, null, VEIL_DOTS.map((d, i) => /*#__PURE__*/React.createElement("span", {
     key: i,
@@ -302,8 +332,9 @@ function ArchetypeCard({
     }
   })), /*#__PURE__*/React.createElement("span", {
     style: {
-      color: "var(--cyan-300)",
-      fontSize: "1.7rem"
+      color: "var(--paper-050)",
+      fontSize: "1.7rem",
+      filter: "drop-shadow(0 0 8px rgba(168,140,220,0.6))"
     }
   }, "\u2726")) : symbol.image_url ? /*#__PURE__*/React.createElement("img", {
     src: symbol.image_url,
@@ -348,7 +379,8 @@ function ArchetypeCard({
       fontSize: "0.78rem",
       fontWeight: 700,
       color: "var(--navy-800)",
-      background: "var(--cyan-300)",
+      background: "var(--lavender)",
+      boxShadow: "0 0 14px rgba(168,140,220,0.45)",
       borderRadius: 999,
       padding: "3px 9px"
     }
@@ -703,8 +735,8 @@ function ConstellationGraph({
       touchAction: "auto",
       userSelect: "none",
       cursor: grabbing ? "grabbing" : "grab",
-      background: "radial-gradient(circle at 30% 20%, rgba(143,214,232,0.18), transparent 55%), linear-gradient(160deg, var(--navy-900), var(--navy-800))",
-      boxShadow: "var(--shadow-xl)",
+      background: "transparent",
+      boxShadow: "none",
       padding: 8
     }
   }, /*#__PURE__*/React.createElement("div", {
@@ -715,7 +747,28 @@ function ConstellationGraph({
       minHeight: height,
       margin: "0 auto"
     }
-  }, /*#__PURE__*/React.createElement(DecorImg, {
+  }, /*#__PURE__*/React.createElement("div", {
+    "aria-hidden": "true",
+    style: {
+      position: "absolute",
+      inset: 0,
+      pointerEvents: "none",
+      zIndex: 0
+    }
+  }, STAR_FIELD.map((st, i) => /*#__PURE__*/React.createElement("span", {
+    key: "star" + i,
+    style: {
+      position: "absolute",
+      left: st.left + "%",
+      top: st.top + "%",
+      width: st.size,
+      height: st.size,
+      borderRadius: "50%",
+      background: st.color,
+      boxShadow: "0 0 " + st.glow + "px " + st.color + ", 0 0 " + (st.glow * 2) + "px rgba(168,140,220,0.4)",
+      animation: st.twinkle ? "lk-twinkle " + st.dur + "s ease-in-out " + st.delay + "s infinite alternate" : "none"
+    }
+  }))), /*#__PURE__*/React.createElement(DecorImg, {
     k: "dotted-s",
     size: 20,
     opacity: 0.4,
@@ -747,8 +800,9 @@ function ConstellationGraph({
     y1: l.y1,
     x2: l.x2,
     y2: l.y2,
-    stroke: "rgba(143,214,232,0.5)",
-    strokeWidth: Math.min(1 + l.strength * 0.6, 4)
+    stroke: "rgba(168,140,220,0.55)",
+    strokeWidth: Math.min(1 + l.strength * 0.6, 4),
+    style: { filter: "drop-shadow(0 0 4px rgba(168,140,220,0.5))" }
   }))), otherSymbols.map((s, i) => {
     const pos = clampPos(customPos[s.id] || positions[i]);
     return /*#__PURE__*/React.createElement("div", {
@@ -826,7 +880,7 @@ function ArchetypesTab({
       alignItems: "flex-end",
       justifyContent: "space-between"
     }
-  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(Eyebrow, null, "\u041A\u0430\u0440\u0442\u0430 \u0441\u043D\u043E\u0432"), /*#__PURE__*/React.createElement("h2", {
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h2", {
     style: {
       margin: "8px 0 0",
       fontSize: "clamp(1.3rem, 2.4vw, 1.8rem)",
@@ -834,7 +888,7 @@ function ArchetypesTab({
       letterSpacing: "-0.01em",
       color: "var(--text-strong)"
     }
-  }, "\u0421\u043E\u0437\u0432\u0435\u0437\u0434\u0438\u0435 \u0430\u0440\u0445\u0435\u0442\u0438\u043F\u043E\u0432"), /*#__PURE__*/React.createElement("p", {
+  }, "\u041A\u0430\u0440\u0442\u0430 \u0441\u043D\u043E\u0432"), /*#__PURE__*/React.createElement("p", {
     style: {
       margin: "8px 0 0",
       color: "var(--text-muted)"
@@ -843,12 +897,12 @@ function ArchetypesTab({
     onClick: onModel,
     disabled: !analyzeReady,
     style: {
-      background: "var(--navy-800)",
-      color: "var(--cyan-300)",
+      background: "#f9ffff",
+      color: "var(--navy-800)",
       fontSize: "1.1rem",
       fontWeight: 800,
       padding: "18px 32px",
-      boxShadow: "var(--shadow-xl)"
+      boxShadow: "0 8px 24px rgba(0,0,0,0.35)"
     }
   }, analyzeReady ? "Разобрать сон →" : "Готовим аккаунт…")), /*#__PURE__*/React.createElement("p", {
     style: {
@@ -860,14 +914,39 @@ function ArchetypesTab({
     variant: "soft",
     style: {
       textAlign: "center",
-      padding: 48
+      padding: "56px 32px",
+      border: "1.5px dashed rgba(143,214,232,0.32)",
+      boxShadow: "0 0 28px rgba(143,214,232,0.08)"
     }
-  }, /*#__PURE__*/React.createElement("p", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
-      margin: 0,
-      color: "var(--text-muted)"
+      width: 56,
+      height: 56,
+      borderRadius: 999,
+      margin: "0 auto 18px",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      background: "rgba(168,140,220,0.18)",
+      color: "var(--paper-050)",
+      fontSize: "1.5rem",
+      filter: "drop-shadow(0 0 10px rgba(168,140,220,0.5))"
     }
-  }, "\u0421\u043E\u0437\u0432\u0435\u0437\u0434\u0438\u0435 \u043F\u043E\u043A\u0430 \u043F\u0443\u0441\u0442\u043E \u2014 \u043E\u043D\u043E \u043F\u043E\u044F\u0432\u0438\u0442\u0441\u044F \u043F\u043E\u0441\u043B\u0435 \u043F\u0435\u0440\u0432\u043E\u0433\u043E \u0440\u0430\u0437\u0431\u043E\u0440\u0430 \u0441\u043D\u0430.")) : /*#__PURE__*/React.createElement(ConstellationGraph, {
+  }, "\u2726"), /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: "0 0 6px",
+      fontWeight: 800,
+      fontSize: "1.05rem",
+      color: "var(--text-strong)"
+    }
+  }, "\u0421\u043E\u0437\u0432\u0435\u0437\u0434\u0438\u0435 \u043F\u043E\u043A\u0430 \u043F\u0443\u0441\u0442\u043E"), /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: "0 auto",
+      color: "var(--text-muted)",
+      maxWidth: "32rem",
+      lineHeight: 1.5
+    }
+  }, "\u041E\u043D\u043E \u043F\u043E\u044F\u0432\u0438\u0442\u0441\u044F \u043F\u043E\u0441\u043B\u0435 \u043F\u0435\u0440\u0432\u043E\u0433\u043E \u0440\u0430\u0437\u0431\u043E\u0440\u0430 \u0441\u043D\u0430.")) : /*#__PURE__*/React.createElement(ConstellationGraph, {
     symbols: archetypes,
     connections: connections,
     onSelect: onSelect
@@ -912,8 +991,9 @@ function DreamHistoryRow({
       width: 28,
       height: 28,
       borderRadius: 999,
-      background: "var(--cyan-300)",
+      background: "var(--lavender)",
       color: "var(--navy-800)",
+      boxShadow: "0 0 14px rgba(168,140,220,0.4)",
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
@@ -999,10 +1079,11 @@ function ArchetypeDetail({
       borderRadius: "var(--radius-xl)",
       overflow: "hidden",
       marginBottom: 18,
-      background: locked ? "radial-gradient(circle at 30% 20%, rgba(143,214,232,0.18), transparent 55%), linear-gradient(160deg, var(--navy-900), var(--navy-800))" : "var(--paper-000)",
+      background: locked ? "linear-gradient(160deg, var(--navy-900), var(--navy-800))" : "var(--lavender-orb)",
       display: "flex",
       alignItems: "center",
-      justifyContent: "center"
+      justifyContent: "center",
+      boxShadow: locked ? "none" : "inset 0 0 40px rgba(168,140,220,0.45), 0 0 28px rgba(168,140,220,0.25)"
     }
   }, locked ? /*#__PURE__*/React.createElement(React.Fragment, null, VEIL_DOTS.map((d, i) => /*#__PURE__*/React.createElement("span", {
     key: i,
@@ -1016,8 +1097,9 @@ function ArchetypeDetail({
     }
   })), /*#__PURE__*/React.createElement("span", {
     style: {
-      color: "var(--cyan-300)",
-      fontSize: "2rem"
+      color: "var(--paper-050)",
+      fontSize: "2rem",
+      filter: "drop-shadow(0 0 10px rgba(168,140,220,0.6))"
     }
   }, "\u2726")) : symbol.image_url ? /*#__PURE__*/React.createElement("img", {
     src: symbol.image_url,
@@ -1094,7 +1176,12 @@ function BalanceCard({
     padding: 0,
     style: {
       position: "relative",
-      overflow: "hidden"
+      overflow: "hidden",
+      background: "linear-gradient(135deg, rgba(168,140,220,0.28) 0%, rgba(143,214,232,0.18) 100%)",
+      border: "1px solid rgba(196,181,232,0.45)",
+      backdropFilter: "blur(18px)",
+      WebkitBackdropFilter: "blur(18px)",
+      boxShadow: "0 0 80px rgba(168,140,220,0.35), 0 0 30px rgba(143,214,232,0.18), 0 24px 56px rgba(0,0,0,0.4)"
     }
   }, /*#__PURE__*/React.createElement(DecorImg, {
     k: "dotted-l",
@@ -1170,12 +1257,12 @@ function BalanceCard({
     onClick: onAnalyze,
     disabled: !analyzeReady,
     style: {
-      background: "var(--cyan-300)",
+      background: "#f9ffff",
       color: "var(--navy-800)",
       fontSize: "1.1rem",
       fontWeight: 800,
       padding: "18px 32px",
-      boxShadow: "var(--shadow-glow)"
+      boxShadow: "0 8px 24px rgba(0,0,0,0.35)"
     }
   }, analyzeReady ? "Разобрать сон →" : "Готовим аккаунт…"))));
 }
@@ -1218,11 +1305,13 @@ function TariffCard({
     onMouseLeave: () => setHover(false),
     style: {
       position: "relative",
-      background: "var(--surface-raised)",
+      background: "linear-gradient(135deg, rgba(168,140,220,0.28) 0%, rgba(143,214,232,0.18) 100%)",
       borderRadius: "var(--radius-2xl)",
       padding: "26px 24px 24px",
-      boxShadow: t.popular || isSubscription ? "var(--shadow-lg)" : "var(--shadow-sm)",
-      border: isSubscription ? "1.5px solid var(--cyan-400)" : t.popular ? "1.5px solid var(--cyan-400)" : "1px solid var(--border-subtle)",
+      backdropFilter: "blur(18px)",
+      WebkitBackdropFilter: "blur(18px)",
+      boxShadow: t.popular || isSubscription ? "0 0 80px rgba(168,140,220,0.35), 0 0 30px rgba(143,214,232,0.18), 0 24px 56px rgba(0,0,0,0.4)" : "0 0 40px rgba(168,140,220,0.22), 0 0 18px rgba(143,214,232,0.12), 0 18px 40px rgba(0,0,0,0.4)",
+      border: isSubscription || t.popular ? "1.5px solid rgba(196,181,232,0.6)" : "1px solid rgba(196,181,232,0.35)",
       transform: hover ? "translateY(-3px)" : "none",
       transition: "transform 200ms var(--ease-out), box-shadow 200ms var(--ease-out)",
       display: "flex",
@@ -1234,14 +1323,20 @@ function TariffCard({
     style: {
       position: "absolute",
       top: -12,
-      left: 24
+      left: 24,
+      background: "var(--lavender)",
+      color: "var(--navy-800)",
+      boxShadow: "0 0 16px rgba(168,140,220,0.5)"
     }
   }, "\u041F\u043E\u0434\u043F\u0438\u0441\u043A\u0430"), !isSubscription && t.popular && /*#__PURE__*/React.createElement(Badge, {
     variant: "cyan",
     style: {
       position: "absolute",
       top: -12,
-      left: 24
+      left: 24,
+      background: "var(--lavender)",
+      color: "var(--navy-800)",
+      boxShadow: "0 0 16px rgba(168,140,220,0.5)"
     }
   }, "\u041F\u043E\u043F\u0443\u043B\u044F\u0440\u043D\u044B\u0439"), !isSubscription && t.best && /*#__PURE__*/React.createElement(Badge, {
     variant: "cream",
@@ -1313,7 +1408,12 @@ function NotebookCard({
     variant: "raised",
     padding: 0,
     style: {
-      overflow: "hidden"
+      overflow: "hidden",
+      background: "linear-gradient(135deg, rgba(168,140,220,0.28) 0%, rgba(143,214,232,0.18) 100%)",
+      border: "1px solid rgba(196,181,232,0.45)",
+      backdropFilter: "blur(18px)",
+      WebkitBackdropFilter: "blur(18px)",
+      boxShadow: "0 0 80px rgba(168,140,220,0.35), 0 0 30px rgba(143,214,232,0.18), 0 24px 56px rgba(0,0,0,0.4)"
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
@@ -1377,7 +1477,9 @@ function SectionHead({
     style: {
       marginBottom: 18
     }
-  }, /*#__PURE__*/React.createElement(Eyebrow, null, eyebrow), /*#__PURE__*/React.createElement("h2", {
+  }, /*#__PURE__*/React.createElement(Eyebrow, {
+    tone: "onDark"
+  }, eyebrow), /*#__PURE__*/React.createElement("h2", {
     style: {
       margin: "8px 0 0",
       fontSize: "clamp(1.3rem, 2.4vw, 1.8rem)",
@@ -1398,14 +1500,40 @@ function HistoryList({
       variant: "soft",
       style: {
         textAlign: "center",
-        padding: 48
+        padding: "56px 32px",
+        border: "1.5px dashed rgba(143,214,232,0.32)",
+        boxShadow: "0 0 28px rgba(143,214,232,0.08)"
       }
-    }, /*#__PURE__*/React.createElement("p", {
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        width: 56,
+        height: 56,
+        borderRadius: 999,
+        margin: "0 auto 18px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "rgba(168,140,220,0.18)",
+        color: "var(--paper-050)",
+        fontSize: "1.5rem",
+        filter: "drop-shadow(0 0 10px rgba(168,140,220,0.5))"
+      }
+    }, "\u2726"), /*#__PURE__*/React.createElement("p", {
+      style: {
+        margin: "0 0 6px",
+        fontWeight: 800,
+        fontSize: "1.05rem",
+        color: "var(--text-strong)"
+      }
+    }, "\u041F\u043E\u043A\u0430 \u043F\u0443\u0441\u0442\u043E"), /*#__PURE__*/React.createElement("p", {
       style: {
         margin: 0,
-        color: "var(--text-muted)"
+        color: "var(--text-muted)",
+        maxWidth: "32rem",
+        margin: "0 auto",
+        lineHeight: 1.5
       }
-    }, "\u0417\u0434\u0435\u0441\u044C \u043F\u043E\u044F\u0432\u044F\u0442\u0441\u044F \u0432\u0430\u0448\u0438 \u0440\u0430\u0437\u0431\u043E\u0440\u044B \u0441\u043D\u043E\u0432."));
+    }, "\u0417\u0434\u0435\u0441\u044C \u043F\u043E\u044F\u0432\u044F\u0442\u0441\u044F \u0432\u0430\u0448\u0438 \u0440\u0430\u0437\u0431\u043E\u0440\u044B \u0441\u043D\u043E\u0432 \u2014 \u043A\u0430\u0436\u0434\u044B\u0439 \u0440\u0430\u0437\u0431\u043E\u0440 \u0431\u0443\u0434\u0435\u0442 \u0434\u043E\u0441\u0442\u0443\u043F\u0435\u043D \u0432 \u043B\u044E\u0431\u043E\u0435 \u0432\u0440\u0435\u043C\u044F."));
   }
   return /*#__PURE__*/React.createElement("div", {
     style: {
@@ -1445,103 +1573,97 @@ function HistoryItem({
     }
   })();
   return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
-    ref: wrapRef
+    ref: wrapRef,
+    onClick: () => setOpen(true),
+    style: {
+      cursor: "pointer"
+    }
   }, /*#__PURE__*/React.createElement(Card, {
     variant: "night",
     padding: 0,
     style: {
       position: "relative",
       overflow: "hidden",
-      background: "radial-gradient(circle at 22% 10%, rgba(143,214,232,0.3), transparent 55%), linear-gradient(160deg, var(--navy-800), var(--navy-700))",
-      boxShadow: focused ? "0 0 0 2px var(--cyan-400), 0 0 36px rgba(143,214,232,0.5)" : "var(--shadow-lg)"
-    }
-  }, /*#__PURE__*/React.createElement(DecorImg, {
-    k: "dotted-l",
-    size: 160,
-    opacity: 0.28,
-    style: {
-      position: "absolute",
-      right: -30,
-      top: -30
-    }
-  }), /*#__PURE__*/React.createElement("div", {
-    style: {
-      position: "relative",
-      padding: "28px 30px"
+      background: "linear-gradient(180deg, rgba(168,140,220,0.10), transparent 45%), rgba(18,23,43,0.72)",
+      border: "1px solid rgba(168,140,220,0.18)",
+      backdropFilter: "blur(10px)",
+      WebkitBackdropFilter: "blur(10px)",
+      boxShadow: focused ? "0 0 0 1px var(--lavender), 0 0 28px rgba(168,140,220,0.22)" : "0 10px 28px rgba(0,0,0,0.35)",
+      transition: "box-shadow 220ms var(--ease-out), transform 220ms var(--ease-out)"
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
-      display: "flex",
-      alignItems: "baseline",
-      gap: 10,
-      marginBottom: 14
+      position: "relative",
+      padding: "22px 26px 20px 28px",
+      borderLeft: "3px solid var(--lavender)"
     }
   }, /*#__PURE__*/React.createElement("span", {
     style: {
-      fontSize: "0.78rem",
+      display: "block",
+      fontSize: "0.72rem",
       fontWeight: 700,
-      color: "rgba(249,255,255,0.55)",
-      letterSpacing: "0.04em",
+      color: "rgba(249,255,255,0.5)",
+      letterSpacing: "0.08em",
       textTransform: "uppercase",
-      flexShrink: 0
+      marginBottom: 6
     }
   }, formatDate(it.date)), /*#__PURE__*/React.createElement("h3", {
     style: {
-      margin: 0,
-      fontSize: "1.3rem",
+      margin: "0 0 12px",
+      fontSize: "1.25rem",
       fontWeight: 800,
-      color: "var(--paper-050)"
+      color: "var(--paper-050)",
+      lineHeight: 1.15
     }
-  }, it.dream_title)), /*#__PURE__*/React.createElement("div", {
-    onClick: () => setOpen(true),
-    onMouseEnter: () => setPreviewHover(true),
-    onMouseLeave: () => setPreviewHover(false),
-    style: {
-      margin: "0 0 16px",
-      padding: "14px 16px",
-      borderRadius: 14,
-      cursor: "pointer",
-      background: previewHover ? "rgba(255,255,255,0.14)" : "rgba(255,255,255,0.07)",
-      border: "1px solid rgba(255,255,255,0.18)",
-      transition: "background 160ms var(--ease-out)"
-    }
-  }, /*#__PURE__*/React.createElement("p", {
+  }, it.dream_title), /*#__PURE__*/React.createElement("p", {
     style: {
       margin: 0,
-      color: "rgba(249,255,255,0.85)",
+      color: "rgba(249,255,255,0.78)",
       lineHeight: 1.6,
-      fontSize: "1.02rem"
+      fontSize: "1rem"
     }
-  }, it.dream_short)), /*#__PURE__*/React.createElement("div", {
+  }, it.dream_short), /*#__PURE__*/React.createElement("div", {
     style: {
-      padding: "18px 20px",
-      borderRadius: 16,
-      background: "rgba(255,255,255,0.1)",
-      border: "1px solid rgba(255,255,255,0.16)"
+      marginTop: 16,
+      paddingTop: 16,
+      borderTop: "1px solid rgba(196,181,232,0.18)"
     }
   }, /*#__PURE__*/React.createElement("p", {
     style: {
-      margin: "0 0 8px",
-      fontSize: "0.78rem",
+      margin: "0 0 6px",
+      fontSize: "0.72rem",
       fontWeight: 800,
-      letterSpacing: "0.08em",
+      letterSpacing: "0.1em",
       textTransform: "uppercase",
-      color: "var(--cyan-300)",
+      color: "var(--paper-050)",
       display: "flex",
       alignItems: "center",
       gap: 6
     }
   }, /*#__PURE__*/React.createElement("span", {
-    "aria-hidden": "true"
+    "aria-hidden": "true",
+    style: { color: "var(--lavender)", filter: "drop-shadow(0 0 6px rgba(168,140,220,0.6))" }
   }, "\u2726"), "\u0418\u043D\u0441\u0430\u0439\u0442"), /*#__PURE__*/React.createElement("p", {
     style: {
       margin: 0,
       color: "var(--paper-050)",
       lineHeight: 1.6,
       fontWeight: 500,
-      fontSize: "1.05rem"
+      fontSize: "1.02rem"
     }
-  }, insightText))))), open && /*#__PURE__*/React.createElement("div", {
+  }, insightText)), /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: 14,
+      display: "flex",
+      justifyContent: "flex-end"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: "0.85rem",
+      fontWeight: 700,
+      color: "var(--text-link)"
+    }
+  }, "\u0427\u0438\u0442\u0430\u0442\u044C \u043F\u043E\u043B\u043D\u043E\u0441\u0442\u044C\u044E \u2192"))))), open && /*#__PURE__*/React.createElement("div", {
     onClick: () => setOpen(false),
     style: {
       position: "fixed",
@@ -1562,9 +1684,12 @@ function HistoryItem({
       maxHeight: "min(640px, 90vh)",
       overflowY: "auto",
       overflowX: "hidden",
-      background: "radial-gradient(circle at 22% 8%, rgba(143,214,232,0.3), transparent 55%), linear-gradient(160deg, var(--navy-800), var(--navy-700))",
+      background: "linear-gradient(135deg, rgba(168,140,220,0.28) 0%, rgba(143,214,232,0.18) 100%)",
+      border: "1px solid rgba(196,181,232,0.45)",
+      backdropFilter: "blur(18px)",
+      WebkitBackdropFilter: "blur(18px)",
       borderRadius: 24,
-      boxShadow: "var(--shadow-xl)",
+      boxShadow: "0 0 80px rgba(168,140,220,0.35), 0 0 30px rgba(143,214,232,0.18), 0 24px 56px rgba(0,0,0,0.4)",
       padding: "26px 28px"
     }
   }, /*#__PURE__*/React.createElement(DecorImg, {
@@ -1712,7 +1837,7 @@ function InsightBubble({
       fontWeight: 800,
       letterSpacing: "0.1em",
       textTransform: "uppercase",
-      color: "var(--cyan-300)",
+      color: "var(--paper-050)",
       display: "flex",
       alignItems: "center",
       gap: 8
@@ -1748,7 +1873,7 @@ function DepthMeter({
       width: 7,
       height: 7,
       borderRadius: 999,
-      background: i < stage ? "var(--cyan-300)" : "rgba(249,255,255,0.25)",
+      background: i < stage ? "var(--lavender)" : "rgba(249,255,255,0.25)",
       transition: "background 240ms var(--ease-out)"
     }
   }))), /*#__PURE__*/React.createElement("span", {
@@ -2107,7 +2232,7 @@ function DreamChat({
     style: {
       padding: 18,
       borderTop: "1px solid var(--border-subtle)",
-      background: "var(--paper-050)",
+      background: "var(--bg-soft)",
       display: "flex",
       flexDirection: "column",
       gap: 10,
@@ -2127,7 +2252,7 @@ function DreamChat({
     style: {
       padding: 18,
       borderTop: "1px solid var(--border-subtle)",
-      background: "var(--paper-050)",
+      background: "var(--bg-soft)",
       display: "flex",
       flexDirection: "column",
       gap: 8,
@@ -2150,9 +2275,9 @@ function DreamChat({
       gap: 12,
       padding: "14px 16px",
       borderRadius: 16,
-      border: "1px solid var(--cyan-400)",
+      border: "1px solid var(--lavender)",
       background: "var(--navy-800)",
-      boxShadow: "var(--shadow-glow)",
+      boxShadow: "0 0 24px rgba(168,140,220,0.35)",
       cursor: "pointer",
       fontFamily: "var(--font-sans)",
       textAlign: "left"
@@ -2164,8 +2289,9 @@ function DreamChat({
       width: 32,
       height: 32,
       borderRadius: 999,
-      background: "var(--cyan-300)",
+      background: "var(--lavender)",
       color: "var(--navy-800)",
+      boxShadow: "0 0 14px rgba(168,140,220,0.4)",
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
@@ -2192,8 +2318,9 @@ function DreamChat({
   }, "\u0412\u043E\u0437\u043C\u043E\u0436\u043D\u043E, \u043F\u043E\u0441\u043B\u0435 \u044D\u0442\u043E\u0433\u043E \u0441\u043D\u0430 \u0442\u0430\u043C \u0440\u0430\u0441\u043A\u0440\u044B\u043B\u0441\u044F \u043D\u043E\u0432\u044B\u0439 \u0430\u0440\u0445\u0435\u0442\u0438\u043F")), /*#__PURE__*/React.createElement("span", {
     "aria-hidden": "true",
     style: {
-      color: "var(--cyan-300)",
-      fontSize: "1.1rem"
+      color: "var(--paper-050)",
+      fontSize: "1.1rem",
+      filter: "drop-shadow(0 0 8px rgba(168,140,220,0.6))"
     }
   }, "\u2192")), showSurvey && /*#__PURE__*/React.createElement(SurveyWidget, {
     dreamsCompleted: dreamsCompletedCount + 1
@@ -2203,7 +2330,7 @@ function DreamChat({
   }, "\u0413\u043E\u0442\u043E\u0432\u043E")) : /*#__PURE__*/React.createElement("div", {
     style: {
       borderTop: "1px solid var(--border-subtle)",
-      background: "var(--paper-050)"
+      background: "var(--bg-soft)"
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
@@ -2303,7 +2430,8 @@ function Toast({
   }, /*#__PURE__*/React.createElement("span", {
     "aria-hidden": "true",
     style: {
-      color: "var(--cyan-300)"
+      color: "var(--paper-050)",
+      filter: "drop-shadow(0 0 8px rgba(168,140,220,0.6))"
     }
   }, "\u2726"), msg);
 }
@@ -2436,7 +2564,7 @@ function SupportWidget() {
   }), error && /*#__PURE__*/React.createElement("p", {
     style: {
       margin: "0 0 12px",
-      color: "#c0392b",
+      color: "#ff6b6b",
       fontSize: "0.88rem"
     }
   }, error), /*#__PURE__*/React.createElement(Button, {

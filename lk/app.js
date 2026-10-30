@@ -28,13 +28,13 @@ const {
 } = window;
 const AUTH_INPUT_STYLE = {
   width: '100%',
-  border: '1.5px solid var(--border-subtle)',
+  border: '1.5px solid rgba(196,181,232,0.28)',
   borderRadius: 12,
   padding: '12px 14px',
   fontSize: '1rem',
   fontFamily: 'var(--font-sans)',
   color: 'var(--text-strong)',
-  background: 'var(--paper-000)',
+  background: 'rgba(18,23,43,0.5)',
   outline: 'none',
   boxSizing: 'border-box',
   marginBottom: 12,
@@ -43,8 +43,8 @@ const AUTH_INPUT_STYLE = {
 function authButtonStyle(disabled) {
   return {
     width: '100%',
-    background: 'var(--navy-800)',
-    color: 'var(--paper-050)',
+    background: 'var(--accent)',
+    color: 'var(--accent-contrast)',
     border: 'none',
     borderRadius: 14,
     padding: '14px 20px',
@@ -87,10 +87,13 @@ function AuthShell(props) {
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       width: 'min(420px, 100%)',
-      background: 'var(--surface-raised)',
+      background: 'linear-gradient(135deg, rgba(168,140,220,0.28) 0%, rgba(143,214,232,0.18) 100%)',
+      border: '1px solid rgba(196,181,232,0.45)',
+      backdropFilter: 'blur(18px)',
+      WebkitBackdropFilter: 'blur(18px)',
       borderRadius: 24,
       padding: '40px 36px',
-      boxShadow: 'var(--shadow-xl)'
+      boxShadow: '0 0 80px rgba(168,140,220,0.35), 0 0 30px rgba(143,214,232,0.18), 0 24px 56px rgba(0,0,0,0.4)'
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
@@ -259,7 +262,7 @@ function LoginScreen() {
   const errorBlock = error && /*#__PURE__*/React.createElement("p", {
     style: {
       margin: '0 0 12px',
-      color: '#c0392b',
+      color: '#ff6b6b',
       fontSize: '0.88rem'
     }
   }, error);
@@ -309,7 +312,8 @@ function LoginScreen() {
     const toggle = /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'flex',
-        background: 'transparent',
+        background: 'rgba(168,140,220,0.10)',
+        border: '1px solid rgba(196,181,232,0.22)',
         borderRadius: 12,
         padding: 4,
         marginBottom: 24,
@@ -326,8 +330,8 @@ function LoginScreen() {
         fontWeight: 700,
         fontFamily: 'var(--font-sans)',
         cursor: 'pointer',
-        background: mode === 'magiclink' ? 'var(--navy-800)' : 'transparent',
-        color: mode === 'magiclink' ? 'var(--paper-050)' : 'var(--text-muted)',
+        background: mode === 'magiclink' ? 'var(--accent)' : 'transparent',
+        color: mode === 'magiclink' ? 'var(--accent-contrast)' : 'var(--text-muted)',
         transition: 'background 0.15s, color 0.15s'
       }
     }, "Ссылка на почту"), /*#__PURE__*/React.createElement("button", {
@@ -341,8 +345,8 @@ function LoginScreen() {
         fontWeight: 700,
         fontFamily: 'var(--font-sans)',
         cursor: 'pointer',
-        background: mode === 'password' ? 'var(--navy-800)' : 'transparent',
-        color: mode === 'password' ? 'var(--paper-050)' : 'var(--text-muted)',
+        background: mode === 'password' ? 'var(--accent)' : 'transparent',
+        color: mode === 'password' ? 'var(--accent-contrast)' : 'var(--text-muted)',
         transition: 'background 0.15s, color 0.15s'
       }
     }, "Пароль"));
@@ -509,7 +513,7 @@ function SetNewPasswordScreen(props) {
   }), error && /*#__PURE__*/React.createElement("p", {
     style: {
       margin: '0 0 12px',
-      color: '#c0392b',
+      color: '#ff6b6b',
       fontSize: '0.88rem'
     }
   }, error), /*#__PURE__*/React.createElement("button", {
@@ -523,6 +527,7 @@ function App() {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [passwordRecovery, setPasswordRecovery] = useState(false);
+  const [previewSignedOut, setPreviewSignedOut] = useState(false);
   const initial = loadState();
   const [tab, setTab] = useState("cabinet");
   const [balance, setBalance] = useState(0);
@@ -545,6 +550,82 @@ function App() {
   const [paymentToken, setPaymentToken] = useState(null);
   const [pendingTariff, setPendingTariff] = useState(null);
   const registeredUserRef = useRef(null);
+  // === PREVIEW MODE (временный обход авторизации для локального превью тёмной темы) ===
+  const PREVIEW_USER = { id: 'preview-local', email: 'preview@local' };
+  const PREVIEW_ON = true;
+  const PREVIEW_MOCK_HISTORY = [{
+    id: 'p-1',
+    date: '2026-10-28',
+    dream_title: 'Бесконечный коридор',
+    dream_short: 'Я шёл по гостинице, где номера повторялись, и никак не мог найти свой. Ключ подходил ко всем дверям, но за каждой была чужая комната.',
+    dream_description: 'Я шёл по гостинице, где номера повторялись, и никак не мог найти свой. Ключ подходил ко всем дверям, но за каждой была чужая комната.\n\nВ конце коридора стоял человек со спины, очень знакомый. Я окликнул — он обернулся, и это был я сам, но старше. Он улыбнулся и протянул второй ключ.\n\nЯ проснулся с чувством, что мне что-то передали, но не успел увидеть что.',
+    insight: JSON.stringify({ insight: 'Коридор повторяющихся дверей — поиск устойчивой идентичности. Ключ, открывающий чужие комнаты, — ощущение, что вы справляетесь с ролями, которые вам не близки. Встреча со старшим собой указывает на потребность в опоре на внутренний авторитет, а не на внешние ориентиры.' })
+  }, {
+    id: 'p-2',
+    date: '2026-10-21',
+    dream_title: 'Море подо льдом',
+    dream_short: 'Лёд был прозрачным, и я видел, как внизу течёт тёмная вода. Я знал, что не провалюсь, но боялся сделать шаг.',
+    dream_description: 'Лёд был прозрачным, и я видел, как внизу течёт тёмная вода. Я знал, что не провалюсь, но боялся сделать шаг.\n\nПодо льдом медленно проплыла большая тень — не страшная, а скорее спокойная. Я проснулся, когда решил всё-таки шагнуть.',
+    insight: JSON.stringify({ insight: 'Лёд над тёмной водой — тонкий слой контроля над сильными эмоциями. Вы чувствуете опору, но страх шага говорит о том, что контроль обходится дорогой ценой — вы не позволяете себе «течь». Тень внизу — не угроза, а та часть переживаний, которая ждёт признания.' })
+  }, {
+    id: 'p-3',
+    date: '2026-10-14',
+    dream_title: 'Дом без стен',
+    dream_short: 'Мой дом стоял на поле, и у него не было наружных стен — только крыша на столбах. Ветер свободно гулял внутри, но мне было спокойно.',
+    dream_description: 'Мой дом стоял на поле, и у него не было наружных стен — только крыша на столбах. Ветер свободно гулял внутри, но мне было спокойно.\n\nЯ накрывал на стол, и кто-то должен был прийти. Я не знал кто, но накрывал на двоих.',
+    insight: JSON.stringify({ insight: 'Дом без стен — открытость границ и одновременно потребность в укрытии, которое не изолирует. Накрытый на двоих стол — готовность к встрече с чем-то ещё не названным. Сон указывает на переход от защиты к контакту.' })
+  }];
+  const PREVIEW_MOCK_ARCHETYPES = {
+    symbols: [{
+      id: 'self', name: 'Самость', is_revealed: true,
+      description: 'Центр личности, вокруг которого выстраивается всё остальное. В снах приходит как фигура, объединяющая противоположности.',
+      image_url: null, dreams: []
+    }, {
+      id: 'shadow', name: 'Тень', is_revealed: true,
+      description: 'То, что вытеснено и не признано в себе. Часто является как незнакомец или пугающий образ.',
+      image_url: null, dreams: [{ dream_id: 'p-1', manifestation: 'старший двойник в коридоре', date: '2026-10-28' }]
+    }, {
+      id: 'anima', name: 'Анима', is_revealed: true,
+      description: 'Внутренний образ живой, эмоциональной части психики. Связывает с чувствами и смыслами.',
+      image_url: null, dreams: [{ dream_id: 'p-2', manifestation: 'течение воды подо льдом', date: '2026-10-21' }]
+    }, {
+      id: 'persona', name: 'Персона', is_revealed: true,
+      description: 'Маска, которую носим для мира. Повторяющиеся двери — её классический мотив.',
+      image_url: null, dreams: [{ dream_id: 'p-1', manifestation: 'ключ, подходящий к чужим комнатам', date: '2026-10-28' }]
+    }, {
+      id: 'mother', name: 'Мать', is_revealed: false,
+      description: 'Архетип питающей и поглощающей опоры. Ждёт проявления в ваших снах.',
+      image_url: null, dreams: []
+    }, {
+      id: 'wise', name: 'Мудрец', is_revealed: false,
+      description: 'Внутренний проводник и авторитет. Появляется, когда созревает готовность к решению.',
+      image_url: null, dreams: []
+    }, {
+      id: 'child', name: 'Дитя', is_revealed: false,
+      description: 'Образ начала и потенциала. Часто возвращается в моменты перестройки.',
+      image_url: null, dreams: []
+    }, {
+      id: 'hero', name: 'Герой', is_revealed: false,
+      description: 'Часть, берущая на себя действие и преодоление. Пока не проявился в снах.',
+      image_url: null, dreams: []
+    }],
+    connections: [
+      { a: 'self', b: 'shadow', strength: 0.8 },
+      { a: 'self', b: 'anima', strength: 0.7 },
+      { a: 'self', b: 'persona', strength: 0.6 },
+      { a: 'shadow', b: 'persona', strength: 0.5 },
+      { a: 'anima', b: 'shadow', strength: 0.4 }
+    ]
+  };
+  // === /PREVIEW MODE ===
+  useEffect(() => {
+    if (!PREVIEW_ON) return;
+    setBalance(3);
+    setAnalyzeReady(true);
+    setHistory(PREVIEW_MOCK_HISTORY);
+    setArchetypes(PREVIEW_MOCK_ARCHETYPES);
+    setSubscription({ isSubscribed: true, autoRenew: true });
+  }, []);
   useEffect(() => {
     fetch('https://api.analysedreams.com/tariffs/').then(r => r.ok ? r.json() : null).then(data => {
       if (Array.isArray(data)) setTariffs(data);
@@ -557,6 +638,14 @@ function App() {
         session
       }
     }) => {
+      if (PREVIEW_ON && !session) {
+        if (!previewSignedOut) {
+          setUser(PREVIEW_USER);
+          setAnalyzeReady(true);
+        }
+        setAuthLoading(false);
+        return;
+      }
       setUser(session?.user ?? null);
       setAuthLoading(false);
     });
@@ -565,6 +654,13 @@ function App() {
         subscription
       }
     } = window._supabase.auth.onAuthStateChange((_event, session) => {
+      if (PREVIEW_ON && !session) {
+        if (!previewSignedOut) {
+          setUser(PREVIEW_USER);
+        }
+        setAuthLoading(false);
+        return;
+      }
       setUser(session?.user ?? null);
       setAuthLoading(false);
       if (_event === 'PASSWORD_RECOVERY') setPasswordRecovery(true);
@@ -754,6 +850,11 @@ function App() {
     a.click();
   }
   async function signOut() {
+    if (PREVIEW_ON) {
+      setPreviewSignedOut(true);
+      setUser(null);
+      return;
+    }
     await window._supabase.auth.signOut();
   }
   function loadArchetypes() {
