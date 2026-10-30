@@ -1,11 +1,11 @@
 /* styles.css — AnalyseDreams · Pastel Dreamcore */
 
 :root{
-  /* — Pastel dream palette — */
-  --bg: #f9ffff;
-  --bg-soft: #eef8fb;
-  --bg-accent: #ccebf0;
-  --bg-deep: #172236;
+  /* — Dark dream palette (инверсия светлой темы) — */
+  --bg: #0d1122;
+  --bg-soft: #12172b;
+  --bg-accent: #1a2740;
+  --bg-deep: #050810;
 
   --lavender: #8fd6e8;
   --lavender-soft: #bfe9f4;
@@ -17,15 +17,27 @@
   --sky: #d9e2f5;
   --sky-deep: #aebfe3;
   --gold: #c9a15c;
+
+  /* ink остаётся тёмным — используется как фон кнопок/панелей */
   --ink: #172236;
   --ink-2: #28425f;
-  --muted: rgba(23,34,54,0.64);
-  --faint: rgba(23,34,54,0.42);
+  /* текстовые переменные для тёмной темы */
+  --text: #f9ffff;
+  --text-2: #c8d6ec;
 
-  --border: rgba(23,34,54,0.12);
-  --border-soft: rgba(23,34,54,0.09);
-  --shadow: 0 30px 70px rgba(23,34,54,0.13);
-  --shadow-soft: 0 18px 44px rgba(23,34,54,0.09);
+  --muted: rgba(249,255,255,0.66);
+  --faint: rgba(249,255,255,0.42);
+
+  --border: rgba(249,255,255,0.14);
+  --border-soft: rgba(249,255,255,0.08);
+
+  /* поверхности-стекло на тёмном */
+  --surface: rgba(255,255,255,0.05);
+  --surface-2: rgba(255,255,255,0.08);
+  --surface-border: rgba(255,255,255,0.16);
+
+  --shadow: 0 30px 70px rgba(0,0,0,0.45);
+  --shadow-soft: 0 18px 44px rgba(0,0,0,0.35);
 
 
   --font-display: "Manrope", system-ui, sans-serif;
@@ -45,12 +57,12 @@ html{ scroll-behavior:smooth; }
 body{
   margin:0;
   font-family:var(--font-sans);
-  color:var(--ink);
+  color:var(--text);
   background:
-    radial-gradient(900px 620px at 85% -5%, rgba(204,235,240,0.55), transparent 62%),
-    radial-gradient(820px 560px at -10% 12%, rgba(186,234,245,0.55), transparent 60%),
-    radial-gradient(700px 520px at 50% 110%, rgba(217,226,245,0.50), transparent 60%),
-    linear-gradient(180deg, #edf8fb 0%, #f9ffff 45%, #f9fffe 100%);
+    radial-gradient(900px 620px at 85% -5%, rgba(92,188,212,0.16), transparent 62%),
+    radial-gradient(820px 560px at -10% 12%, rgba(143,214,232,0.12), transparent 60%),
+    radial-gradient(700px 520px at 50% 110%, rgba(174,191,227,0.14), transparent 60%),
+    linear-gradient(180deg, #0a0e1c 0%, #0d1122 45%, #0b101e 100%);
   background-attachment: fixed;
   overflow-x:hidden;
 }
@@ -353,17 +365,17 @@ h3{ font-size: clamp(1.4rem, 1.9vw, 1.85rem); }
 }
 
 .button-contrast{
-  background: var(--ink);
-  color: #f9ffff;
-  box-shadow: 0 14px 30px rgba(23,34,54,0.28);
+  background: #f9ffff;
+  color: var(--ink);
+  box-shadow: 0 14px 30px rgba(0,0,0,0.4);
   min-height:64px;
   padding:16px 40px;
   font-size:1.1rem;
   width:min(420px, 80%);
 }
 .button-contrast:hover{
-  background: var(--ink-2);
-  box-shadow: 0 18px 38px rgba(23,34,54,0.32);
+  background: #f0f4f5;
+  box-shadow: 0 18px 38px rgba(255,255,255,0.18);
 }
 
 /* — Mini features (Why analyse dreams) — */
@@ -378,7 +390,7 @@ h3{ font-size: clamp(1.4rem, 1.9vw, 1.85rem); }
   flex-direction:column;
   gap:20px;
   align-items:start;
-  color:var(--ink);
+  color:var(--text);
 }
 
 .mini-card-wide{ grid-column:auto; }
@@ -448,7 +460,7 @@ h3{ font-size: clamp(1.4rem, 1.9vw, 1.85rem); }
   margin-left:calc(50% - 50vw);
   margin-right:calc(50% - 50vw);
   margin-top:0;
-  background:#f9ffff;
+  background:var(--bg);
 }
 
 .feature-showcase-top{
@@ -582,11 +594,11 @@ h3{ font-size: clamp(1.4rem, 1.9vw, 1.85rem); }
   position:relative;
   padding:34px 26px 30px;
   border-radius:var(--radius-xl);
-  background:rgba(255,255,255,0.55);
-  border:1px solid rgba(255,255,255,0.75);
-  box-shadow:var(--shadow-soft);
-  backdrop-filter:blur(14px);
-  -webkit-backdrop-filter:blur(14px);
+  background:rgba(226,215,245,0.20);
+  border:1px solid rgba(226,215,245,0.28);
+  box-shadow:0 0 50px rgba(190,165,235,0.28), 0 18px 44px rgba(0,0,0,0.4);
+  backdrop-filter:blur(18px);
+  -webkit-backdrop-filter:blur(18px);
   text-align:center;
   transition:transform .45s var(--ease-out), box-shadow .45s var(--ease-out);
 }
@@ -599,6 +611,7 @@ h3{ font-size: clamp(1.4rem, 1.9vw, 1.85rem); }
   line-height:1.05;
   max-width: none;
   white-space: nowrap;
+  color:var(--text);
 }
 
 .info-card p{
@@ -617,8 +630,8 @@ h3{ font-size: clamp(1.4rem, 1.9vw, 1.85rem); }
   object-fit:cover;
   display:block;
   margin:0 auto;
-  border:3px solid rgba(255,255,255,0.85);
-  box-shadow:0 16px 36px rgba(23,34,54,0.13);
+  border:3px solid rgba(226,215,245,0.6);
+  box-shadow:0 16px 36px rgba(0,0,0,0.4);
 }
 
 /* — Archetype map — */
@@ -638,11 +651,12 @@ h3{ font-size: clamp(1.4rem, 1.9vw, 1.85rem); }
   align-items:center;
   padding:44px;
   border-radius:var(--radius-xl);
-  background:rgba(255,255,255,0.55);
-  border:1px solid rgba(255,255,255,0.75);
-  box-shadow:var(--shadow-soft);
-  backdrop-filter:blur(14px);
-  -webkit-backdrop-filter:blur(14px);
+  background:rgba(226,215,245,0.20);
+  border:1px solid rgba(226,215,245,0.28);
+  box-shadow:0 0 50px rgba(190,165,235,0.28), 0 18px 44px rgba(0,0,0,0.4);
+  backdrop-filter:blur(18px);
+  -webkit-backdrop-filter:blur(18px);
+  color:var(--text);
 }
 
 .archetype-map-copy{ grid-area:copy; }
@@ -652,6 +666,10 @@ h3{ font-size: clamp(1.4rem, 1.9vw, 1.85rem); }
   max-width:none;
   font-size: clamp(1.6rem, 2.2vw, 2.4rem);
   line-height:1.08;
+}
+
+.archetype-map-copy .eyebrow{
+  color:var(--muted);
 }
 
 .archetype-map-lead{
@@ -671,14 +689,14 @@ h3{ font-size: clamp(1.4rem, 1.9vw, 1.85rem); }
 }
 
 .archetype-map-note .button-primary{
-  background:var(--ink);
-  color:#f9ffff;
-  box-shadow:0 14px 34px rgba(23,34,54,0.24);
+  background:#f9ffff;
+  color:var(--ink);
+  box-shadow:0 14px 34px rgba(0,0,0,0.4);
 }
 .archetype-map-note .button-primary::before{ display:none; }
 .archetype-map-note .button-primary:hover{
-  background:var(--ink-2);
-  box-shadow:0 18px 42px rgba(23,34,54,0.3);
+  background:#f0f4f5;
+  box-shadow:0 18px 42px rgba(255,255,255,0.2);
 }
 
 .archetype-map-visual{
@@ -825,20 +843,19 @@ h3{ font-size: clamp(1.4rem, 1.9vw, 1.85rem); }
   gap:18px;
   padding:22px;
   border-radius:var(--radius-xl);
-  background:rgba(255,255,255,0.55);
-  border:1px solid rgba(255,255,255,0.75);
-  box-shadow:var(--shadow-soft);
-  backdrop-filter:blur(14px);
-  -webkit-backdrop-filter:blur(14px);
-  color:var(--ink);
+  background:rgba(226,215,245,0.20);
+  border:1px solid rgba(226,215,245,0.28);
+  box-shadow:0 0 50px rgba(190,165,235,0.28), 0 18px 44px rgba(0,0,0,0.4);
+  backdrop-filter:blur(18px);
+  -webkit-backdrop-filter:blur(18px);
+  color:var(--text);
   transition:transform .45s cubic-bezier(.22,1,.36,1), box-shadow .45s cubic-bezier(.22,1,.36,1);
 }
-
 .audience-card-visual{
   border-radius:var(--radius-lg);
   overflow:hidden;
-  border:1px solid rgba(255,255,255,0.8);
-  box-shadow:0 14px 32px rgba(23,34,54,0.10);
+  border:1px solid rgba(226,215,245,0.4);
+  box-shadow:0 14px 32px rgba(0,0,0,0.35);
 }
 
 .audience-card-img{
@@ -891,7 +908,7 @@ h3{ font-size: clamp(1.4rem, 1.9vw, 1.85rem); }
 }
 
 .seo-intro .eyebrow{
-  color:var(--ink);
+  color:var(--text);
   font-size:1.5rem;
   letter-spacing:0.02em;
   text-transform:none;
@@ -927,7 +944,7 @@ h3{ font-size: clamp(1.4rem, 1.9vw, 1.85rem); }
 
 .seo-panel-kicker{
   margin:0 0 22px;
-  color:var(--ink);
+  color:var(--text);
   font-size:0.82rem;
   font-weight:800;
   letter-spacing:0.08em;
@@ -943,7 +960,7 @@ h3{ font-size: clamp(1.4rem, 1.9vw, 1.85rem); }
 }
 
 .seo-text li{
-  color:var(--ink-2);
+  color:var(--text-2);
   font-size:1.04rem;
   font-weight:500;
   line-height:1.4;
@@ -970,7 +987,7 @@ h3{ font-size: clamp(1.4rem, 1.9vw, 1.85rem); }
 }
 
 .footer a{
-  color:var(--ink);
+  color:var(--text);
   text-decoration:none;
   border-bottom:1px solid rgba(92,188,212,0.4);
   padding-bottom:2px;

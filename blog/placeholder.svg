@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="800" height="500" role="img" aria-label="Образ из сна — заглушка">
+  <defs>
+    <linearGradient id="pbg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0a0e1c"/>
+      <stop offset="1" stop-color="#161033"/>
+    </linearGradient>
+    <radialGradient id="pglow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#b8a4e0" stop-opacity="0.4"/>
+      <stop offset="1" stop-color="#b8a4e0" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="800" height="500" fill="url(#pbg)"/>
+  <circle cx="400" cy="250" r="220" fill="url(#pglow)"/>
+  <g fill="none" stroke="#c4b5e8" stroke-opacity="0.45" stroke-width="1.4">
+    <circle cx="400" cy="250" r="60"/>
+    <circle cx="400" cy="250" r="110" stroke-opacity="0.28"/>
+    <circle cx="400" cy="250" r="160" stroke-opacity="0.16"/>
+  </g>
+  <circle cx="400" cy="250" r="22" fill="#d1c4ef" opacity="0.85"/>
+  <g fill="#f4f0ff">
+    <circle cx="140" cy="120" r="2" opacity="0.6"/>
+    <circle cx="220" cy="80" r="1.5" opacity="0.5"/>
+    <circle cx="640" cy="120" r="1.8" opacity="0.65"/>
+    <circle cx="700" cy="200" r="1.5" opacity="0.5"/>
+    <circle cx="120" cy="380" r="1.5" opacity="0.45"/>
+    <circle cx="680" cy="400" r="2" opacity="0.6"/>
+    <circle cx="560" cy="360" r="1.5" opacity="0.5"/>
+  </g>
+  <text x="400" y="445" text-anchor="middle" font-family="Manrope, system-ui, sans-serif" font-size="16" font-weight="600" fill="#b8a4e0" letter-spacing="2" opacity="0.55">ОБРАЗ ИЗ СНА</text>
+</svg>

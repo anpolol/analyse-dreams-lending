@@ -1,21 +1,57 @@
 :root {
+  --bg: #0d1122;
+  --bg-soft: #12172b;
+  --bg-accent: #1a2740;
+
   --navy-800: #172236;
   --navy-700: #1e2d44;
   --navy-600: #28425f;
-  --paper-050: #f9ffff;
-  --paper-000: #ffffff;
-  --text-strong: var(--navy-800);
-  --text-body: var(--navy-700);
-  --text-muted: rgba(23, 34, 54, 0.64);
-  --text-link: var(--navy-600);
-  --border-subtle: rgba(23, 34, 54, 0.12);
+
+  --paper-050: #0d1122;
+  --paper-000: #12172b;
+
+  --lavender: #8fd6e8;
+  --lavender-soft: #bfe9f4;
+  --lavender-deep: #5cbcd4;
+
+  --text-strong: #f9ffff;
+  --text-body: #c8d6ec;
+  --text-muted: rgba(249, 255, 255, 0.62);
+  --text-link: var(--lavender-deep);
+  --border-subtle: rgba(249, 255, 255, 0.12);
+  --surface-border: rgba(249, 255, 255, 0.16);
 }
 
 body {
   margin: 0;
-  background: var(--paper-050);
+  background:
+    /* звёздное поле */
+    radial-gradient(1.5px 1.5px at 25px 35px, rgba(244,240,255,0.85), transparent 50%),
+    radial-gradient(1px 1px at 90px 120px, rgba(244,240,255,0.55), transparent 50%),
+    radial-gradient(1.5px 1.5px at 160px 70px, rgba(212,196,239,0.9), transparent 50%),
+    radial-gradient(1px 1px at 200px 180px, rgba(244,240,255,0.5), transparent 50%),
+    radial-gradient(1px 1px at 60px 210px, rgba(244,240,255,0.7), transparent 50%),
+    radial-gradient(1.5px 1.5px at 130px 250px, rgba(244,240,255,0.6), transparent 50%),
+    radial-gradient(1px 1px at 220px 30px, rgba(244,240,255,0.45), transparent 50%),
+    /* голубые свечения */
+    radial-gradient(900px 620px at 85% -5%, rgba(92,188,212,0.16), transparent 62%),
+    radial-gradient(820px 560px at -10% 12%, rgba(143,214,232,0.12), transparent 60%),
+    radial-gradient(700px 520px at 50% 110%, rgba(174,191,227,0.14), transparent 60%),
+    /* сиреневые свечения */
+    radial-gradient(820px 600px at 100% 100%, rgba(168,140,220,0.18), transparent 60%),
+    radial-gradient(720px 520px at 0% 65%, rgba(184,164,224,0.13), transparent 62%),
+    /* базовый градиент */
+    linear-gradient(180deg, #0a0e1c 0%, #0d1122 45%, #0b101e 100%);
+  background-size:
+    240px 240px, 240px 240px, 240px 240px, 240px 240px, 240px 240px, 240px 240px, 240px 240px,
+    auto, auto, auto, auto, auto, auto;
+  background-repeat:
+    repeat, repeat, repeat, repeat, repeat, repeat, repeat,
+    no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat;
+  background-attachment: fixed;
   font-family: "Manrope", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
   color: var(--text-body);
+  -webkit-font-smoothing: antialiased;
 }
 
 .legal-shell {
@@ -43,6 +79,7 @@ body {
   color: var(--text-strong);
   margin: 0 0 8px;
   line-height: 1.2;
+  letter-spacing: -0.02em;
 }
 
 .legal-updated {
@@ -68,7 +105,15 @@ body {
   margin: 0 0 12px;
 }
 
-.legal-shell a { color: var(--text-link); }
+.legal-shell ul li::marker { color: var(--lavender-deep); }
+
+.legal-shell a {
+  color: var(--text-link);
+  border-bottom: 1px solid rgba(92, 188, 212, 0.4);
+  text-decoration: none;
+  padding-bottom: 1px;
+}
+.legal-shell a:hover { border-bottom-color: var(--lavender-deep); }
 
 .tariff-list {
   display: grid;
@@ -82,9 +127,12 @@ body {
   justify-content: space-between;
   gap: 16px;
   padding: 14px 18px;
-  background: var(--paper-000);
-  border: 1px solid var(--border-subtle);
+  background: rgba(226,215,245,0.20);
+  border: 1px solid rgba(226,215,245,0.28);
   border-radius: 14px;
+  box-shadow: 0 0 40px rgba(190,165,235,0.22), 0 18px 44px rgba(0,0,0,0.4);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
 }
 
 .tariff-row-name {
