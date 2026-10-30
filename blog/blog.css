@@ -554,19 +554,19 @@ body::after{
   flex-direction:column;
   gap:14px;
   padding:22px;
-  border:1px solid rgba(226,215,245,0.28);
+  border:1px solid rgba(196,181,232,0.45);
   border-radius:var(--radius-xl);
-  background:rgba(226,215,245,0.20);
+  background:linear-gradient(135deg, rgba(168,140,220,0.28) 0%, rgba(143,214,232,0.18) 100%);
   backdrop-filter:blur(18px);
   -webkit-backdrop-filter:blur(18px);
-  box-shadow:0 0 50px rgba(190,165,235,0.28), 0 18px 44px rgba(0,0,0,0.4);
+  box-shadow:0 0 80px rgba(168,140,220,0.35), 0 0 30px rgba(143,214,232,0.18), 0 24px 56px rgba(0,0,0,0.4);
   text-decoration:none;
   color:var(--text);
   transition:transform .35s cubic-bezier(.22,1,.36,1), box-shadow .35s cubic-bezier(.22,1,.36,1);
 }
 .post-card:hover{
   transform:translateY(-6px);
-  box-shadow:0 0 60px rgba(190,165,235,0.38), 0 30px 64px rgba(0,0,0,0.5);
+  box-shadow:0 0 100px rgba(168,140,220,0.45), 0 0 40px rgba(143,214,232,0.22), 0 30px 64px rgba(0,0,0,0.45);
 }
 .post-card-cover{
   width:100%;
