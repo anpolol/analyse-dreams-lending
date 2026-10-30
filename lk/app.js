@@ -552,7 +552,7 @@ function App() {
   const registeredUserRef = useRef(null);
   // === PREVIEW MODE (временный обход авторизации для локального превью тёмной темы) ===
   const PREVIEW_USER = { id: 'preview-local', email: 'preview@local' };
-  const PREVIEW_ON = true;
+  const PREVIEW_ON = false;
   const PREVIEW_MOCK_HISTORY = [{
     id: 'p-1',
     date: '2026-10-28',
