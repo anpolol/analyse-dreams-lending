@@ -56,20 +56,8 @@ function authButtonStyle(disabled) {
     transition: 'opacity 0.15s'
   };
 }
-function authLinkButtonStyle() {
-  return {
-    background: 'none',
-    border: 'none',
-    color: 'var(--text-link)',
-    cursor: 'pointer',
-    padding: 0,
-    fontFamily: 'var(--font-sans)',
-    fontSize: 'inherit'
-  };
-}
 function mapAuthError(message) {
   if (!message) return 'Что-то пошло не так. Попробуйте ещё раз.';
-  if (/Invalid login credentials/i.test(message)) return 'Неверный email или пароль.';
   if (/already registered|already exists/i.test(message)) return 'Этот email уже зарегистрирован — попробуйте войти.';
   if (/Password should be at least/i.test(message)) return 'Пароль должен быть не короче 6 символов.';
   return message;
@@ -120,8 +108,6 @@ function AuthShell(props) {
   }, "Анализ снов")), props.children, /*#__PURE__*/React.createElement(LegalFooter, null)));
 }
 function LoginScreen() {
-  const [mode, setMode] = useState('magiclink'); // 'password' | 'magiclink'
-  const [authAction, setAuthAction] = useState('signin'); // 'signin' | 'signup'
   const [email, setEmail] = useState(() => {
     try {
       return localStorage.getItem('ad_last_email') || "";
@@ -129,91 +115,26 @@ function LoginScreen() {
       return "";
     }
   });
-  const [password, setPassword] = useState("");
   const [sent, setSent] = useState(false);
-  const [resetSent, setResetSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [consent, setConsent] = useState(false);
-  function switchMode(next) {
-    setMode(next);
-    setError("");
-    setSent(false);
-    setResetSent(false);
-  }
   async function sendLink() {
     if (!email.trim() || !consent) return;
     adTrack('registration_started');
     setLoading(true);
     setError("");
-    const {
-      error: err
-    } = await window._supabase.auth.signInWithOtp({
-      email: email.trim(),
-      options: {
-        emailRedirectTo: window.location.origin + '/lk'
-      }
-    });
-    setLoading(false);
-    if (err) setError(mapAuthError(err.message));else {
+    try {
+      await window.ADAuth.requestOtp(email.trim(), window.location.origin + '/lk');
       try {
         localStorage.setItem('ad_last_email', email.trim());
       } catch (e) {}
       setSent(true);
-    }
-  }
-  async function submitPassword() {
-    if (!email.trim() || !password || authAction === 'signup' && !consent) return;
-    setLoading(true);
-    setError("");
-    if (authAction === 'signin') {
-      const {
-        error: err
-      } = await window._supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password
-      });
+    } catch (err) {
+      setError(mapAuthError(err.message));
+    } finally {
       setLoading(false);
-      if (err) setError(mapAuthError(err.message));else {
-        try {
-          localStorage.setItem('ad_last_email', email.trim());
-        } catch (e) {}
-      }
-    } else {
-      adTrack('registration_started');
-      const {
-        data,
-        error: err
-      } = await window._supabase.auth.signUp({
-        email: email.trim(),
-        password,
-        options: {
-          emailRedirectTo: window.location.origin + '/lk'
-        }
-      });
-      setLoading(false);
-      if (err) setError(mapAuthError(err.message));else {
-        try {
-          localStorage.setItem('ad_last_email', email.trim());
-        } catch (e) {}
-        if (!data.session) setSent(true);
-      }
     }
-  }
-  async function sendReset() {
-    if (!email.trim()) {
-      setError('Введите email, чтобы восстановить пароль');
-      return;
-    }
-    setLoading(true);
-    setError("");
-    const {
-      error: err
-    } = await window._supabase.auth.resetPasswordForEmail(email.trim(), {
-      redirectTo: window.location.origin + '/lk'
-    });
-    setLoading(false);
-    if (err) setError(mapAuthError(err.message));else setResetSent(true);
   }
   const consentBlock = /*#__PURE__*/React.createElement("label", {
     style: {
@@ -267,7 +188,7 @@ function LoginScreen() {
     }
   }, error);
   let content;
-  if (resetSent) {
+  if (sent) {
     content = /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("h2", {
       style: {
         margin: '0 0 12px',
@@ -275,32 +196,13 @@ function LoginScreen() {
         fontWeight: 700,
         color: 'var(--text-strong)'
       }
-    }, "Письмо отправлено"), /*#__PURE__*/React.createElement("p", {
-      style: {
-        margin: '0 0 20px',
-        color: 'var(--text-body)',
-        lineHeight: 1.6
-      }
-    }, "Проверьте почту ", /*#__PURE__*/React.createElement("strong", null, email), " — там ссылка для восстановления пароля."), /*#__PURE__*/React.createElement("button", {
-      onClick: () => switchMode('password'),
-      style: authLinkButtonStyle()
-    }, "← Назад ко входу"));
-  } else if (sent) {
-    const isSignup = mode === 'password' && authAction === 'signup';
-    content = /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("h2", {
-      style: {
-        margin: '0 0 12px',
-        fontSize: '1.25rem',
-        fontWeight: 700,
-        color: 'var(--text-strong)'
-      }
-    }, isSignup ? "Подтвердите почту" : "Ссылка отправлена"), /*#__PURE__*/React.createElement("p", {
+    }, "Ссылка отправлена"), /*#__PURE__*/React.createElement("p", {
       style: {
         margin: '0 0 12px',
         color: 'var(--text-body)',
         lineHeight: 1.6
       }
-    }, "Проверьте почту ", /*#__PURE__*/React.createElement("strong", null, email), isSignup ? " — перейдите по ссылке в письме, чтобы подтвердить регистрацию." : " — там ссылка для входа. Откройте её с этого устройства."), /*#__PURE__*/React.createElement("p", {
+    }, "Проверьте почту ", /*#__PURE__*/React.createElement("strong", null, email), " — там ссылка для входа. Откройте её с этого устройства."), /*#__PURE__*/React.createElement("p", {
       style: {
         margin: 0,
         color: 'var(--text-muted)',
@@ -309,224 +211,41 @@ function LoginScreen() {
       }
     }, "Не видите письма? Проверьте папку «Спам» — иногда оно попадает туда."));
   } else {
-    const toggle = /*#__PURE__*/React.createElement("div", {
+    const disabled = loading || !email.trim() || !consent;
+    content = /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("h2", {
       style: {
-        display: 'flex',
-        background: 'rgba(168,140,220,0.10)',
-        border: '1px solid rgba(196,181,232,0.22)',
-        borderRadius: 12,
-        padding: 4,
-        marginBottom: 24,
-        gap: 4
-      }
-    }, /*#__PURE__*/React.createElement("button", {
-      onClick: () => switchMode('magiclink'),
-      style: {
-        flex: 1,
-        border: 'none',
-        borderRadius: 9,
-        padding: '8px 0',
-        fontSize: '0.88rem',
+        margin: '0 0 8px',
+        fontSize: '1.25rem',
         fontWeight: 700,
-        fontFamily: 'var(--font-sans)',
-        cursor: 'pointer',
-        background: mode === 'magiclink' ? 'var(--accent)' : 'transparent',
-        color: mode === 'magiclink' ? 'var(--accent-contrast)' : 'var(--text-muted)',
-        transition: 'background 0.15s, color 0.15s'
+        color: 'var(--text-strong)'
       }
-    }, "Ссылка на почту"), /*#__PURE__*/React.createElement("button", {
-      onClick: () => switchMode('password'),
+    }, "Вход по ссылке"), /*#__PURE__*/React.createElement("p", {
       style: {
-        flex: 1,
-        border: 'none',
-        borderRadius: 9,
-        padding: '8px 0',
-        fontSize: '0.88rem',
-        fontWeight: 700,
-        fontFamily: 'var(--font-sans)',
-        cursor: 'pointer',
-        background: mode === 'password' ? 'var(--accent)' : 'transparent',
-        color: mode === 'password' ? 'var(--accent-contrast)' : 'var(--text-muted)',
-        transition: 'background 0.15s, color 0.15s'
+        margin: '0 0 24px',
+        color: 'var(--text-muted)',
+        lineHeight: 1.5,
+        fontSize: '0.95rem'
       }
-    }, "Пароль"));
-    if (mode === 'password') {
-      const disabled = loading || !email.trim() || !password || authAction === 'signup' && !consent;
-      content = /*#__PURE__*/React.createElement(React.Fragment, null, toggle, /*#__PURE__*/React.createElement("h2", {
-        style: {
-          margin: '0 0 8px',
-          fontSize: '1.25rem',
-          fontWeight: 700,
-          color: 'var(--text-strong)'
-        }
-      }, authAction === 'signin' ? "Войти в кабинет" : "Создать аккаунт"), /*#__PURE__*/React.createElement("p", {
-        style: {
-          margin: '0 0 24px',
-          color: 'var(--text-muted)',
-          lineHeight: 1.5,
-          fontSize: '0.95rem'
-        }
-      }, "Введите email и пароль."), /*#__PURE__*/React.createElement("input", {
-        type: "email",
-        placeholder: "ваш@email.com",
-        value: email,
-        onChange: e => setEmail(e.target.value),
-        onKeyDown: e => {
-          if (e.key === 'Enter') submitPassword();
-        },
-        style: AUTH_INPUT_STYLE
-      }), /*#__PURE__*/React.createElement("input", {
-        type: "password",
-        placeholder: "пароль",
-        value: password,
-        onChange: e => setPassword(e.target.value),
-        onKeyDown: e => {
-          if (e.key === 'Enter') submitPassword();
-        },
-        style: AUTH_INPUT_STYLE
-      }), authAction === 'signup' ? consentBlock : null, errorBlock, /*#__PURE__*/React.createElement("button", {
-        onClick: submitPassword,
-        disabled,
-        style: authButtonStyle(disabled)
-      }, loading ? 'Секунду…' : authAction === 'signin' ? 'Войти' : 'Зарегистрироваться'), /*#__PURE__*/React.createElement("div", {
-        style: {
-          display: 'flex',
-          justifyContent: 'space-between',
-          marginTop: 14,
-          fontSize: '0.85rem'
-        }
-      }, /*#__PURE__*/React.createElement("button", {
-        onClick: () => {
-          setAuthAction(authAction === 'signin' ? 'signup' : 'signin');
-          setError("");
-        },
-        style: authLinkButtonStyle()
-      }, authAction === 'signin' ? 'Нет аккаунта? Зарегистрироваться' : 'Уже есть аккаунт? Войти'), authAction === 'signin' ? /*#__PURE__*/React.createElement("button", {
-        onClick: sendReset,
-        style: authLinkButtonStyle()
-      }, "Забыли пароль?") : null));
-    } else {
-      const disabled = loading || !email.trim() || !consent;
-      content = /*#__PURE__*/React.createElement(React.Fragment, null, toggle, /*#__PURE__*/React.createElement("h2", {
-        style: {
-          margin: '0 0 8px',
-          fontSize: '1.25rem',
-          fontWeight: 700,
-          color: 'var(--text-strong)'
-        }
-      }, "Вход по ссылке"), /*#__PURE__*/React.createElement("p", {
-        style: {
-          margin: '0 0 24px',
-          color: 'var(--text-muted)',
-          lineHeight: 1.5,
-          fontSize: '0.95rem'
-        }
-      }, "Введите email — мы пришлём ссылку. Без пароля."), /*#__PURE__*/React.createElement("input", {
-        type: "email",
-        placeholder: "ваш@email.com",
-        value: email,
-        onChange: e => setEmail(e.target.value),
-        onKeyDown: e => {
-          if (e.key === 'Enter') sendLink();
-        },
-        style: AUTH_INPUT_STYLE
-      }), consentBlock, errorBlock, /*#__PURE__*/React.createElement("button", {
-        onClick: sendLink,
-        disabled,
-        style: authButtonStyle(disabled)
-      }, loading ? 'Отправляем…' : 'Отправить ссылку →'));
-    }
+    }, "Введите email — мы пришлём ссылку для входа. Без пароля."), /*#__PURE__*/React.createElement("input", {
+      type: "email",
+      placeholder: "ваш@email.com",
+      value: email,
+      onChange: e => setEmail(e.target.value),
+      onKeyDown: e => {
+        if (e.key === 'Enter') sendLink();
+      },
+      style: AUTH_INPUT_STYLE
+    }), consentBlock, errorBlock, /*#__PURE__*/React.createElement("button", {
+      onClick: sendLink,
+      disabled,
+      style: authButtonStyle(disabled)
+    }, loading ? 'Отправляем…' : 'Отправить ссылку →'));
   }
-  return /*#__PURE__*/React.createElement(AuthShell, null, content);
-}
-function SetNewPasswordScreen(props) {
-  const [password, setPassword] = useState("");
-  const [confirm, setConfirm] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [done, setDone] = useState(false);
-  async function submit() {
-    if (password.length < 6) {
-      setError('Пароль должен быть не короче 6 символов');
-      return;
-    }
-    if (password !== confirm) {
-      setError('Пароли не совпадают');
-      return;
-    }
-    setLoading(true);
-    setError("");
-    const {
-      error: err
-    } = await window._supabase.auth.updateUser({
-      password
-    });
-    setLoading(false);
-    if (err) setError(mapAuthError(err.message));else setDone(true);
-  }
-  const disabled = loading || !password || !confirm;
-  const content = done ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("h2", {
-    style: {
-      margin: '0 0 12px',
-      fontSize: '1.25rem',
-      fontWeight: 700,
-      color: 'var(--text-strong)'
-    }
-  }, "Пароль обновлён"), /*#__PURE__*/React.createElement("p", {
-    style: {
-      margin: '0 0 20px',
-      color: 'var(--text-body)',
-      lineHeight: 1.6
-    }
-  }, "Теперь можно входить с новым паролем."), /*#__PURE__*/React.createElement("button", {
-    onClick: props.onDone,
-    style: authButtonStyle(false)
-  }, "Перейти в кабинет")) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("h2", {
-    style: {
-      margin: '0 0 8px',
-      fontSize: '1.25rem',
-      fontWeight: 700,
-      color: 'var(--text-strong)'
-    }
-  }, "Новый пароль"), /*#__PURE__*/React.createElement("p", {
-    style: {
-      margin: '0 0 24px',
-      color: 'var(--text-muted)',
-      lineHeight: 1.5,
-      fontSize: '0.95rem'
-    }
-  }, "Придумайте новый пароль для входа."), /*#__PURE__*/React.createElement("input", {
-    type: "password",
-    placeholder: "новый пароль",
-    value: password,
-    onChange: e => setPassword(e.target.value),
-    style: AUTH_INPUT_STYLE
-  }), /*#__PURE__*/React.createElement("input", {
-    type: "password",
-    placeholder: "повторите пароль",
-    value: confirm,
-    onChange: e => setConfirm(e.target.value),
-    onKeyDown: e => {
-      if (e.key === 'Enter') submit();
-    },
-    style: AUTH_INPUT_STYLE
-  }), error && /*#__PURE__*/React.createElement("p", {
-    style: {
-      margin: '0 0 12px',
-      color: '#ff6b6b',
-      fontSize: '0.88rem'
-    }
-  }, error), /*#__PURE__*/React.createElement("button", {
-    onClick: submit,
-    disabled,
-    style: authButtonStyle(disabled)
-  }, loading ? 'Сохраняем…' : 'Сохранить пароль'));
   return /*#__PURE__*/React.createElement(AuthShell, null, content);
 }
 function App() {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
-  const [passwordRecovery, setPasswordRecovery] = useState(false);
   const [previewSignedOut, setPreviewSignedOut] = useState(false);
   const initial = loadState();
   const [tab, setTab] = useState("cabinet");
@@ -632,82 +351,100 @@ function App() {
       adTrack('pricing_viewed');
     }).catch(() => {});
   }, []);
+
+  async function handleNewSession(session) {
+    if (!session) {
+      setUser(null);
+      registeredUserRef.current = null;
+      setAuthLoading(false);
+      return;
+    }
+    const u = session.user;
+    setUser(u);
+    setAuthLoading(false);
+    if (registeredUserRef.current !== u.id) {
+      registeredUserRef.current = u.id;
+      const token = session.access_token;
+      (async () => {
+        try {
+          const headers = { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token, 'X-Anon-Id': window.adGetAnonId() };
+          const [regRes, balRes] = await Promise.all([
+            fetch('https://api.analysedreams.com/user/register', { method: 'POST', headers }),
+            fetch('https://api.analysedreams.com/payment/balance', { headers })
+          ]);
+          const data = regRes.ok ? await regRes.json() : null;
+          if (data?.is_new_user) adTrack('registration_completed', {}, token);
+          const balData = balRes.ok ? await balRes.json() : null;
+          if (balData) setSubscription({
+            isSubscribed: !!balData.is_subscribed,
+            autoRenew: !!balData.subscription_auto_renew
+          });
+          if (data?.dreams_balance != null) setBalance(data.dreams_balance);
+          setAnalyzeReady(true);
+          if (localStorage.getItem('ad_payment_redirect')) {
+            localStorage.removeItem('ad_payment_redirect');
+            refreshBalanceAfterPayment(balData?.dreams_balance ?? 0);
+          }
+          const histRes = await fetch('https://api.analysedreams.com/history/', { headers });
+          const hist = histRes.ok ? await histRes.json() : [];
+          if (Array.isArray(hist)) setHistory(hist);
+        } catch (e) {
+          setAnalyzeReady(true);
+        }
+      })();
+      loadArchetypes();
+    }
+  }
+
   useEffect(() => {
-    window._supabase.auth.getSession().then(({
-      data: {
-        session
+    let unsub = null;
+    (async () => {
+      // Проверяем токен из email-ссылки в URL hash
+      const hashToken = window.ADAuth.parseHashToken();
+      if (hashToken) {
+        window.ADAuth.clearHash();
+        try {
+          const session = await window.ADAuth.verifyEmailToken(hashToken.token, hashToken.type);
+          window.ADAuth.setSession(session);
+        } catch (e) {
+          // невалидная/устаревшая ссылка — просто показываем логин
+        }
       }
-    }) => {
-      if (PREVIEW_ON && !session) {
+
+      // Существующая сессия из localStorage
+      const existing = window.ADAuth.getSession();
+      if (PREVIEW_ON && !existing) {
         if (!previewSignedOut) {
           setUser(PREVIEW_USER);
           setAnalyzeReady(true);
         }
         setAuthLoading(false);
-        return;
-      }
-      setUser(session?.user ?? null);
-      setAuthLoading(false);
-    });
-    const {
-      data: {
-        subscription
-      }
-    } = window._supabase.auth.onAuthStateChange((_event, session) => {
-      if (PREVIEW_ON && !session) {
-        if (!previewSignedOut) {
-          setUser(PREVIEW_USER);
-        }
-        setAuthLoading(false);
-        return;
-      }
-      setUser(session?.user ?? null);
-      setAuthLoading(false);
-      if (_event === 'PASSWORD_RECOVERY') setPasswordRecovery(true);
-      if (session?.access_token) {
-        if (_event !== 'TOKEN_REFRESHED' && registeredUserRef.current !== session.user.id) {
-          registeredUserRef.current = session.user.id;
-          const token = session.access_token;
-          (async () => {
-            try {
-              const [regRes, balRes] = await Promise.all([authHeaders(token).then(headers => fetch('https://api.analysedreams.com/user/register', {
-                method: 'POST',
-                headers: Object.assign({}, headers, {
-                  'X-Anon-Id': window.adGetAnonId()
-                })
-              })), authHeaders(token).then(headers => fetch('https://api.analysedreams.com/payment/balance', {
-                headers
-              }))]);
-              const data = regRes.ok ? await regRes.json() : null;
-              if (data?.is_new_user) adTrack('registration_completed', {}, token);
-              const balData = balRes.ok ? await balRes.json() : null;
-              if (balData) setSubscription({
-                isSubscribed: !!balData.is_subscribed,
-                autoRenew: !!balData.subscription_auto_renew
-              });
-              if (data?.dreams_balance != null) setBalance(data.dreams_balance);
-              setAnalyzeReady(true);
-              if (localStorage.getItem('ad_payment_redirect')) {
-                localStorage.removeItem('ad_payment_redirect');
-                refreshBalanceAfterPayment(balData?.dreams_balance ?? 0);
-              }
-              const histRes = await fetch('https://api.analysedreams.com/history/', {
-                headers: await authHeaders(token)
-              });
-              const hist = histRes.ok ? await histRes.json() : [];
-              if (Array.isArray(hist)) setHistory(hist);
-            } catch (e) {
-              setAnalyzeReady(true);
-            }
-          })();
-          loadArchetypes();
-        }
+      } else if (existing) {
+        // Если access-токен истёк, попробуем refresh
+        const token = await window.ADAuth.getAccessToken();
+        const s = window.ADAuth.getSession();
+        if (s) handleNewSession(s);
+        else setAuthLoading(false);
       } else {
-        registeredUserRef.current = null;
+        setAuthLoading(false);
       }
-    });
-    return () => subscription.unsubscribe();
+
+      // Подписка на смену сессии (refresh, logout, вход по ссылке)
+      unsub = window.ADAuth.onSessionChange(function (s) {
+        if (PREVIEW_ON && !s) {
+          if (!previewSignedOut) {
+            setUser(PREVIEW_USER);
+            setAnalyzeReady(true);
+          }
+          setAuthLoading(false);
+          return;
+        }
+        handleNewSession(s);
+      });
+    })();
+    return () => { if (unsub) unsub(); };
   }, []);
+
   useEffect(() => {
     if (!user || !analyzeReady) return;
     try {
@@ -736,9 +473,6 @@ function App() {
       fontFamily: 'var(--font-sans)'
     }
   }, "\u0437\u0430\u0433\u0440\u0443\u0437\u043A\u0430\u2026");
-  if (passwordRecovery) return /*#__PURE__*/React.createElement(SetNewPasswordScreen, {
-    onDone: () => setPasswordRecovery(false)
-  });
   if (!user) return /*#__PURE__*/React.createElement(LoginScreen, null);
   function flash(msg) {
     setToast(msg);
@@ -747,16 +481,12 @@ function App() {
   }
   async function buyTariff(t) {
     try {
-      const {
-        data: {
-          session
-        }
-      } = await window._supabase.auth.getSession();
+      const token = await window.ADAuth.getAccessToken();
       adTrack('tariff_selected', {
         tariff_id: t.id,
         price: t.price,
         currency: 'RUB'
-      }, session?.access_token);
+      }, token);
       setPendingTariff(t);
       const isSubscription = t.type === "subscription";
       const url = isSubscription ? 'https://api.analysedreams.com/payment/subscribe' : 'https://api.analysedreams.com/payment/checkout';
@@ -777,7 +507,7 @@ function App() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
+          'Authorization': `Bearer ${token}`
         },
         body
       });
@@ -794,12 +524,7 @@ function App() {
     }
   }
   async function refreshBalanceAfterPayment(prevBalance, attempts = 6, delayMs = 1200) {
-    const {
-      data: {
-        session
-      }
-    } = await window._supabase.auth.getSession();
-    const headers = await authHeaders(session.access_token);
+    const headers = await window.ADAuth.authHeaders();
     for (let i = 0; i < attempts; i++) {
       await new Promise(r => setTimeout(r, delayMs));
       try {
@@ -824,26 +549,18 @@ function App() {
   async function onPaymentWidgetSuccess() {
     setPaymentToken(null);
     flash('Оплата прошла успешно!');
-    const {
-      data: {
-        session
-      }
-    } = await window._supabase.auth.getSession();
+    const token = await window.ADAuth.getAccessToken();
     adTrack('payment_succeeded', {
       tariff_id: pendingTariff?.id,
       price: pendingTariff?.price,
       currency: 'RUB'
-    }, session?.access_token);
+    }, token);
     setPendingTariff(null);
     refreshBalanceAfterPayment(balance);
   }
   async function getNotebook() {
-    const {
-      data: {
-        session
-      }
-    } = await window._supabase.auth.getSession();
-    adTrack('notebook_opened', {}, session?.access_token);
+    const token = await window.ADAuth.getAccessToken();
+    adTrack('notebook_opened', {}, token);
     const a = document.createElement("a");
     a.href = "/workbook_analyse_dreams.pdf";
     a.download = "workbook_analyse_dreams.pdf";
@@ -855,17 +572,18 @@ function App() {
       setUser(null);
       return;
     }
-    await window._supabase.auth.signOut();
+    await window.ADAuth.logout();
   }
-  function loadArchetypes() {
-    authHeaders().then(headers => fetch('https://api.analysedreams.com/symbols/archetypes', {
+  async function loadArchetypes() {
+    const headers = await window.ADAuth.authHeaders();
+    fetch('https://api.analysedreams.com/symbols/archetypes', {
       headers
-    })).then(r => r.ok ? r.json() : null).then(data => {
+    }).then(r => r.ok ? r.json() : null).then(data => {
       if (data && Array.isArray(data.symbols)) setArchetypes(data);
     }).catch(() => {});
   }
   function completeAnalysis() {
-    authHeaders().then(headers => fetch('https://api.analysedreams.com/history/', {
+    window.ADAuth.authHeaders().then(headers => fetch('https://api.analysedreams.com/history/', {
       headers
     })).then(r => r.ok ? r.json() : []).then(data => {
       if (Array.isArray(data)) setHistory(data);
@@ -873,14 +591,10 @@ function App() {
     loadArchetypes();
   }
   async function startAnalysis() {
-    const {
-      data: {
-        session
-      }
-    } = await window._supabase.auth.getSession();
+    const token = await window.ADAuth.getAccessToken();
     adTrack('dream_submitted', {
       channel: 'lk'
-    }, session?.access_token);
+    }, token);
   }
   function updateBalance(b) {
     setBalance(b);
@@ -888,15 +602,11 @@ function App() {
   async function cancelSubscription() {
     if (!confirm("Отменить подписку? Текущий баланс разборов останется, но мы не будем списывать новый цикл, когда он закончится.")) return;
     try {
-      const {
-        data: {
-          session
-        }
-      } = await window._supabase.auth.getSession();
+      const token = await window.ADAuth.getAccessToken();
       const res = await fetch('https://api.analysedreams.com/payment/subscription/cancel', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${session.access_token}`
+          'Authorization': `Bearer ${token}`
         }
       });
       if (!res.ok) throw new Error();

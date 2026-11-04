@@ -349,14 +349,8 @@
   ::-webkit-scrollbar-track { background: transparent; }
 </style>
 <script src="../analytics.js?v=20260709"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.108.2" integrity="sha384-JWEyvHh+lRf0sN/WWY+QTQwX+CyWqmNg4tkc8GQzAMEtR2wGNrCJlvnu1lHD1kDm" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js" integrity="sha384-/TQbtLCAerC3jgaim+N78RZSDYV7ryeoBCVqTuzRrFec2akfBkHS7ACQ3PQhvMVi" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/dompurify@3.4.11/dist/purify.min.js" integrity="sha384-o44XUELLEnv/iSlA1NWxBweqbD4TSR0qgq2VzVsxtkHS989JJjGKSE9vkfo5MN4K" crossorigin="anonymous"></script>
-<script>
-  var SUPABASE_URL = 'https://tzpgjykxvgtideeuyrgc.supabase.co';
-  var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR6cGdqeWt4dmd0aWRlZXV5cmdjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODExNjY2NDksImV4cCI6MjA5Njc0MjY0OX0.lZVYCSubr_orts56iF4aTLn-CfrmdXunSrK-Yv9O8rk';
-  window._supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-</script>
 </head>
 <body>
   <div id="root"></div>
@@ -410,8 +404,9 @@
     return { Button:Button, GhostButton:GhostButton, Card:Card, Input:Input, Eyebrow:Eyebrow, Badge:Badge, Sparkle:Sparkle };
   })();
   </script>
-  <script src="app-components.js?v=20261030t"></script>
-  <script src="app.js?v=20261030t"></script>
+  <script src="auth.js?v=20261104"></script>
+  <script src="app-components.js?v=20261104"></script>
+  <script src="app.js?v=20261104"></script>
 
 
 </body></html>

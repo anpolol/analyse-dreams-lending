@@ -1754,18 +1754,13 @@ function Field({
 /* ---------- Dream dialogue engine ---------- */
 const API_BASE = 'https://api.analysedreams.com';
 async function authHeaders(token) {
-  if (!token) {
-    const {
-      data: {
-        session
-      }
-    } = await window._supabase.auth.getSession();
-    token = session?.access_token;
+  if (token) {
+    return {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    };
   }
-  return {
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${token}`
-  };
+  return window.ADAuth.authHeaders();
 }
 async function callAnalyse(apiMsgs, isEnded) {
   const res = await fetch(`${API_BASE}/analyse/run`, {
@@ -1893,27 +1888,19 @@ function SurveyWidget({
   const FACES = ["😞", "😕", "😐", "🙂", "😍"];
   async function rate(value) {
     setRating(value);
-    const {
-      data: {
-        session
-      }
-    } = await window._supabase.auth.getSession();
+    const token = await window.ADAuth.getAccessToken();
     adTrack('survey_rated', {
       rating: value,
       dreams_completed: dreamsCompleted
-    }, session?.access_token);
+    }, token);
   }
   async function sendComment() {
     if (!comment.trim()) return;
-    const {
-      data: {
-        session
-      }
-    } = await window._supabase.auth.getSession();
+    const token = await window.ADAuth.getAccessToken();
     adTrack('survey_feedback_submitted', {
       comment: comment.trim(),
       dreams_completed: dreamsCompleted
-    }, session?.access_token);
+    }, token);
     setCommentSent(true);
   }
   return /*#__PURE__*/React.createElement("div", {
@@ -2101,12 +2088,8 @@ function DreamChat({
   }
   async function summarizeNow() {
     if (typing || done || stage === 0) return;
-    const {
-      data: {
-        session
-      }
-    } = await window._supabase.auth.getSession();
-    adTrack('summary_requested', {}, session?.access_token);
+    const token = await window.ADAuth.getAccessToken();
+    adTrack('summary_requested', {}, token);
     runTurn(apiMsgs, true);
   }
   const hasSent = msgs.some(m => m.from === "me");
