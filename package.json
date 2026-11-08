@@ -1,0 +1,8 @@
+{
+  "name": "analyse-dreams-lending",
+  "private": true,
+  "description": "Лендинг и личный кабинет analysedreams.com. npm start — локальный dev-сервер.",
+  "scripts": {
+    "start": "node serve.js"
+  }
+}

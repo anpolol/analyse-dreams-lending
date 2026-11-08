@@ -1,10 +1,21 @@
 (function () {
-  var API_BASE = 'https://api.analysedreams.com';
+  var API_BASE = window.AD_API_BASE;
   var LS_KEY = 'ad_auth_session';
   var REFRESH_LEEWAY_SECONDS = 60;
 
   var listeners = [];
   var session = loadSession();
+
+  // Другая вкладка могла ротировать refresh-токен (он одноразовый) или выйти:
+  // подхватываем сессию из localStorage, иначе наша вкладка потратит уже
+  // отозванный токен и внезапно разлогинится. На смену присутствия сессии
+  // (вход/выход в другой вкладке) оповещаем слушателей.
+  window.addEventListener('storage', function (e) {
+    if (e.key !== LS_KEY) return;
+    var hadSession = !!session;
+    session = loadSession();
+    if (!!session !== hadSession) notify();
+  });
 
   function loadSession() {
     try {
@@ -39,6 +50,12 @@
   var refreshing = null;
   function refresh() {
     if (refreshing) return refreshing;
+    // Гонка с другой вкладкой: она могла обновить токены прямо перед нами —
+    // берём свежие из localStorage, чтобы не потратить отозванный refresh-токен.
+    var stored = loadSession();
+    if (stored && session && stored.refresh_token !== session.refresh_token && !isExpired(stored)) {
+      session = stored;
+    }
     if (!session || !session.refresh_token) {
       refreshing = Promise.resolve(null);
       refreshing.then(function () { refreshing = null; });
@@ -81,14 +98,19 @@
     });
   }
 
-  function requestOtp(email, redirectTo) {
+  function requestOtp(email, redirectTo, dream) {
     return fetch(API_BASE + '/auth/otp', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: email, redirect_to: redirectTo || (window.location.origin + '/lk') })
+      body: JSON.stringify({ email: email, redirect_to: redirectTo || (window.location.origin + '/lk'), dream: dream || null })
     }).then(function (res) {
-      if (!res.ok) return res.json().catch(function () { return {}; }).then(function (b) { throw new Error(b.detail || ('HTTP ' + res.status)); });
+      if (!res.ok) return res.json().catch(function () { return null; }).then(function (b) {
+        throw new Error(window.AD_API_ERROR(res.status, b));
+      });
       return res.json();
+    }, function () {
+      // fetch кидает TypeError с техническим текстом — пользователю он не нужен.
+      throw new Error(window.AD_HTTP_ERROR(0));
     });
   }
 
@@ -98,8 +120,12 @@
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ token: token, type: type })
     }).then(function (res) {
-      if (!res.ok) return res.json().catch(function () { return {}; }).then(function (b) { throw new Error(b.detail || ('HTTP ' + res.status)); });
+      if (!res.ok) return res.json().catch(function () { return null; }).then(function (b) {
+        throw new Error(window.AD_API_ERROR(res.status, b));
+      });
       return res.json();
+    }, function () {
+      throw new Error(window.AD_HTTP_ERROR(0));
     });
   }
 

@@ -1,0 +1,13 @@
+# Non-site files: keep out of the image's document root
+.git
+.gitignore
+.dockerignore
+Dockerfile
+docker-compose.yml
+compose.yaml
+docs
+.DS_Store
+serve.js
+package.json
+package-lock.json
+node_modules

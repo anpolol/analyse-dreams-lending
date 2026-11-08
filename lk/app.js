@@ -26,6 +26,7 @@ const {
   SupportWidget,
   LegalFooter
 } = window;
+const API_BASE = window.AD_API_BASE;
 const AUTH_INPUT_STYLE = {
   width: '100%',
   border: '1.5px solid rgba(196,181,232,0.28)',
@@ -61,6 +62,18 @@ function mapAuthError(message) {
   if (/already registered|already exists/i.test(message)) return 'Этот email уже зарегистрирован — попробуйте войти.';
   if (/Password should be at least/i.test(message)) return 'Пароль должен быть не короче 6 символов.';
   return message;
+}
+// Черновик сна, набранный на лендинге: уйдёт на сервер вместе с запросом ссылки,
+// чтобы пережить смену браузера/устройства между отправкой email и кликом по ссылке.
+function readLandingDraft() {
+  try {
+    const raw = localStorage.getItem('ad_landing_context');
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return typeof parsed?.dream === 'string' && parsed.dream.trim() ? parsed.dream : null;
+  } catch (e) {
+    return null;
+  }
 }
 function AuthShell(props) {
   return /*#__PURE__*/React.createElement("div", {
@@ -125,7 +138,7 @@ function LoginScreen() {
     setLoading(true);
     setError("");
     try {
-      await window.ADAuth.requestOtp(email.trim(), window.location.origin + '/lk');
+      await window.ADAuth.requestOtp(email.trim(), window.location.origin + '/lk', readLandingDraft() || undefined);
       try {
         localStorage.setItem('ad_last_email', email.trim());
       } catch (e) {}
@@ -346,7 +359,7 @@ function App() {
     setSubscription({ isSubscribed: true, autoRenew: true });
   }, []);
   useEffect(() => {
-    fetch('https://api.analysedreams.com/tariffs/').then(r => r.ok ? r.json() : null).then(data => {
+    fetch(`${API_BASE}/tariffs/`).then(r => r.ok ? r.json() : null).then(data => {
       if (Array.isArray(data)) setTariffs(data);
       adTrack('pricing_viewed');
     }).catch(() => {});
@@ -369,8 +382,8 @@ function App() {
         try {
           const headers = { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token, 'X-Anon-Id': window.adGetAnonId() };
           const [regRes, balRes] = await Promise.all([
-            fetch('https://api.analysedreams.com/user/register', { method: 'POST', headers }),
-            fetch('https://api.analysedreams.com/payment/balance', { headers })
+            fetch(`${API_BASE}/user/register`, { method: 'POST', headers }),
+            fetch(`${API_BASE}/payment/balance`, { headers })
           ]);
           const data = regRes.ok ? await regRes.json() : null;
           if (data?.is_new_user) adTrack('registration_completed', {}, token);
@@ -385,9 +398,17 @@ function App() {
             localStorage.removeItem('ad_payment_redirect');
             refreshBalanceAfterPayment(balData?.dreams_balance ?? 0);
           }
-          const histRes = await fetch('https://api.analysedreams.com/history/', { headers });
+          const histRes = await fetch(`${API_BASE}/history/`, { headers });
           const hist = histRes.ok ? await histRes.json() : [];
           if (Array.isArray(hist)) setHistory(hist);
+          // Черновик сна, начатый на лендинге или в чете раньше: восстанавливаем после
+          // входа — в том числе на другом устройстве, где и открыли ссылку из письма.
+          const draftRes = await fetch(`${API_BASE}/user/draft`, { headers });
+          const draft = draftRes.ok ? await draftRes.json() : null;
+          if (draft?.dream) {
+            setPendingDream(draft.dream);
+            setChatOpen(true);
+          }
         } catch (e) {
           setAnalyzeReady(true);
         }
@@ -489,7 +510,7 @@ function App() {
       }, token);
       setPendingTariff(t);
       const isSubscription = t.type === "subscription";
-      const url = isSubscription ? 'https://api.analysedreams.com/payment/subscribe' : 'https://api.analysedreams.com/payment/checkout';
+      const url = isSubscription ? `${API_BASE}/payment/subscribe` : `${API_BASE}/payment/checkout`;
       let widgetAvailable = true;
       try {
         await loadYooKassaWidgetScript();
@@ -528,7 +549,7 @@ function App() {
     for (let i = 0; i < attempts; i++) {
       await new Promise(r => setTimeout(r, delayMs));
       try {
-        const res = await fetch('https://api.analysedreams.com/payment/balance', {
+        const res = await fetch(`${API_BASE}/payment/balance`, {
           headers
         });
         if (res.ok) {
@@ -576,14 +597,14 @@ function App() {
   }
   async function loadArchetypes() {
     const headers = await window.ADAuth.authHeaders();
-    fetch('https://api.analysedreams.com/symbols/archetypes', {
+    fetch(`${API_BASE}/symbols/archetypes`, {
       headers
     }).then(r => r.ok ? r.json() : null).then(data => {
       if (data && Array.isArray(data.symbols)) setArchetypes(data);
     }).catch(() => {});
   }
   function completeAnalysis() {
-    window.ADAuth.authHeaders().then(headers => fetch('https://api.analysedreams.com/history/', {
+    window.ADAuth.authHeaders().then(headers => fetch(`${API_BASE}/history/`, {
       headers
     })).then(r => r.ok ? r.json() : []).then(data => {
       if (Array.isArray(data)) setHistory(data);
@@ -603,7 +624,7 @@ function App() {
     if (!confirm("Отменить подписку? Текущий баланс разборов останется, но мы не будем списывать новый цикл, когда он закончится.")) return;
     try {
       const token = await window.ADAuth.getAccessToken();
-      const res = await fetch('https://api.analysedreams.com/payment/subscription/cancel', {
+      const res = await fetch(`${API_BASE}/payment/subscription/cancel`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`

@@ -25,6 +25,7 @@
   <p>Вопросы по тарифам и оплате — на адрес электронной почты <a href="mailto:info@analysedreams.com">info@analysedreams.com</a>.</p>
 </div>
 
+<script src="../config.js?v=20261106d"></script>
 <script>
 (function () {
   function pluralWord(n, one, few, many) {
@@ -37,7 +38,7 @@
 
   var listEl = document.getElementById('tariff-list');
 
-  fetch('https://api.analysedreams.com/tariffs/')
+  fetch(window.AD_API_BASE + '/tariffs/')
     .then(function (r) { return r.ok ? r.json() : null; })
     .then(function (data) {
       if (!Array.isArray(data) || data.length === 0) {
