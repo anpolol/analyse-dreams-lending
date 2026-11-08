@@ -1752,7 +1752,7 @@ function Field({
 }
 
 /* ---------- Dream dialogue engine ---------- */
-const API_BASE = 'https://api.analysedreams.com';
+const API_BASE = window.AD_API_BASE;
 async function authHeaders(token) {
   if (token) {
     return {
@@ -1762,23 +1762,55 @@ async function authHeaders(token) {
   }
   return window.ADAuth.authHeaders();
 }
-async function callAnalyse(apiMsgs, isEnded) {
-  const res = await fetch(`${API_BASE}/analyse/run`, {
-    method: 'POST',
-    headers: await authHeaders(),
-    body: JSON.stringify({
-      dream_title: '',
-      is_ended: isEnded,
-      messages: apiMsgs
-    })
-  });
+// История диалога хранится на сервере: шлём только id диалога и новое сообщение.
+// Ошибки переводим в понятный текст (window.AD_API_ERROR в config.js).
+async function callAnalyse(sessionId, message, isEnded) {
+  let res;
+  try {
+    res = await fetch(`${API_BASE}/analyse/run`, {
+      method: 'POST',
+      headers: await authHeaders(),
+      body: JSON.stringify({
+        dream_title: '',
+        session_id: sessionId,
+        message: message,
+        is_ended: isEnded
+      })
+    });
+  } catch (e) {
+    // fetch кидает TypeError с техническим текстом — пользователю он не нужен.
+    throw Object.assign(new Error(window.AD_HTTP_ERROR(0)), { status: 0 });
+  }
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
-    throw Object.assign(new Error(body.detail || `HTTP ${res.status}`), {
+    throw Object.assign(new Error(window.AD_API_ERROR(res.status, body)), {
       status: res.status
     });
   }
   return res.json();
+}
+// Черновик сна хранится на сервере: переживает смену устройства/браузера и закрытие таба.
+async function fetchDraft() {
+  const res = await fetch(`${API_BASE}/user/draft`, {
+    headers: await authHeaders()
+  });
+  if (!res.ok) return null;
+  const data = await res.json().catch(() => null);
+  return data?.dream || null;
+}
+async function saveDraft(dream) {
+  try {
+    const res = await fetch(`${API_BASE}/user/draft`, {
+      method: 'PUT',
+      headers: await authHeaders(),
+      body: JSON.stringify({
+        dream
+      })
+    });
+    return res.ok;
+  } catch (e) {
+    return false;
+  }
 }
 function Bubble({
   from,
@@ -1991,6 +2023,7 @@ function DreamChat({
   };
   const [msgs, setMsgs] = useState([greeting]);
   const [apiMsgs, setApiMsgs] = useState([]);
+  const [sessionId, setSessionId] = useState(null);
   const [text, setText] = useState("");
   const [typing, setTyping] = useState(false);
   const [stage, setStage] = useState(0);
@@ -1998,6 +2031,9 @@ function DreamChat({
   const [entry, setEntry] = useState(null);
   const [errMsg, setErrMsg] = useState("");
   const scroller = useRef(null);
+  const draftRef = useRef(null); // текст, который уже сохранён на сервере как черновик
+  const autosaveTimer = useRef(null);
+  const submittedRef = useRef(false); // сон отправлен на разбор — черновиком текст больше не является
   useEffect(() => {
     if (open) {
       setMsgs([greeting]);
@@ -2007,20 +2043,49 @@ function DreamChat({
       setDone(false);
       setEntry(null);
       setApiMsgs([]);
+      setSessionId(null);
       setErrMsg("");
+      draftRef.current = initialDream || null;
+      submittedRef.current = false;
+      if (!initialDream) {
+        // Лендинг ничего не передал — подтягиваем сохранённый черновик с сервера.
+        fetchDraft().then(dream => {
+          if (dream && !submittedRef.current) {
+            draftRef.current = dream;
+            setText(t => t || dream);
+          }
+        });
+      }
     }
   }, [open]);
+  // Автосохранение черновика: дебаунс после паузы в печати, пустой текст гасит черновик.
+  // После отправки сна не сохраняем — черновик перешёл в разбор, сервер гасит его сам.
+  useEffect(() => {
+    if (!open || submittedRef.current || sessionId !== null || done) return;
+    const value = text.trim();
+    if (value === (draftRef.current || "")) return;
+    clearTimeout(autosaveTimer.current);
+    autosaveTimer.current = setTimeout(function () {
+      if (submittedRef.current) return;
+      draftRef.current = value;
+      saveDraft(value);
+    }, 1000);
+    return function () {
+      clearTimeout(autosaveTimer.current);
+    };
+  }, [text, open, sessionId, done]);
   useEffect(() => {
     if (scroller.current) scroller.current.scrollTop = scroller.current.scrollHeight;
   }, [msgs, typing]);
   if (!open) return null;
   const noBalance = balance <= 0 && stage === 0;
   const showSurvey = dreamsCompletedCount === 0 || (dreamsCompletedCount + 1) % 5 === 0;
-  async function runTurn(newApiMsgs, isEnded) {
+  async function runTurn(newApiMsgs, message, isEnded) {
     setTyping(true);
     try {
-      const data = await callAnalyse(newApiMsgs, isEnded);
+      const data = await callAnalyse(sessionId, message, isEnded);
       setTyping(false);
+      setSessionId(data.session_id);
       const result = data.result;
       let botText = result.messages[result.messages.length - 1].content;
       try {
@@ -2031,7 +2096,7 @@ function DreamChat({
         role: 'assistant',
         content: botText
       }]);
-      const isInsight = isEnded || newApiMsgs.length >= 7;
+      const isInsight = data.is_completed;
       if (isInsight) {
         setMsgs(m => [...m, {
           from: "bot",
@@ -2060,12 +2125,26 @@ function DreamChat({
       setTyping(false);
       console.error("analyse/run error:", err);
       if (err.status === 402) onGoTopUp();else setErrMsg(err.message || "Ошибка соединения с сервером. Попробуйте ещё раз.");
+      // Разбор не начался — сон остаётся черновиком: гарантируем его сохранность на сервере
+      // и возвращаем текст в поле ввода (кроме 402 — там уводим пополнять баланс, черновик
+      // подтянется при следующем открытии чета).
+      if (message && sessionId === null) {
+        submittedRef.current = false;
+        draftRef.current = message;
+        saveDraft(message);
+        if (err.status !== 402) setText(message);
+      } else if (message && err.status !== 402) {
+        // Ход позже первого: черновика уже нет (сон в разборе), но текст вернём в поле —
+        // можно повторить, не перепечатывая. Автосохранение остаётся выключенным.
+        setText(message);
+      }
     }
   }
   function send() {
     const value = text.trim();
     if (!value || typing || done) return;
     if (stage === 0 && balance <= 0) return;
+    submittedRef.current = true; // с этого момента текст — не черновик, а отправленный сон
     const newApiMsgs = [...apiMsgs, {
       role: 'user',
       content: value
@@ -2084,17 +2163,20 @@ function DreamChat({
         dream: value
       });
     }
-    runTurn(newApiMsgs, false);
+    runTurn(newApiMsgs, value, false);
   }
   async function summarizeNow() {
     if (typing || done || stage === 0) return;
     const token = await window.ADAuth.getAccessToken();
     adTrack('summary_requested', {}, token);
-    runTurn(apiMsgs, true);
+    runTurn(apiMsgs, null, true);
   }
-  const hasSent = msgs.some(m => m.from === "me");
+  // Закрыть можно, пока диалога реально нет: ничего не отправлено ИЛИ первый ход упал
+  // (sessionId null, ответа нет). Во время запроса (typing) — нельзя: списание может
+  // произойти; в активном диалоге и после завершения — только «подвести итог».
+  const canClose = sessionId === null && !typing;
   return /*#__PURE__*/React.createElement("div", {
-    onClick: hasSent ? undefined : onClose,
+    onClick: canClose ? onClose : undefined,
     style: {
       position: "fixed",
       inset: 0,
@@ -2154,7 +2236,7 @@ function DreamChat({
     }
   }, "\u0412 \u0431\u0430\u043B\u0430\u043D\u0441\u0435: ", balance, " ", plural(balance, "разбор", "разбора", "разборов")) : /*#__PURE__*/React.createElement(DepthMeter, {
     stage: stage
-  })), !hasSent ? /*#__PURE__*/React.createElement("button", {
+  })), canClose ? /*#__PURE__*/React.createElement("button", {
     onClick: onClose,
     "aria-label": "\u0417\u0430\u043A\u0440\u044B\u0442\u044C",
     style: {
