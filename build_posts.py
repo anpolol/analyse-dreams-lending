@@ -293,7 +293,7 @@ POST_TEMPLATE = """<!DOCTYPE html>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
-  <link rel="stylesheet" href="./blog.css?v=20261030-cards4" />
+  <link rel="stylesheet" href="./blog.css?v=20261112-sq3" />
 
   <script type="application/ld+json">
   {{
@@ -353,7 +353,7 @@ POST_TEMPLATE = """<!DOCTYPE html>
           <span>{date_pretty}</span>{meta_extra}
         </div>
 
-        <img class="post-cover" src="{cover}" alt="" />
+        <img class="post-cover" src="{cover}" alt=""{cover_position_attr} />
       </header>
 
       <section class="post-cta-top">
@@ -401,6 +401,7 @@ def generate_post_html(meta, body_html, h2s):
     preview = meta.get("preview", "")
     description = meta.get("description", preview)
     reading_time = meta.get("reading_time", "")
+    cover_position = meta.get("cover_position", "").strip()
 
     url = f"{DOMAIN}/blog/{slug}.html"
     og_image = cover if cover.startswith("http") else f"{DOMAIN}{cover}"
@@ -413,6 +414,9 @@ def generate_post_html(meta, body_html, h2s):
     if category:
         meta_bits.append(f'<span class="post-meta-dot"></span><span>{escape(category)}</span>')
     meta_extra = "".join(meta_bits)
+
+    # object-position для обложки (если задано в frontmatter cover_position)
+    cover_position_attr = f' style="object-position:{escape(cover_position)}"' if cover_position else ""
 
     # TOC
     toc_html = ""
@@ -437,6 +441,7 @@ def generate_post_html(meta, body_html, h2s):
         h1_html=h1_html,
         meta_extra=meta_extra,
         cover=cover,
+        cover_position_attr=cover_position_attr,
         toc_html=toc_html,
         body_html=body_html,
         DOMAIN=DOMAIN,
@@ -461,9 +466,11 @@ def generate_card(meta):
     h1_html = render_inline(title)
     date_pretty = format_date(date_iso)
     cat_label = f" · {escape(category)}" if category else ""
+    cover_position = meta.get("cover_position", "").strip()
+    card_pos_attr = f' style="object-position:{escape(cover_position)}"' if cover_position else ""
     return (
         f'      <a class="post-card" href="./{slug}.html">\n'
-        f'        <img class="post-card-cover" src="{cover}" alt="" loading="lazy" />\n'
+        f'        <img class="post-card-cover" src="{cover}" alt="" loading="lazy"{card_pos_attr} />\n'
         f'        <span class="post-card-date">{date_pretty}{cat_label}</span>\n'
         f'        <h2>{h1_html}</h2>\n'
         f'        <p>{escape(preview)}</p>\n'
