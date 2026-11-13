@@ -53,7 +53,9 @@ ROOT = os.path.dirname(os.path.abspath(__file__))
 BLOG_DIR = os.path.join(ROOT, "blog")
 POSTS_SRC = os.path.join(BLOG_DIR, "posts")
 INDEX_FILE = os.path.join(BLOG_DIR, "index.html")
+HOME_INDEX_FILE = os.path.join(ROOT, "index.html")
 SITEMAP_FILE = os.path.join(ROOT, "sitemap.xml")
+HOME_PREVIEW_LIMIT = 3
 DOMAIN = "https://analysedreams.com"
 
 MONTHS_RU = {
@@ -493,6 +495,52 @@ def update_index(posts):
         f.write(new_content)
 
 
+# ---------- превью постов на главной странице ----------
+
+HOME_PREVIEW_RE = re.compile(
+    r'(<div class="cards-grid audience-grid">)(.*?)(</div>\s*</section>)',
+    re.DOTALL,
+)
+
+HOME_DELAYS = ["", "--reveal-delay:.12s", "--reveal-delay:.24s"]
+
+
+def generate_home_card(meta, delay):
+    title = meta.get("title", "")
+    slug = meta.get("slug", "post")
+    cover = meta.get("cover", "/blog/placeholder.svg")
+    preview = meta.get("preview", "")
+    h3_html = render_inline(title)
+    style_attr = f' style="{delay}"' if delay else ""
+    return (
+        f'        <a class="audience-card reveal"{style_attr} href="/blog/{slug}.html">\n'
+        f'          <div class="audience-card-visual">\n'
+        f'            <img class="audience-card-img" src="{cover}" alt="" loading="lazy" />\n'
+        f'          </div>\n'
+        f'          <h3>{h3_html}</h3>\n'
+        f'          <p>{escape(preview)}</p>\n'
+        f'        </a>'
+    )
+
+
+def update_home_preview(posts):
+    """posts: список meta dict, отсортированный по дате desc. Берём первые HOME_PREVIEW_LIMIT."""
+    with open(HOME_INDEX_FILE, "r", encoding="utf-8") as f:
+        content = f.read()
+    top = posts[:HOME_PREVIEW_LIMIT]
+    cards = "\n\n".join(
+        generate_home_card(m, HOME_DELAYS[i] if i < len(HOME_DELAYS) else "")
+        for i, m in enumerate(top)
+    )
+    new_block = f'<div class="cards-grid audience-grid">\n\n{cards}\n\n      </div>\n    </section>'
+    new_content, n = HOME_PREVIEW_RE.subn(new_block, content)
+    if n == 0:
+        print("WARN: не нашёл <div class=\"cards-grid audience-grid\"> в index.html")
+        return
+    with open(HOME_INDEX_FILE, "w", encoding="utf-8") as f:
+        f.write(new_content)
+
+
 # ---------- sitemap ----------
 
 def generate_sitemap(posts):
@@ -622,8 +670,9 @@ def main():
     # сортировка по дате desc
     metas.sort(key=lambda m: m.get("date", ""), reverse=True)
     update_index(metas)
+    update_home_preview(metas)
     generate_sitemap(metas)
-    print(f"\nГотово. Постов: {len(metas)}. Обновлены blog/index.html и sitemap.xml.")
+    print(f"\nГотово. Постов: {len(metas)}. Обновлены blog/index.html, index.html и sitemap.xml.")
 
 
 if __name__ == "__main__":
