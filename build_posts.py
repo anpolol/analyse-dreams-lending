@@ -359,7 +359,7 @@ POST_TEMPLATE = """<!DOCTYPE html>
       </header>
 
       <section class="post-cta-top">
-        <a class="button" href="/#cta">Анализ сна бесплатно →</a>
+        <a class="button" href="/lk">Анализ сна бесплатно →</a>
       </section>
 
 {toc_html}
@@ -374,7 +374,7 @@ POST_TEMPLATE = """<!DOCTYPE html>
           Попробуй бесплатный анализ сновидения — сервис выделит символы, эмоции
           и предложит направления для понимания в юнгианском подходе.
         </p>
-        <a class="button" href="/#cta">Анализировать сон бесплатно →</a>
+        <a class="button" href="/lk">Анализировать сон бесплатно →</a>
       </section>
 
       <footer class="post-footer">
